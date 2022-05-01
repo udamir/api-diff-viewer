@@ -3,6 +3,8 @@
 
 React component to view the difference between two JsonSchema or API specifications
 
+View demo on [Storybook](https://api-diff-viewer.vercel.app/)
+
 ## License
 
 MIT

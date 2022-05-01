@@ -12,11 +12,13 @@ export default [
       {
         file: 'dist/index.js',
         format: 'cjs',
+        sourceMap: true
       },
       {
         file: 'dist/index.es.js',
         format: 'es',
         exports: 'named',
+        sourceMap: true
       }
     ],
     external: ['react', 'react-dom'],
@@ -26,10 +28,11 @@ export default [
         minimize: true,
       }),
       typescript({
-        exclude: ["src/stories"]
+        exclude: ["stories"],
+        sourceMap: true
       }),
       babel({
-        exclude: ['node_modules/**', "src/stories/**"],
+        exclude: ['node_modules/**', "stories/**"],
         presets: ['@babel/preset-react']
       }),
       external(),
