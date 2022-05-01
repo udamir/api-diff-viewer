@@ -1,0 +1,94 @@
+.line {
+  font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+  font-size: 0;
+  margin: 0;
+  color: #0451a5;
+  width: 100%;
+  font-family: Menlo, Monaco, "Courier New", monospace;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0px;
+}
+
+.before {
+  text-decoration: line-through;
+  background-color: #FFC8C1;
+}
+
+.after {
+  background-color: #D0FAD4;
+}
+
+.line-num {
+  line-height: 18px;  
+  padding-left: 10px;
+  padding-right: 15px;
+  color: #6e7681;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 12px;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  /* display: inline-block; */
+  position: absolute;
+  width: 30px;
+}
+
+.line-content {
+  word-break: break-all;
+  overflow: visible;
+  word-wrap: normal;
+  text-align: left;
+  font-size: 12px;
+  display: inline-block;
+  margin: 0;
+}
+
+.token-spec,
+.token-key {
+  color: #008080;
+}
+
+.token-string {
+  color: #0451a5;
+}
+
+.action-remove {
+  background-color:#ff526112;
+}
+
+.action-add {
+  background-color: #00BB5B12;
+
+}
+
+.action-replace {
+  background-color: #FFB02E12;
+
+}
+
+.action-hidden {
+  background-color: #F2F3F5;
+}
+
+.diff-line {
+  display: flex;
+}
+
+.row {
+  width: 100%;
+}
+
+.left {
+  width: 50%;
+  flex: 1;
+}
+
+.right {
+  border-left: solid 1px lightgray;
+  /* width: 50%; */
+  /* flex: 1; */
+}
