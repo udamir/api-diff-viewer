@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { LineData } from "../../utils"
 import { DiffLine } from "../DiffLine/DiffLine"
 
@@ -14,7 +14,7 @@ interface DiffBlockProps {
 }
 
 export const DiffBlock = ({ data, display = "side-by-side" }: DiffBlockProps) => {
-  const visiable = true
+  const [visiable, setVisible] = useState(true)
 
   const children =
     data.children?.map((line) => (
@@ -23,7 +23,7 @@ export const DiffBlock = ({ data, display = "side-by-side" }: DiffBlockProps) =>
 
   return (
     <div className="diff-node">
-      <DiffLine data={data} display={display} />
+      <DiffLine data={data} display={display} toggle={data.children ? visiable ? "expand" : "collapse" : undefined } onClick={() => setVisible(!visiable)} />
       <div style={{ display: visiable ? "block" : "none" }}>{children}</div>
     </div>
   )

@@ -11,6 +11,37 @@
   letter-spacing: 0px;
 }
 
+.toggle {
+  flex: none;
+  position: absolute;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  cursor: pointer;
+}
+
+
+.icon {
+  border: solid lightgray;
+  border-width: 0 1px 1px 0;
+  display: inline-block;
+  padding: 2px;
+}
+
+.expand {
+  margin-left: 43px;
+  margin-top: 5px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.collapse {
+  margin-left: 41px;
+  margin-top: 6px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
 .before {
   text-decoration: line-through;
   background-color: #FFC8C1;

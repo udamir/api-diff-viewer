@@ -11,9 +11,15 @@ interface DiffLineProps {
    * Display document diff in inline or side-by-side mode
    */
   display?: "inline" | "side-by-side"
+  /**
+   * Show block expanded or collapsed
+   */
+  toggle?: "expand" | "collapse"
+
+  onClick?: () => any
 }
 
-const Line = (data: any, display: 'before' | 'after' | 'merged') => {
+const Line = (data: any, display: 'before' | 'after' | 'merged', toggle?: "expand" | "collapse") => {
 
   const indent = Math.max(data.indent, 0)
 
@@ -33,6 +39,7 @@ const Line = (data: any, display: 'before' | 'after' | 'merged') => {
   return (
     <div className={["line", itemClass, ...display==="after" ? ["right"] : []].join(" ")}>
       <span className="line-num">{ data.line }</span>
+      { !!toggle && <span className={`toggle icon ${toggle}`}></span> }
       <p className="line-content" style={ hidden ? { display: "none" } : { ...itemStyle } }>
         { !!indent && <span className="indent">{ " ".repeat(indent).replace(/ /g, "\u00a0") }</span> }
         { content }
@@ -41,8 +48,8 @@ const Line = (data: any, display: 'before' | 'after' | 'merged') => {
   );
 };
 
-export const DiffLine = ({ data, display = "side-by-side" }: DiffLineProps) => {
+export const DiffLine = ({ data, display = "side-by-side", toggle, onClick }: DiffLineProps) => {
   return display === "inline" 
-    ? <div className="diff-line">{ Line(data, "merged") }</div>
-    : <div className="diff-line">{ Line(data, "before") }{ Line(data, "after") }</div>
+    ? <div className="diff-line" onClick={onClick}>{ Line(data, "merged", toggle) }</div>
+    : <div className="diff-line" onClick={onClick}>{ Line(data, "before", toggle) }{ Line(data, "after") }</div>
 }

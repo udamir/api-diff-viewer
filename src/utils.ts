@@ -17,6 +17,7 @@ export type LineData = {
   tokens: Token[]
   children?: LineData[]
   action?: ActionType
+  diffs?: number[]
 }
 
 export type Diff = {
@@ -31,12 +32,25 @@ const _token = (type: TokenType, value: string | number, display?: "before" | "a
   ...(display ? { display } : {}),
 })
 
+const countDiffs = (diff?: Diff): number[] => {
+  const diffs = [0,0,0,0,0]
+  if (!diff) { return diffs }
+  const i = ["","breaking", "non-breaking", "annotation", "unclassified"].indexOf(diff.type)
+  diffs[0]++
+  diffs[i]++
+  return diffs
+}
+
 export const _block = (type: BlockType, line: number, indent: number, key: string, children: LineData[], diff?: Diff): LineData => {
   let lines = 1
   let removed = 0
+  let diffs = countDiffs(diff)
   children.forEach((child) => {
     lines += child.lines || 1
     removed += child.action === "remove" ? 1 : 0
+    if (diff && diff.action === "replace") {
+      diffs = child.diffs?.map((v,i) => v + diffs[i]) || diffs
+    }
   })
 
   const emptyBlock =
@@ -53,6 +67,7 @@ export const _block = (type: BlockType, line: number, indent: number, key: strin
     line,
     children,
     lines,
+    diffs,
     ...(diff ? { action: diff.action } : {}),
     tokens: [_token("key", key), _token("spec", ":"), ...emptyBlock],
   }
@@ -63,7 +78,7 @@ export const _arrLine = (line: number, indent: number, value: string | number, d
   indent,
   line,
   prefix: "- ",
-  ...(diff ? { action: diff.action } : {}),
+  ...(diff ? { action: diff.action, diffs: countDiffs(diff) } : {}),
   tokens: [
     _token("index", "- "),
     ...(diff?.replaced ? [_token("value", diff.replaced, "before")] : []),
@@ -75,9 +90,13 @@ export const _arrBlock = (type: BlockType, line: number, indent: number, childre
   const first = children[0]
   let lines = first && !first.action ? 0 : 1
   let removed = 0
+  let diffs = countDiffs(diff)
   children.forEach((child) => {
     lines += child.lines || 1
     removed += child.action === "remove" ? 1 : 0
+    if (diff && diff.action === "replace") {
+      diffs = child.diffs?.map((v,i) => v + diffs[i]) || diffs
+    }
   })
   const emptyBlock =
     removed === children.length && diff?.action !== "remove"
@@ -92,6 +111,7 @@ export const _arrBlock = (type: BlockType, line: number, indent: number, childre
     indent,
     line,
     lines,
+    diffs,
     prefix: "- ",
     ...(diff ? { action: diff.action } : {}),
     tokens: [
@@ -107,7 +127,7 @@ export const _line = (line: number, indent: number, key: string, value: string |
   type: "line",
   indent,
   line,
-  ...(diff ? { action: diff.action } : {}),
+  ...(diff ? { action: diff.action, diffs: countDiffs(diff) } : {}),
   tokens: [
     _token("key", key),
     _token("spec", ": "),
