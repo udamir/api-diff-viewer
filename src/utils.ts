@@ -4,12 +4,12 @@ export type ActionType = "add" | "remove" | "replace"
 
 export type Token = {
   type: TokenType
-  value: string | number
+  value: string
   display?: "before" | "after"
 }
 
 export type LineData = {
-  type: "block" | "line"
+  type: "objectBlock" | "arrayBlock" | "line"
   line: number
   lines?: number
   indent: number
@@ -17,6 +17,7 @@ export type LineData = {
   tokens: Token[]
   children?: LineData[]
   action?: ActionType
+  diffType?: string
   diffs?: number[]
 }
 
@@ -26,7 +27,7 @@ export type Diff = {
   type?: any
 }
 
-const _token = (type: TokenType, value: string | number, display?: "before" | "after"): Token => ({
+const _token = (type: TokenType, value: any, display?: "before" | "after"): Token => ({
   type,
   value,
   ...(display ? { display } : {}),
@@ -62,27 +63,27 @@ export const _block = (type: BlockType, line: number, indent: number, key: strin
       : []
 
   return {
-    type: "block",
+    type: type === "object" ? "objectBlock" : "arrayBlock",
     indent,
     line,
     children,
     lines,
     diffs,
-    ...(diff ? { action: diff.action } : {}),
+    ...(diff ? { action: diff.action, diffType: diff.type } : {}),
     tokens: [_token("key", key), _token("spec", ":"), ...emptyBlock],
   }
 }
 
-export const _arrLine = (line: number, indent: number, value: string | number, diff?: Diff): LineData => ({
+export const _arrLine = (line: number, indent: number, value: any, diff?: Diff): LineData => ({
   type: "line",
   indent,
   line,
   prefix: "- ",
-  ...(diff ? { action: diff.action, diffs: countDiffs(diff) } : {}),
+  ...(diff ? { action: diff.action, diffs: countDiffs(diff), diffType: diff.type } : {}),
   tokens: [
     _token("index", "- "),
-    ...(diff?.replaced ? [_token("value", diff.replaced, "before")] : []),
-    _token("value", value, diff?.replaced && "after"),
+    ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
+    _token("value", value, diff?.replaced !== undefined && "after" || undefined),
   ],
 })
 
@@ -107,32 +108,32 @@ export const _arrBlock = (type: BlockType, line: number, indent: number, childre
       : []
 
   return {
-    type: "block",
+    type: type === "object" ? "objectBlock" : "arrayBlock",
     indent,
     line,
     lines,
     diffs,
     prefix: "- ",
-    ...(diff ? { action: diff.action } : {}),
+    ...(diff ? { action: diff.action, diffType: diff.type } : {}),
     tokens: [
       _token("index", "- "),
       ...(first && !first.action ? first.tokens : emptyBlock),
-      ...(diff?.replaced ? [_token("value", diff.replaced, "before")] : []),
+      ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
     ],
     children: first && !first.action ? children.slice(1) : children,
   }
 }
 
-export const _line = (line: number, indent: number, key: string, value: string | number, diff?: Diff): LineData => ({
+export const _line = (line: number, indent: number, key: string, value: any, diff?: Diff): LineData => ({
   type: "line",
   indent,
   line,
-  ...(diff ? { action: diff.action, diffs: countDiffs(diff) } : {}),
+  ...(diff ? { action: diff.action, diffs: countDiffs(diff), diffType: diff.type } : {}),
   tokens: [
     _token("key", key),
     _token("spec", ": "),
-    ...(diff?.replaced ? [_token("value", diff.replaced, "before")] : []),
-    _token("value", value, diff?.replaced && "after"),
+    ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
+    _token("value", value, diff?.replaced !== undefined && "after" || undefined),
   ],
 })
 

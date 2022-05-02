@@ -2,8 +2,10 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { ApiDiffViewer } from '../components/ApiDiffViewer/ApiDiffViewer';
-import before from "./samples/openApi.before"
-import after from "./samples/openApi.after"
+import openApiBefore from "./samples/openApi.before"
+import openApiAfter from "./samples/openApi.after"
+import asyncApiBefore from "./samples/asyncApi.before"
+import asyncApiAfter from "./samples/asyncApi.after"
 
 export default {
   title: 'ApiDiffViewer/JsonSchema',
@@ -12,10 +14,18 @@ export default {
 
 const Template: ComponentStory<typeof ApiDiffViewer> = (args) => <ApiDiffViewer {...args} />;
 
-export const Default = Template.bind({});
-Default.args = {
-  before,
-  after,
+export const OpenApi3 = Template.bind({});
+OpenApi3.args = {
+  before: openApiBefore,
+  after: openApiAfter,
   display: "side-by-side",
   rules: "OpenApi3"
+};
+
+export const AsyncApi = Template.bind({});
+AsyncApi.args = {
+  before: asyncApiBefore,
+  after: asyncApiAfter,
+  display: "side-by-side",
+  rules: "AsyncApi2"
 };

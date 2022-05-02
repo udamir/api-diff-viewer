@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { LineData } from "../../utils"
 import { DiffLine } from "../DiffLine/DiffLine"
 
-interface DiffBlockProps {
+export interface DiffBlockProps {
   /**
    * Parsed line data
    */

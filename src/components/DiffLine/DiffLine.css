@@ -1,4 +1,5 @@
 .line {
+  position: relative;
   font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
   font-size: 0;
   margin: 0;
@@ -40,6 +41,31 @@
   margin-top: 6px;
   transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
+}
+
+.collapsed {
+  font-size: 10px;
+  color: darkgray;
+}
+
+.diff {
+  left: -1px;
+  position: absolute;
+  width: 3px;
+  background-color: darkgray;
+  height: 100%;
+}
+
+.diff.breaking {
+  background-color: red;
+}
+
+.diff.non-breaking {
+  background-color: lightgreen;
+}
+
+.diff.annotation {
+  background-color: mediumorchid;
 }
 
 .before {

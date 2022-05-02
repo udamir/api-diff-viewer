@@ -2,7 +2,7 @@ import React from 'react';
 import { LineData } from '../../utils';
 import './DiffLine.css';
 
-interface DiffLineProps {
+export interface DiffLineProps {
   /**
    * Parsed line data
    */
@@ -37,12 +37,14 @@ const Line = (data: any, display: 'before' | 'after' | 'merged', toggle?: "expan
   }
 
   return (
-    <div className={["line", itemClass, ...display==="after" ? ["right"] : []].join(" ")}>
+    <div className={["line", itemClass, ...display==="after" ? ["right"] : []].join(" ") } title={data.diffType}>
+      { !!data.action && display !== "after" && <div className={`diff ${data.diffType}`}></div> }
       <span className="line-num">{ data.line }</span>
       { !!toggle && <span className={`toggle icon ${toggle}`}></span> }
       <p className="line-content" style={ hidden ? { display: "none" } : { ...itemStyle } }>
         { !!indent && <span className="indent">{ " ".repeat(indent).replace(/ /g, "\u00a0") }</span> }
         { content }
+        { toggle === "collapse" && <span className="collapsed">{ data.type === "objectBlock" ? "\u00a0{...}" : "\u00a0[...]" }</span>}
       </p>
     </div>
   );
@@ -51,5 +53,5 @@ const Line = (data: any, display: 'before' | 'after' | 'merged', toggle?: "expan
 export const DiffLine = ({ data, display = "side-by-side", toggle, onClick }: DiffLineProps) => {
   return display === "inline" 
     ? <div className="diff-line" onClick={onClick}>{ Line(data, "merged", toggle) }</div>
-    : <div className="diff-line" onClick={onClick}>{ Line(data, "before", toggle) }{ Line(data, "after") }</div>
+    : <div className="diff-line" onClick={onClick}>{ Line(data, "before", toggle) }{ Line(data, "after", toggle) }</div>
 }
