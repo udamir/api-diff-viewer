@@ -1,3 +1,5 @@
+import { diffWords } from "diff"
+
 export type BlockType = "object" | "array"
 export type TokenType = "key" | "index" | "value" | "spec"
 export type ActionType = "add" | "remove" | "replace"
@@ -74,18 +76,35 @@ export const _block = (type: BlockType, line: number, indent: number, key: strin
   }
 }
 
-export const _arrLine = (line: number, indent: number, value: any, diff?: Diff): LineData => ({
-  type: "line",
-  indent,
-  line,
-  prefix: "- ",
-  ...(diff ? { action: diff.action, diffs: countDiffs(diff), diffType: diff.type } : {}),
-  tokens: [
-    _token("index", "- "),
-    ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
-    _token("value", value, diff?.replaced !== undefined && "after" || undefined),
-  ],
-})
+const lineTokens = (value: any, diff?: Diff) => {
+
+  if (diff?.replaced !== undefined && typeof value === "string") {
+    const changes = diffWords(String(value), String(diff.replaced))
+    return changes.map<Token>((c) => _token("value", c.value, c.added && "before" || c.removed && "after" || undefined ))
+  } else {
+    const content: Token[] = []
+    if (diff?.replaced !== undefined) {
+      content.push(_token("value", String(diff.replaced), "before"))
+    }
+    content.push(_token("value", value, diff?.replaced !== undefined && "after" || undefined))
+    return content
+  }
+}
+
+export const _arrLine = (line: number, indent: number, value: any, diff?: Diff): LineData => {
+
+  return {
+    type: "line",
+    indent,
+    line,
+    prefix: "- ",
+    ...(diff ? { action: diff.action, diffs: countDiffs(diff), diffType: diff.type } : {}),
+    tokens: [
+      _token("index", "- "),
+      ...lineTokens(value, diff),
+    ]
+  }
+}
 
 export const _arrBlock = (type: BlockType, line: number, indent: number, children: LineData[], diff?: Diff): LineData => {
   const first = children[0]
@@ -132,8 +151,7 @@ export const _line = (line: number, indent: number, key: string, value: any, dif
   tokens: [
     _token("key", key),
     _token("spec", ": "),
-    ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
-    _token("value", value, diff?.replaced !== undefined && "after" || undefined),
+    ...lineTokens(value, diff)
   ],
 })
 
