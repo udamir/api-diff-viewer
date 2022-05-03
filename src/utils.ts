@@ -51,7 +51,7 @@ export const _block = (type: BlockType, line: number, indent: number, key: strin
   children.forEach((child) => {
     lines += child.lines || 1
     removed += child.action === "remove" ? 1 : 0
-    if (diff && diff.action === "replace") {
+    if (!diff || diff.action === "replace") {
       diffs = child.diffs?.map((v,i) => v + diffs[i]) || diffs
     }
   })
@@ -92,7 +92,6 @@ const lineTokens = (value: any, diff?: Diff) => {
 }
 
 export const _arrLine = (line: number, indent: number, value: any, diff?: Diff): LineData => {
-
   return {
     type: "line",
     indent,
@@ -114,7 +113,7 @@ export const _arrBlock = (type: BlockType, line: number, indent: number, childre
   children.forEach((child) => {
     lines += child.lines || 1
     removed += child.action === "remove" ? 1 : 0
-    if (diff && diff.action === "replace") {
+    if (!diff || diff.action === "replace") {
       diffs = child.diffs?.map((v,i) => v + diffs[i]) || diffs
     }
   })

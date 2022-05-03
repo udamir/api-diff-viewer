@@ -48,6 +48,35 @@
   color: darkgray;
 }
 
+.changes {
+  margin-left: 4px;
+  display: inline-block;
+  font-size: 10px;
+  min-width: 16px;
+  padding-bottom: 2px;
+  height: 14px;
+  border-radius: 30%;
+  border: 1px solid darkgray;
+  text-indent: -1px;
+  text-align: center;
+  color: darkgray
+}
+
+.changes.breaking {
+  border-color: red;
+  color: red;
+}
+
+.changes.non-breaking {
+  border-color: lightgreen;
+  color: lightgreen;
+}
+
+.changes.annotation {
+  border-color: mediumorchid;
+  color: mediumorchid;
+}
+
 .diff {
   left: -1px;
   position: absolute;
