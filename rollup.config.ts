@@ -3,7 +3,8 @@ import resolve from '@rollup/plugin-node-resolve';
 import external from 'rollup-plugin-peer-deps-external';
 import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
-import typescript from '@rollup/plugin-typescript';
+import commonjs from "@rollup/plugin-commonjs";
+import typescript from "rollup-plugin-typescript2";
 
 export default [
   {
@@ -12,29 +13,30 @@ export default [
       {
         file: 'dist/index.js',
         format: 'cjs',
-        sourceMap: true
+        exports: 'named',
+        sourcemap: true
       },
       {
         file: 'dist/index.es.js',
         format: 'es',
         exports: 'named',
-        sourceMap: true
+        sourcemap: true
       }
     ],
     external: ['react', 'react-dom'],
     plugins: [
+      commonjs(),
       postcss({
         plugins: [],
         minimize: true,
       }),
-      typescript({
-        exclude: ["stories"],
-        sourceMap: true
+      typescript({ 
+        useTsconfigDeclarationDir: true
       }),
-      babel({
-        exclude: ['node_modules/**', "stories/**"],
-        presets: ['@babel/preset-react']
-      }),
+      // babel({
+      //   exclude: ['node_modules/**', "src/stories/**"],
+      //   presets: ['@babel/preset-react']
+      // }),
       external(),
       resolve(),
       terser(),

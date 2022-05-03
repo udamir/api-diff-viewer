@@ -49,7 +49,7 @@ const Line = (data: any, display: "before" | "after" | "merged", toggle?: "expan
       }
       content.push(
         <span key={content.length} className={"changes " + changeTypes[i]} title={`${changeTypes[i]}: ${data.diffs[i]}`}>
-          {data.diffs[i]}
+          {`${changeTypes[i]}: ${data.diffs[i]}`}
         </span>
       )
     }
