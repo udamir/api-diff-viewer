@@ -136,10 +136,10 @@ export const _arrBlock = (type: BlockType, line: number, indent: number, childre
     ...(diff ? { action: diff.action, diffType: diff.type } : {}),
     tokens: [
       _token("index", "- "),
-      ...(first && !first.action ? first.tokens : emptyBlock),
+      ...(first && !first.action && first.type === "line" ? first.tokens : emptyBlock),
       ...(diff?.replaced !== undefined ? [_token("value", String(diff.replaced), "before")] : []),
     ],
-    children: first && !first.action ? children.slice(1) : children,
+    children: first && !first.action && first.type === "line" ? children.slice(1) : children,
   }
 }
 
