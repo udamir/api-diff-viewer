@@ -14,6 +14,9 @@ export const dumpDiffYaml = (input: any, line = 1, indent = 0, parentDiff?: Diff
     for (let i = 0; i < input.length; i++) {
       const value = input[i]
       const diff = metaKey in input && (input as any)[metaKey][i] || parentDiff
+      if (diff?.replaced !== undefined) {
+        diff.replaced = formatInline(diff.replaced)
+      }
       if (typeof value !== 'object' || input instanceof Date || isEmpty(value)) {
         lines.push(_arrLine(line++, indent, formatInline(value), diff))
       } else {
@@ -27,6 +30,9 @@ export const dumpDiffYaml = (input: any, line = 1, indent = 0, parentDiff?: Diff
     for (const key in input) {
       const value = input[key];
       const diff = metaKey in input && input[metaKey][key] || parentDiff
+      if (diff?.replaced !== undefined) {
+        diff.replaced = formatInline(diff.replaced)
+      }
       if (typeof value !== 'object' || input instanceof Date || isEmpty(value)) {
         lines.push(_line(line++, indent, formatInline(key), formatInline(value), diff))
       } else {
