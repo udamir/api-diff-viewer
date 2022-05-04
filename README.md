@@ -3,7 +3,7 @@
 
 React component to view the difference between two JsonSchema or API specifications
 
-View demo on [Storybook](https://api-diff-viewer.vercel.app/)
+View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://api-diff-viewer.vercel.app/)
 
 ## Current status and plans:
 - [x] JsonSchema support

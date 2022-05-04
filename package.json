@@ -1,18 +1,24 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "React component to view the difference between two JsonSchema/API specifications",
   "author": "Damir Yusipov",
   "license": "MIT",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
-  "module": "dist/index.es.js",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "module": "dist/api-diff-viewer.es.js",
+  "main": "dist/api-diff-viewer.umd.js",
+  "types": "dist/api-diff-viewer.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/api-diff-viewer.es.js",
+      "require": "./dist/api-diff-viewer.umd.js"
+    }
+  },
   "scripts": {
-    "build": "rollup -c",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
@@ -53,16 +59,13 @@
     "@types/diff": "^5.0.2",
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.0",
+    "@vitejs/plugin-react": "^1.3.2",
     "babel-loader": "^8.2.5",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "rollup": "^2.71.1",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.31.2",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.6.4",
+    "vite": "^2.9.8",
+    "vite-plugin-dts": "^1.1.1"
   }
 }
