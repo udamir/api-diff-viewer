@@ -13,8 +13,8 @@ const Template: ComponentStory<typeof DiffBlock> = (args) => <DiffBlock {...args
 
 let l = 1
 
-export const ObjectNode = Template.bind({});
-ObjectNode.args = {
+export const ObjectBlock = Template.bind({});
+ObjectBlock.args = {
   data: _block("object", l++, 0, "properies", [
     _block("object", l++, 2, "name", [
       _line(l++, 4, "$ref", '"#/$refs/NameType"'),
@@ -43,8 +43,8 @@ ObjectNode.args = {
 
 l = 1
 
-export const ArrayNode = Template.bind({});
-ArrayNode.args = {
+export const ArrayBlock = Template.bind({});
+ArrayBlock.args = {
   data: _block("array", l++, 0, "required", [
     _arrLine(4, 2, "type"),
     _arrLine(5, 2, "bar", _added),
