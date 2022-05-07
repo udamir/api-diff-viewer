@@ -47,7 +47,10 @@
   color: darkgray;
 }
 
-.changes {
+.token-unclassified,
+.token-breaking,
+.token-annotation,
+.token-non-breaking {
   margin-left: 4px;
   display: inline-block;
   font-size: 10px;
@@ -59,20 +62,24 @@
   border: 1px solid darkgray;
   text-indent: -1px;
   text-align: center;
-  color: darkgray
+  color: darkgray;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 
-.changes.breaking {
+.token-breaking {
   border-color: red;
   color: red;
 }
 
-.changes.non-breaking {
+.token-non-breaking {
   border-color: rgb(0, 170, 0);
   color: rgb(0, 170, 0);
 }
 
-.changes.annotation {
+.token-annotation {
   border-color: mediumorchid;
   color: mediumorchid;
 }

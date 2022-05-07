@@ -39,7 +39,8 @@
   ],
   "dependencies": {
     "api-smart-diff": "^0.3.1",
-    "diff": "^5.0.0"
+    "diff": "^5.0.0",
+    "styled-components": "^5.3.5"
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
