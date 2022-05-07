@@ -1,36 +1,84 @@
 export default {
   asyncapi: "2.4.0",
   info: {
-    title: "APIHUB Websocket API",
-    version: "0.1.0",
+    title: "Gemini Market Data Websocket API",
+    version: "1.0.0",
     contact: {
-      name: "Damir Yusipov"
+      name: "Gemini",
+      url: "https://www.gemini.com/"
     },
-    description: "Market data is a public API that streams all the market data on a given symbol.\n\nYou can quickly play with the API using [websocat](https://github.com/vi/websocat#installation) like this:\n```bash\nwebsocat wss://api.gemini.com/v1/marketdata/btcusd?heartbeat=true -S\n```\n"
+    description: "Market data is a public API that streams all the market data on a given symbol.\n\nYou can quickly play with the API using [websocat](https://github.com/vi/websocat#installation) like this:\n```bash\nwebsocat wss://api.gemini.com/v1/marketdata/btcusd?heartbeat=true -S\n```\n",
   },
   externalDocs: {
     url: "https://docs.sandbox.gemini.com/websocket-api/#market-data"
   },
   servers: {
-    private: {
-      url: "wss://apihub.netcracker.com",
+    public: {
+      url: "wss://api.gemini.com/",
       protocol: "wss"
     }
   },
   channels: {
-    "/v1/projects/{projectId}/branches/{branch}": {
-      description: "Manage project branch content",
+    "/v1/marketdata/{symbol}": {
       parameters: {
-        projectId: {
-          description: "Project Id",
+        symbol: {
+          description: "Symbols are formatted as CCY1CCY2 where prices are in CCY2 and quantities are in CCY1.\n",
           schema: {
-            type: "string"
-          }
-        },
-        branch: {
-          description: "Branch name",
-          schema: {
-            type: "string"
+            type: "string",
+            enum: [
+              "btcusd",
+              "ethbtc",
+              "ethusd",
+              "zecusd",
+              "zecbtc",
+              "zeceth",
+              "zecbch",
+              "zecltc",
+              "bchusd",
+              "bcheth",
+              "ltcusd",
+              "ltcbtc",
+              "ltcbch",
+              "batusd",
+              "daiusd",
+              "linkusd",
+              "oxtusd",
+              "batbtc",
+              "oxtbtc",
+              "bateth",
+              "linketh",
+              "oxteth",
+              "ampusd",
+              "paxgusd",
+              "mkrusd",
+              "zrxusd",
+              "kncusd",
+              "manausd",
+              "storjusd",
+              "balusd",
+              "uniusd",
+              "renusd",
+              "umausd",
+              "yfiusd",
+              "aaveusd",
+              "filusd",
+              "btceur",
+              "btcgbp",
+              "etheur",
+              "ethgbp",
+              "btcsgd",
+              "ethsgd",
+              "sklusd",
+              "grtusd",
+              "bntusd",
+              "1inchusd",
+              "enjusd",
+              "lrcusd",
+              "sandusd",
+              "cubeusd",
+              "lptusd",
+              "sushiusd"
+            ]
           }
         }
       },
@@ -46,11 +94,6 @@ export default {
                 default: false,
                 description: "Optionally add this parameter and set to true to receive a heartbeat every 5 seconds"
               },
-              top_of_book: {
-                type: "boolean",
-                default: false,
-                description: "If absent or false, receive full order book depth; if present and true, receive top of book only. Only applies to bids and offers."
-              },
               bids: {
                 type: "boolean",
                 default: true,
@@ -65,11 +108,6 @@ export default {
                 type: "boolean",
                 default: true,
                 description: "Include trade events"
-              },
-              auctions: {
-                type: "boolean",
-                default: true,
-                description: "Include auction events"
               }
             }
           }
@@ -87,7 +125,7 @@ export default {
     messages: {
       marketData: {
         summary: "Message with marked data information.",
-        description: "The initial response message will show the existing state of the order book. Subsequent messages will show all executed trades, as well as all other changes to the order book from orders placed or canceled.\n",
+        description: "The initial response message will show the existing state of the order book.\n",
         payload: {
           $ref: "#/components/schemas/market"
         },
@@ -111,14 +149,6 @@ export default {
                   reason: "place"
                 }
               ]
-            }
-          },
-          {
-            name: "heartbeatMessage",
-            summary: "Example of additional heartbeat message when you enable them.",
-            payload: {
-              type: "heartbeat",
-              socket_sequence: 1656
             }
           }
         ]
@@ -184,8 +214,7 @@ export default {
               "type",
               "eventId",
               "events",
-              "timestamp",
-              "timestampms"
+              "timestamp"
             ]
           },
           {
@@ -218,8 +247,8 @@ export default {
               type: "string",
               enum: [
                 "trade",
-                "change",
-                "auction, block_trade"
+                "auction",
+                "block_trade"
               ]
             },
             price: {
@@ -239,7 +268,6 @@ export default {
               enum: [
                 "place",
                 "trade",
-                "cancel",
                 "initial"
               ],
               description: "Indicates why the change has occurred. initial is for the initial response message, which will show the entire existing state of the order book."
@@ -248,11 +276,6 @@ export default {
               type: "number",
               multipleOf: 1,
               description: "The quantity remaining at that price level after this change occurred. May be zero if all orders at this price level have been filled or canceled."
-            },
-            delta: {
-              type: "number",
-              multipleOf: 1,
-              description: "The quantity changed. May be negative, if an order is filled or canceled. For initial messages, delta will equal remaining."
             }
           }
         }
