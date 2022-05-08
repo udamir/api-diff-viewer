@@ -52,7 +52,7 @@
 .token-annotation,
 .token-non-breaking {
   margin-left: 4px;
-  display: inline-block;
+  /* display: inline-block; */
   font-size: 10px;
   min-width: 16px;
   padding: 0 3px;

@@ -1,4 +1,4 @@
-import { apiMerge, BaseRulesType, DiffType, ApiMergedMeta } from "api-smart-diff"
+import { apiMerge, BaseRulesType, DiffType, ApiMergedMeta, ActionType } from "api-smart-diff"
 import { diffWords } from "diff"
 import { diffTypes, isEmpty, _yamlArrItemLine, _yamlItemBlock, _yamlPropBlock, _yamlPropLine } from "./utils"
 import { YAML } from "./yaml"
@@ -6,6 +6,10 @@ import { YAML } from "./yaml"
 export type DisplayCondition = "before" | "after" | "empty" | "collapsed" | "expanded"
 
 export type TokenType = "key" | "index" | "value" | "spec" | DiffType
+export type LineDiff = {
+  type: DiffType,
+  action: ActionType
+}
 
 export class Token {
   public display: DisplayCondition[]
@@ -58,16 +62,16 @@ export class ParsedLine {
     this.diff = diff
   }
 
-  public dump(conditions: DisplayCondition[] | DisplayCondition): ParsedLine {
-    conditions = Array.isArray(conditions) ? conditions : [conditions]
+  // public dump(conditions: DisplayCondition[] | DisplayCondition): ParsedLine {
+  //   conditions = Array.isArray(conditions) ? conditions : [conditions]
 
-    const tokens = this.tokens.filter(({ display }) =>
-      Array.isArray(display) 
-        ? display.find((c) => conditions.includes(c)) 
-        : !display || conditions.includes(display))
+  //   const tokens = this.tokens.filter(({ display }) =>
+  //     Array.isArray(display) 
+  //       ? display.find((c) => conditions.includes(c)) 
+  //       : !display || conditions.includes(display))
 
-    return { ...this, tokens }
-  }
+  //   return { ...this, tokens }
+  // }
 }
 
 export const valueTokens = (value: any, diff?: ApiMergedMeta) => {
