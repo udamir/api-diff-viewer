@@ -107,7 +107,7 @@ export const _arrLine = (line: number, indent: number, value: any, diff?: Diff):
 
 export const _arrBlock = (type: BlockType, line: number, indent: number, children: LineData[], diff?: Diff): LineData => {
   const first = children[0]
-  let lines = first && !first.action ? 0 : 1
+  let lines = first && !first.action && first.type === "line" ? 0 : 1
   let removed = 0
   let diffs = countDiffs(diff)
   children.forEach((child) => {
