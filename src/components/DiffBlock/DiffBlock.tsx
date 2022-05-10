@@ -1,12 +1,12 @@
 import React, { useState } from "react"
-import { ParsedBlock, ParsedLine } from "../../diffParser"
+import { DiffBlockData } from "../../diff-builder/common"
 import { DiffLine } from "../DiffLine/DiffLine"
 
 export interface DiffBlockProps {
   /**
    * Line index
    */
-  data: ParsedBlock
+  data: DiffBlockData
   /**
    * Display document diff in inline or side-by-side mode
    */
@@ -16,21 +16,21 @@ export interface DiffBlockProps {
 export const DiffBlock = ({ data, display = "side-by-side" }: DiffBlockProps) => {
   const [visiable, setVisible] = useState(true)
 
-  const items = data.items.map((line, i) => (
-    line instanceof ParsedBlock 
-      ? <DiffBlock key={i} data={line} display={display} />
-      : <DiffLine key={i} data={line} display={display} />
-  ))
+  const items = data.children.map((line, i) => (<DiffBlock key={i} data={line} display={display} />))
 
-  const tags = visiable ? ["expanded"] : ["collapsed"]
+  const tags = data.children.length ? visiable ? ["expanded"] : ["collapsed"] : []
 
-  if (data.items[0] instanceof ParsedLine) {
-    return (
-      <div className="diff-node">
-        <DiffLine data={data.items[0]} display={display} tags={tags} onClick={() => setVisible(!visiable)} />
-        <div style={{ display: visiable ? "block" : "none" }}>{items.slice(1)}</div>
-      </div>
-    )
+  if (data.tokens.length) {
+    if (items.length) {
+      return (
+        <div className="diff-node">
+          <DiffLine data={data} display={display} tags={tags} onClick={() => setVisible(!visiable)} />
+          <div style={{ display: visiable ? "block" : "none" }}>{items}</div>
+        </div>
+      )
+    } else {
+      return<DiffLine data={data} display={display} tags={tags} onClick={() => setVisible(!visiable)} />
+    }
   } else {
     return <div>{items}</div>
   }

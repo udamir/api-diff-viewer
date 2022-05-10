@@ -1,6 +1,5 @@
 import React from "react"
-import { LineDiff, Token } from "../../diffParser"
-import { diffTypes } from "../../utils"
+import { diffTypes, LineDiff, Token } from "../../diff-builder/common"
 import "./Line.css"
 
 export interface LineProps {
@@ -39,8 +38,8 @@ export const Line = ({ index, indent, tokens, diff, tags, className}: LineProps)
     textIndent: `${-(indent * 10 + 10)}px`,
     paddingLeft: `${indent * 10 + 65}px`,
   }
-  const content = tokens.filter((token) => token.display.every((v) => tags.includes(v))).map((token, i) => (
-    <span key={i} className={`token-${token.type} ${token.display.join(" ")}`.trim()}>
+  const content = tokens.filter((token) => token.tags.every((v) => tags.includes(v))).map((token, i) => (
+    <span key={i} className={`token-${token.type} ${token.tags.join(" ")}`.trim()}>
       { diffTypes.includes(token.type as any) ? `${token.type}: ${token.value}` : token.value}
     </span>
   ))

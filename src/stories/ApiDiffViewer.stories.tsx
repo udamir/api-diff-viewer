@@ -19,13 +19,15 @@ OpenApi3.args = {
   before: openApiBefore,
   after: openApiAfter,
   display: "side-by-side",
-  rules: "OpenApi3"
-};
+  rules: "OpenApi3",
+  format: "yaml"
+}
 
 export const AsyncApi = Template.bind({});
 AsyncApi.args = {
   before: asyncApiBefore,
   after: asyncApiAfter,
   display: "side-by-side",
-  rules: "AsyncApi2"
-};
+  rules: "AsyncApi2",
+  format: "yaml"
+}

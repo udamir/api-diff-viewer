@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { DiffBlock } from '../components/DiffBlock/DiffBlock';
-import { _added, _removed, _replaced, _yamlArrItemLine, _yamlItemBlock, _yamlPropBlock, _yamlPropLine} from '../utils';
+import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
 
 export default {
   title: 'Components/DiffBlock',
@@ -15,26 +15,26 @@ let l = 1
 
 export const ObjectBlock = Template.bind({});
 ObjectBlock.args = {
-  data: _yamlPropBlock("object", l++, 0, "properies", [
-    _yamlPropBlock("object", l++, 2, "name", [
+  data: _yamlPropBlock(l++, 0, "object", "properies", [
+    _yamlPropBlock(l++, 2, "object", "name", [
       _yamlPropLine(l++, 4, "$ref", '"#/$refs/NameType"', _removed("breaking")),
     ], _removed("breaking")),
-    _yamlPropBlock("object", l++, 2, "type", [
+    _yamlPropBlock(l++, 2, "object", "type", [
       _yamlPropLine(l++, 4, "nullable", "false", _added("non-breaking")),
       _yamlPropLine(l++, 4, "type", "string", _added("non-breaking"))
     ], _added("non-breaking")),
-    _yamlPropBlock("object", l++, 2, "bar", [
+    _yamlPropBlock(l++, 2, "object", "bar", [
       _yamlPropLine(l++, 4, "type", "number", _added("non-breaking")),
       _yamlPropLine(l++, 4, "title", "age", _removed("breaking")),
       _yamlPropLine(l++, 4, "maximum", 100, _replaced(50, "breaking")),
     ]),
-    _yamlPropBlock("object", l++, 2, "foo", [
+    _yamlPropBlock(l++, 2, "object", "foo", [
       _yamlPropLine(l++, 4, "type", "number", _replaced("string")),
-      _yamlPropBlock("array", l++, 4, "enum", [
-        _yamlArrItemLine(l++, 6, 10, 1, _removed("breaking")),
-        _yamlArrItemLine(l++, 6, 20, 1, _removed("breaking")),
-        _yamlArrItemLine(l++, 6, 30),
-        _yamlArrItemLine(l++, 6, 40, 1, _added("non-breaking")),
+      _yamlPropBlock(l++, 4, "array", "enum", [
+        _yamlArrLine(l++, 6, 10, _removed("breaking")),
+        _yamlArrLine(l++, 6, 20, _removed("breaking")),
+        _yamlArrLine(l++, 6, 30),
+        _yamlArrLine(l++, 6, 40, _added("non-breaking")),
       ]),
     ]),
   ]),
@@ -45,17 +45,17 @@ l = 1
 
 export const ArrayBlock = Template.bind({});
 ArrayBlock.args = {
-  data: _yamlPropBlock("array", l++, 0, "items", [
-    _yamlItemBlock("array", l++, 2, [
-      _yamlArrItemLine(l++, 4, "type", 1),
-      _yamlArrItemLine(l++, 4, "bar", 1, _added("non-breaking")),
+  data: _yamlPropBlock(l++, 0, "array", "items", [
+    _yamlPropBlock(l, 2, "array", "", [
+      _yamlArrLine(l++, 2, "type", undefined, 1),
+      _yamlArrLine(l++, 4, "bar", _added("non-breaking")),
     ]),
-    _yamlItemBlock("array", l++, 2, [
-      _yamlPropLine(l++, 4, "type", "number"),
+    _yamlPropBlock(l, 2, "array", "", [
+      _yamlPropLine(l++, 2, "type", "number", undefined, 1),
       _yamlPropLine(l++, 4, "bar", "foo", _added("non-breaking")),
     ]),
-    _yamlArrItemLine(4, 2, "type"),
-    _yamlArrItemLine(5, 2, "bar", 1, _added("non-breaking")),
+    _yamlArrLine(l++, 2, "type"),
+    _yamlArrLine(l++, 2, "bar", _added("non-breaking")),
   ]),
   display: "side-by-side"
 };

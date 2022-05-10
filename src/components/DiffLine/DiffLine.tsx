@@ -1,5 +1,5 @@
 import React from "react"
-import { ParsedLine } from "../../diffParser"
+import { DiffLineData } from "../../diff-builder/common"
 import { Line } from "../Line/Line"
 import "./DiffLine.css"
 
@@ -7,7 +7,7 @@ export interface DiffLineProps {
   /**
    * Line data
    */
-  data: ParsedLine
+  data: DiffLineData
   /**
    * Display document diff in inline or side-by-side mode
    */

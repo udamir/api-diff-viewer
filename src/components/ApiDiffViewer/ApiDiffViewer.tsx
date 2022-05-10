@@ -1,7 +1,7 @@
 import React from "react"
-import { DiffParser, ParsedBlock } from "../../diffParser"
+import { DiffBuilder } from "../../diff-builder"
 import { DiffBlock } from "../DiffBlock/DiffBlock"
-import { DiffLine } from "../DiffLine/DiffLine"
+
 
 export interface DiffTreeProps {
   /**
@@ -27,15 +27,12 @@ export interface DiffTreeProps {
 }
 
 export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "side-by-side", format="yaml" }: DiffTreeProps) => {
-  // const visiable = true
-  const parser = new DiffParser(before, after, rules)
-  const lines = format === "yaml" ? parser.toYamlLines() : parser.toJsonLines()
+  const builder = new DiffBuilder(before, after, rules)
+  const block = format === "yaml" ? builder.buildYaml() : builder.buildJson()
 
-  const items = lines.map((line, i) => (
-    line instanceof ParsedBlock 
-      ? <DiffBlock key={i} data={line} display={display} />
-      : <DiffLine key={i} data={line} display={display} />
-  ))
-
-  return <div className="api-diff-viewer">{items}</div>
+  return (
+    <div className="api-diff-viewer">
+      <DiffBlock data={block} display={display} />
+    </div>
+  )
 }

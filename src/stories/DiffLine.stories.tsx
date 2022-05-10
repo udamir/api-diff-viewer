@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { DiffLine } from '../components/DiffLine/DiffLine';
-import { _added, _removed, _replaced, _yamlArrItemLine, _yamlArrPropLine, _yamlObjPropLine, _yamlPropLine } from '../utils';
+import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
 
 export default {
   title: 'Components/DiffLine',
@@ -13,7 +13,7 @@ const Template: ComponentStory<typeof DiffLine> = (args) => <DiffLine {...args} 
 
 export const YamlReplaceProperty = Template.bind({});
 YamlReplaceProperty.args = {
-  data: _yamlPropLine(1, 0, "type", "string", _replaced("object", "breaking")), 
+  data:  _yamlPropLine(1, 0, "type", "string", _replaced("object", "breaking")), 
   display: "side-by-side",
 };
 
@@ -31,55 +31,55 @@ YamlDeleteProperty.args = {
 
 export const YamlCollapsedObject = Template.bind({});
 YamlCollapsedObject.args = {
-  data: _yamlObjPropLine(1, 0, "type"), 
+  data: _yamlPropBlock(1, 0, "object", "type"), 
   display: "side-by-side",
   tags: ["collapsed"]
 };
 
 export const YamlCollapsedObjectWithChanges = Template.bind({});
 YamlCollapsedObjectWithChanges.args = {
-  data: _yamlObjPropLine(1, 0, "type", [1, 2, 0, 0]), 
+  data: _yamlPropBlock(1, 0, "object", "type", [], undefined, [1,2,0,0]), 
   display: "side-by-side",
   tags: ["collapsed", "changed"]
 };
 
 export const YamlAddedObjectWithChanges = Template.bind({});
 YamlAddedObjectWithChanges.args = {
-  data: _yamlObjPropLine(1, 0, "type", [1, 0, 0, 0], _added("breaking")), 
+  data: _yamlPropBlock(1, 0, "object", "type", [], _added("breaking"), [1,2,0,0]), 
   display: "side-by-side",
   tags: ["expanded", "changed"]
 };
 
 export const YamlEmptyObject = Template.bind({});
 YamlEmptyObject.args = {
-  data: _yamlObjPropLine(1, 0, "type"), 
+  data: _yamlPropBlock(1, 0, "object", "type"), 
   display: "side-by-side",
   tags: ["empty",  "expanded"]
 };
 
 export const YamlCollapsedArrayWithChanges = Template.bind({});
 YamlCollapsedArrayWithChanges.args = {
-  data: _yamlArrPropLine(1, 0, "type", [1, 2, 0, 0]), 
+  data: _yamlPropBlock(1, 0, "array", "type", [], undefined, [0,0,0,1]), 
   display: "side-by-side",
   tags: ["collapsed", "changed"]
 };
 
 export const YamlExpandedArrayWithChanges = Template.bind({});
 YamlExpandedArrayWithChanges.args = {
-  data: _yamlArrPropLine(1, 0, "type", [1, 2, 0, 0]), 
+  data: _yamlPropBlock(1, 0, "array", "type", [], undefined, [0,0,2,1]), 
   display: "side-by-side",
   tags: ["expanded", "changed"]
 };
 
 export const YamlEmptyArray = Template.bind({});
 YamlEmptyArray.args = {
-  data: _yamlArrPropLine(1, 0, "type"), 
+  data: _yamlPropBlock(1, 0, "array",  "type"), 
   display: "side-by-side",
   tags: ["empty",  "expanded"]
 };
 
 export const YamlArrayItem = Template.bind({});
 YamlArrayItem.args = {
-  data: _yamlArrItemLine(1, 2, 40, 2), 
+  data: _yamlArrLine(1, 2, 40, undefined, 1), 
   display: "side-by-side"
 };
