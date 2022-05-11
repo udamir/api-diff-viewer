@@ -1,1 +1,1 @@
-export * from "./components/ApiDiffViewer/ApiDiffViewer"
+export * from "./components/ApiDiffViewer"

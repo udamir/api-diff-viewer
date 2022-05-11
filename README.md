@@ -13,15 +13,44 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Side-by-side compare view
 - [x] Inline compare view
 - [x] Yaml output
-- [ ] Json output
+- [x] Json output
 - [x] Compare text by words
 - [x] Collapse/expand blocks
 - [x] View change summary on collaped blocks
-- [ ] Collapse/expand all
-- [ ] Filter changes by type (Collapse unchanged/not filtered)
+- [x] Collapse/expand all
+- [x] Filter changes by type (Collapse unchanged/not filtered)
 - [ ] Navigation sidebar
 - [ ] WebComponent
 - [ ] Color themes
+
+
+## Documentation
+
+### Installation
+
+```sh
+# Yarn
+yarn add api-diff-viewer
+
+# NPM
+npm install api-diff-viewer
+```
+
+> ✨ Checkout the stories [here](https://api-diff-viewer.vercel.app/) for a detailed documentation.
+
+## Development
+
+### Install
+
+```sh
+yarn install
+```
+
+### Develop
+
+```sh
+yarn storybook
+```
 
 ## License
 
