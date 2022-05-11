@@ -138,13 +138,6 @@ const StyledToken = styled.span<{ type?: TokenType, tags?: string[] }>`
   ${({ tags }) => tags?.includes("after") ? "background-color: #D0FAD4;" : "" }
 `
 
-const badgeColor = (tags: string[]) => {
-  if (tags.includes("breaking")) { return diffTypeBgColor["breaking"] }
-  if (tags.includes("non-breaking")) { return diffTypeBgColor["non-breaking"] }
-  if (tags.includes("annotation")) { return diffTypeBgColor["annotation"] }
-  return diffTypeBgColor["unclassified"]
-}
-
 export interface LineProps {
   /**
    * Line index
@@ -181,7 +174,7 @@ export const Line = ({ index, indent, tokens, diff, tags }: LineProps) => {
 
   const content = tokens.filter((token) => token.tags.every((v) => tags.includes(v))).map((token, i) => 
     diffTypes.includes(token.type as any) 
-      ? <StyledChangeBadge key={i} color={badgeColor(token.tags)}>{ `${token.type}: ${token.value}` }</StyledChangeBadge> 
+      ? <StyledChangeBadge key={i} color={diffTypeBgColor[token.type as DiffType]}>{ `${token.type}: ${token.value}` }</StyledChangeBadge> 
       : <StyledToken key={i} type={token.type} tags={token.tags}>{ token.value }</StyledToken>
   )
 
