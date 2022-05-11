@@ -1,19 +1,33 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { DiffLine } from '../components/DiffLine/DiffLine';
+import { DiffLine, DiffLineProps } from '../components/DiffLine';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
+import { DiffContext } from '../helpers/context';
+
+type DiffLineStoryProps = DiffLineProps & {
+  display: "inline" | "side-by-side"
+}
 
 export default {
   title: 'Components/DiffLine',
   component: DiffLine,
+  argTypes: {
+    display: {
+      options: ['inline', 'side-by-side'],
+      control: { type: 'radio' },
+    }
+  },
 } as ComponentMeta<typeof DiffLine>;
 
-const Template: ComponentStory<typeof DiffLine> = (args) => <DiffLine {...args} />;
+const Template: ComponentStory<any> = ({ display, ...args}: DiffLineStoryProps) => 
+  <DiffContext.Provider value={{ display }}>
+    <DiffLine {...args} />
+  </DiffContext.Provider  >
 
 export const YamlReplaceProperty = Template.bind({});
 YamlReplaceProperty.args = {
-  data:  _yamlPropLine(1, 0, "type", "string", _replaced("object", "breaking")), 
+  data: _yamlPropLine(1, 0, "type", "string", _replaced("object", "breaking")), 
   display: "side-by-side",
 };
 

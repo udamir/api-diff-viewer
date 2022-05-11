@@ -1,6 +1,6 @@
 import { ApiMergedMeta } from "api-smart-diff"
 import { diffWords } from "diff"
-import { YAML } from "../yaml"
+import { YAML } from "../helpers/yaml"
 import { isEmpty, DiffBlockData, Token, TokenTag, metaKey } from "./common"
 
 export const buildDiffYaml = (input: any, parent: DiffBlockData) => {
@@ -27,12 +27,12 @@ export const addYamlBlockTokens = (block: DiffBlockData, arrayBlock: boolean) =>
 
   const tags = [
     "expanded",
-    ...!added ? ["before"] : [],
-    ...!removed ? ["after"] : [],
+    ...!added && block.diff?.action !== "add" ? ["before"] : [],
+    ...!removed && block.diff?.action !== "remove" ? ["after"] : [],
   ]
   
   if (block.tokens.length) {
-    if (!added || !removed) {
+    if (tags.length > 1) {
       block.tokens.push(Token.Spec(arrayBlock ? " []" : " {}", tags as TokenTag[]))
     }
     const tokens = block.diffs?.map((c, i) => c && Token.Change(c, i, "collapsed")).filter((v) => !!v) as any || []

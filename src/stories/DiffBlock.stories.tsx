@@ -1,15 +1,29 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { DiffBlock } from '../components/DiffBlock/DiffBlock';
+import { DiffBlock, DiffBlockProps } from '../components/DiffBlock';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
+import { DiffContext } from '../helpers/context';
+
+type DiffBlockStoryProps = DiffBlockProps & {
+  display: "inline" | "side-by-side"
+}
 
 export default {
   title: 'Components/DiffBlock',
   component: DiffBlock,
+  argTypes: {
+    display: {
+      options: ['inline', 'side-by-side'],
+      control: { type: 'radio' },
+    }
+  },
 } as ComponentMeta<typeof DiffBlock>;
 
-const Template: ComponentStory<typeof DiffBlock> = (args) => <DiffBlock {...args} />;
+const Template: ComponentStory<any> = ({data, display }: DiffBlockStoryProps) => 
+  <DiffContext.Provider value={{ display }}>
+    <DiffBlock data={data} />
+  </DiffContext.Provider  >
 
 let l = 1
 

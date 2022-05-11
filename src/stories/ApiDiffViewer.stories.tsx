@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { ApiDiffViewer } from '../components/ApiDiffViewer/ApiDiffViewer';
+import { ApiDiffViewer } from '../components/ApiDiffViewer';
 import openApiBefore from "./samples/openApi.before"
 import openApiAfter from "./samples/openApi.after"
 import asyncApiBefore from "./samples/asyncApi.before"
@@ -10,6 +10,12 @@ import asyncApiAfter from "./samples/asyncApi.after"
 export default {
   title: 'ApiDiffViewer/JsonSchema',
   component: ApiDiffViewer,
+  argTypes: {
+    filters: {
+      options: ['breaking', 'non-breaking', 'annotation', "unclassified"],
+      control: { type: 'multi-select' },
+    },
+  },
 } as ComponentMeta<typeof ApiDiffViewer>;
 
 const Template: ComponentStory<typeof ApiDiffViewer> = (args) => <ApiDiffViewer {...args} />;

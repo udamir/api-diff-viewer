@@ -11,13 +11,13 @@ export class DiffBuilder {
   }
 
   public buildJson() {
-    const block = new DiffBlockData(1, 0, [])
+    const block = new DiffBlockData(1, -2, [])
     buildDiffJson(this.source, block)
     return block
   }
 
   public buildYaml() {
-    const block = new DiffBlockData(1, 0, [])
+    const block = new DiffBlockData(1, -2, [])
     buildDiffYaml(this.source, block)
     return block
   }
