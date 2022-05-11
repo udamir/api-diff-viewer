@@ -14,10 +14,10 @@ export const buildDiffJson = (input: any, parent: DiffBlockData) => {
       buildDiffJsonBlock(input, keys[i], parent, i === keys.length - 1)
     }
   }
-  addJsonBlockTokens(parent, input instanceof Array)
+  addJsonBlockTokens(parent)
 }
 
-export const addJsonBlockTokens = (block: DiffBlockData, arrayBlock: boolean) => {
+export const addJsonBlockTokens = (block: DiffBlockData) => {
   let added = block.children.length
   let removed = block.children.length
 
@@ -99,7 +99,7 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
     diff = parent.diff
   }
 
-  const { nextLine, indent, level } = parent
+  const { nextLine, indent } = parent
 
   let block: DiffBlockData
   if (typeof value !== 'object' || input instanceof Date || isEmpty(value)) {
@@ -114,7 +114,7 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
       : new DiffBlockData(nextLine, indent + 2, _jsonPropBlockTokens(Array.isArray(value), key, last), diff)
 
     buildDiffJson(value, block)
-    block.addBlock(new DiffBlockData(nextLine, indent + 2, _jsonEndBlockTokens(Array.isArray(value), last), diff))
+    block.addBlock(new DiffBlockData(block.nextLine, indent + 2, _jsonEndBlockTokens(Array.isArray(value), last), diff))
   }
 
   parent.addBlock(block)
