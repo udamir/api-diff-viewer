@@ -108,6 +108,8 @@ export const buildDiffYamlBlock = (input: any, key: string | number, parent: Dif
       ? new DiffBlockData(nextLine, indent, [], diff, level + 1)
       : new DiffBlockData(nextLine, indent + 2, tokens, diff)
 
+    block.id = parent.id ? `${parent.id}.${key}` : String(key)
+    
     buildDiffYaml(value, block)
   }
 

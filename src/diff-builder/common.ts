@@ -65,7 +65,7 @@ export class DiffLineData {
 }
 
 export class DiffBlockData extends DiffLineData {
-
+  public id: string
   public children: DiffBlockData[]
   public diffs: number[]
 
@@ -77,8 +77,9 @@ export class DiffBlockData extends DiffLineData {
     return this.index + this.lines
   }
   
-  constructor(index: number, indent: number, tokens: Token[], diff?: ApiMergedMeta, level = 0) {
+  constructor(index: number, indent: number, tokens: Token[], diff?: ApiMergedMeta, level = 0, id = "") {
     super(index, indent, tokens, diff)
+    this.id = id
     this.children = []
     this.diffs = [0, 0, 0, 0]
     this.lines = tokens.length ? 1 : 0

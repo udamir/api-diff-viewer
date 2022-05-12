@@ -18,7 +18,7 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Collapse/expand blocks
 - [x] View change summary on collaped blocks
 - [x] Collapse/expand all
-- [x] Filter changes by type (Collapse unchanged/not filtered)
+- [x] Filter changes by type (Hide unchanged/not filtered lines)
 - [ ] Navigation sidebar
 - [ ] WebComponent
 - [ ] Color themes

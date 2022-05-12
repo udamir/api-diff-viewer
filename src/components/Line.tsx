@@ -175,13 +175,13 @@ export const Line = ({ index, indent, tokens, diff, tags }: LineProps) => {
   const content = tokens.filter((token) => token.tags.every((v) => tags.includes(v))).map((token, i) => 
     diffTypes.includes(token.type as any) 
       ? <StyledChangeBadge key={i} color={diffTypeBgColor[token.type as DiffType]}>{ `${token.type}: ${token.value}` }</StyledChangeBadge> 
-      : <StyledToken key={i} type={token.type} tags={token.tags}>{ token.value }</StyledToken>
+      : <StyledToken key={i} {...token}>{ token.value }</StyledToken>
   )
 
   return (
     <StyledLine action={diff?.action} hidden={hidden} right={right}>
       <StyledChangeMarker hidden={!showMarker} type={diff?.type} />
-      <StyledLineNum>{index}</StyledLineNum>
+      <StyledLineNum>{index || ""}</StyledLineNum>
       <StyledToggle tags={tags} />      
       <StyledLineContent hidden={hidden} indent={indent}>
         <span>{" ".repeat(indent).replace(/ /g, "\u00a0")}</span>

@@ -112,6 +112,8 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
     block = Array.isArray(input) 
       ? new DiffBlockData(nextLine, indent + 2, _jsonBeginBlockTokens(Array.isArray(value), last), diff)
       : new DiffBlockData(nextLine, indent + 2, _jsonPropBlockTokens(Array.isArray(value), key, last), diff)
+      
+    block.id = parent.id ? `${parent.id}.${key}` : String(key)
 
     buildDiffJson(value, block)
     block.addBlock(new DiffBlockData(block.nextLine, indent + 2, _jsonEndBlockTokens(Array.isArray(value), last), diff))

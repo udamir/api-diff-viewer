@@ -5,8 +5,8 @@ import { DiffLineData } from "../diff-builder/common"
 import { DiffContext } from "../helpers/context"
 import { Line } from "./Line"
 
-const StyledDiffLine = styled.div`
-  display: flex;
+const StyledDiffLine = styled.div<{ hidden: boolean }>`
+  display: ${ ({ hidden }) => hidden ? 'none' : 'flex'};
 `
 
 export interface DiffLineProps {
@@ -24,7 +24,7 @@ export interface DiffLineProps {
 export const DiffLine = ({ data, tags = [], onClick }: DiffLineProps) => {
   const { display } = useContext(DiffContext)
   return (
-    <StyledDiffLine id={`line-${data.index}`} onClick={onClick}>
+    <StyledDiffLine id={`line-${data.index}`} hidden={tags.includes("hidden")} onClick={onClick}>
       {display === "inline" 
         ? ( <Line {...data} tags={["before", "after", ...tags]} /> ) 
         : ([
