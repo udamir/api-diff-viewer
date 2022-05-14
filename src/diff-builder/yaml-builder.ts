@@ -1,7 +1,7 @@
-import { ApiMergedMeta } from "api-smart-diff"
+import { ApiMergedMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
 import { YAML } from "../helpers/yaml"
-import { isEmpty, DiffBlockData, Token, TokenTag, metaKey } from "./common"
+import { isEmpty, DiffBlockData, Token, TokenTag, metaKey, encodeKey } from "./common"
 
 export const buildDiffYaml = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {
@@ -40,17 +40,17 @@ export const addYamlBlockTokens = (block: DiffBlockData, arrayBlock: boolean) =>
   }
 }
 
-export const _yamlValueTokens = (value: any, diff?: ApiMergedMeta) => {
+export const _yamlValueTokens = (tokenConstrucor: (value: any, tags?: TokenTag | TokenTag[]) => Token, value: any, diff?: ApiMergedMeta) => {
   const _value = YAML.stringify(value)
   if (diff?.replaced !== undefined && typeof value === "string") {
     const changes = diffWords(_value, YAML.stringify(diff.replaced))
-    return changes.map<Token>((c) => Token.Value(c.value).cond("before", !!c.added).cond("after", !!c.removed))
+    return changes.map<Token>((c) => tokenConstrucor(c.value).cond("before", !!c.added).cond("after", !!c.removed))
   } else {
     const content: Token[] = []
     if (diff?.replaced !== undefined) {
-      content.push(Token.Value(YAML.stringify(diff.replaced), "before"))
+      content.push(tokenConstrucor(YAML.stringify(diff.replaced), "before"))
     }
-    content.push(Token.Value(_value).cond("after", diff?.replaced !== undefined))
+    content.push(tokenConstrucor(_value).cond("after", diff?.replaced !== undefined))
     return content
   }
 }
@@ -58,23 +58,23 @@ export const _yamlValueTokens = (value: any, diff?: ApiMergedMeta) => {
 export const _yamlPropLineTokens = (key: string | number, value: any, diff?: ApiMergedMeta, level: number = 0) => {
   return [
     Token.Spec("- ".repeat(level)),
-    Token.Key(YAML.stringify(key)),
+    ...diff?.action === DiffAction.rename ? _yamlValueTokens(Token.Key, key, diff) : [Token.Key(YAML.stringify(key))],
     Token.Spec(": "),
-    ..._yamlValueTokens(value, diff)
+    ...diff?.action === DiffAction.rename ? [Token.Value(YAML.stringify(value))] : _yamlValueTokens(Token.Value, value, diff)
   ] 
 }
 
 export const _yamlArrLineTokens = (value: any, diff?: ApiMergedMeta, level: number = 0) => {
   return [
     Token.Spec("- ".repeat(level + 1)),
-    ..._yamlValueTokens(value, diff)
+    ..._yamlValueTokens(Token.Value, value, diff)
   ]
 }
 
-export const _yamlPropBlockTokens = (isArray: boolean, key: string | number, level: number = 0) => {
+export const _yamlPropBlockTokens = (isArray: boolean, key: string | number, diff?: ApiMergedMeta, level: number = 0) => {
   return [
     Token.Spec("- ".repeat(level)),
-    Token.Key(YAML.stringify(key)),
+    ...diff?.action === DiffAction.rename ? _yamlValueTokens(Token.Key, key, diff) : [Token.Key(YAML.stringify(key))],
     Token.Spec(":"),
     ...isArray 
       ? [Token.Spec(" [...] ", "collapsed")]
@@ -89,7 +89,7 @@ export const buildDiffYamlBlock = (input: any, key: string | number, parent: Dif
   if (diff) {
     parent.addDiff(diff)
   } else {
-    diff = parent.diff
+    diff = parent.diff?.action !== "rename" ? parent.diff : diff
   }
 
   const { nextLine, indent, level } = parent
@@ -102,14 +102,15 @@ export const buildDiffYamlBlock = (input: any, key: string | number, parent: Dif
   
     block = new DiffBlockData(nextLine, indent + 2, tokens, diff)
   } else {
-    const tokens = _yamlPropBlockTokens(Array.isArray(value), key, level)
+    const tokens = _yamlPropBlockTokens(Array.isArray(value), key, diff, level)
 
     block = Array.isArray(input) 
       ? new DiffBlockData(nextLine, indent, [], diff, level + 1)
       : new DiffBlockData(nextLine, indent + 2, tokens, diff)
 
-    block.id = parent.id ? `${parent.id}.${key}` : String(key)
-    
+    const encodedKey = encodeKey(String(key))
+    block.id = parent.id ? `${parent.id}/${encodedKey}` : encodedKey
+
     buildDiffYaml(value, block)
   }
 

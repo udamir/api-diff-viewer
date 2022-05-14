@@ -1,6 +1,6 @@
-import { ApiMergedMeta } from "api-smart-diff"
+import { ApiMergedMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
-import { isEmpty, DiffBlockData, Token, metaKey } from "./common"
+import { isEmpty, DiffBlockData, Token, metaKey, encodeKey, TokenTag } from "./common"
 
 export const buildDiffJson = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {
@@ -32,40 +32,40 @@ export const addJsonBlockTokens = (block: DiffBlockData) => {
   }
 }
 
-export const _jsonValueTokens = (value: any, diff?: ApiMergedMeta) => {
+export const _jsonValueTokens = (tokenConstrucor: (value: any, tags?: TokenTag | TokenTag[]) => Token, value: any, diff?: ApiMergedMeta) => {
   const _value = JSON.stringify(value)
   if (diff?.replaced !== undefined && typeof value === "string") {
     const changes = diffWords(_value, JSON.stringify(diff.replaced))
-    return changes.map<Token>((c) => Token.Value(c.value).cond("before", !!c.added).cond("after", !!c.removed))
+    return changes.map<Token>((c) => tokenConstrucor(c.value).cond("before", !!c.added).cond("after", !!c.removed))
   } else {
     const content: Token[] = []
     if (diff?.replaced !== undefined) {
-      content.push(Token.Value(JSON.stringify(diff.replaced), "before"))
+      content.push(tokenConstrucor(JSON.stringify(diff.replaced), "before"))
     }
-    content.push(Token.Value(_value).cond("after", diff?.replaced !== undefined))
+    content.push(tokenConstrucor(_value).cond("after", diff?.replaced !== undefined))
     return content
   }
 }
 
 export const _jsonPropLineTokens = (key: string | number, value: any, diff?: ApiMergedMeta, last = false) => {
   return [
-    Token.Key(JSON.stringify(key)),
+    ...diff?.action === DiffAction.rename ? _jsonValueTokens(Token.Key, key, diff) : [Token.Key(JSON.stringify(key))],
     Token.Spec(": "),
-    ..._jsonValueTokens(value, diff),
+    ...diff?.action === DiffAction.rename ? [Token.Value(JSON.stringify(value))] : _jsonValueTokens(Token.Value, value, diff),
     ...last ? [] : [Token.Spec(",")],
   ] 
 }
 
 export const _jsonArrLineTokens = (value: any, diff?: ApiMergedMeta, last?: boolean) => {
   return [
-    ..._jsonValueTokens(value, diff),
+    ..._jsonValueTokens(Token.Value, value, diff),
     ...last ? [] : [Token.Spec(",")],
   ]
 }
 
-export const _jsonPropBlockTokens = (isArray: boolean, key: string | number, last: boolean) => {
+export const _jsonPropBlockTokens = (isArray: boolean, key: string | number, diff?: ApiMergedMeta, last = false) => {
   return [
-    Token.Key(JSON.stringify(key)),
+    ...diff?.action === DiffAction.rename ? _jsonValueTokens(Token.Key, key, diff) : [Token.Key(JSON.stringify(key))],
     Token.Spec(": "),
     ...isArray 
       ? [Token.Spec("[", "expanded"), Token.Spec(`[...]${last ? "" : ","}`, "collapsed")]
@@ -96,7 +96,7 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
   if (diff) {
     parent.addDiff(diff)
   } else {
-    diff = parent.diff
+    diff = parent.diff?.action !== "rename" ? parent.diff : diff
   }
 
   const { nextLine, indent } = parent
@@ -111,9 +111,10 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
   } else {
     block = Array.isArray(input) 
       ? new DiffBlockData(nextLine, indent + 2, _jsonBeginBlockTokens(Array.isArray(value), last), diff)
-      : new DiffBlockData(nextLine, indent + 2, _jsonPropBlockTokens(Array.isArray(value), key, last), diff)
+      : new DiffBlockData(nextLine, indent + 2, _jsonPropBlockTokens(Array.isArray(value), key, diff, last), diff)
       
-    block.id = parent.id ? `${parent.id}.${key}` : String(key)
+    const encodedKey = encodeKey(String(key))
+    block.id = parent.id ? `${parent.id}/${encodedKey}` : encodedKey
 
     buildDiffJson(value, block)
     block.addBlock(new DiffBlockData(block.nextLine, indent + 2, _jsonEndBlockTokens(Array.isArray(value), last), diff))

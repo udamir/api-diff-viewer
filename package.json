@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "React component to view the difference between two JsonSchema/API specifications",
   "author": "Damir Yusipov",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "api"
   ],
   "dependencies": {
-    "api-smart-diff": "^0.3.1",
+    "api-smart-diff": "^0.3.4",
     "diff": "^5.0.0",
     "styled-components": "^5.3.5"
   },

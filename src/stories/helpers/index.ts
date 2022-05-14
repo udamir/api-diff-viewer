@@ -21,7 +21,7 @@ export const _replaced = (val: string | number, type?: DiffType): ApiMergedMeta 
 export const _yamlPropLine = (i: number, n: number, k: string, v: any, d?: ApiMergedMeta, l = 0) =>
   new DiffBlockData(i, n, _yamlPropLineTokens(k, v, d, l), d)
 export const _yamlPropBlock = (i: number, n: number, t: "object" | "array", k: string, c?: DiffBlockData[], d?: ApiMergedMeta, diffs?: number[], l = 0) => {
-  const tokens = k ? _yamlPropBlockTokens(t === "array", k, l) : []
+  const tokens = k ? _yamlPropBlockTokens(t === "array", k, d, l) : []
   const block = new DiffBlockData(i, n, tokens, d)
   block.children = c || []
   if (diffs) {
