@@ -6,7 +6,7 @@ import { buildDiffYaml } from "./yaml-builder"
 export class DiffBuilder {
   public source: any
 
-  constructor(before: any, after: any, rules: BaseRulesType) {
+  constructor(before: any, after: any, public rules: BaseRulesType) {
     this.source = apiMerge(before, after, { rules, metaKey, arrayMeta: true })
   }
 

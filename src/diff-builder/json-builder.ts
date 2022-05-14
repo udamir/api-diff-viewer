@@ -1,6 +1,6 @@
 import { ApiMergedMeta } from "api-smart-diff"
 import { diffWords } from "diff"
-import { isEmpty, DiffBlockData, Token, metaKey } from "./common"
+import { isEmpty, DiffBlockData, Token, metaKey, encodeKey } from "./common"
 
 export const buildDiffJson = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {
@@ -113,7 +113,8 @@ export const buildDiffJsonBlock = (input: any, key: string | number, parent: Dif
       ? new DiffBlockData(nextLine, indent + 2, _jsonBeginBlockTokens(Array.isArray(value), last), diff)
       : new DiffBlockData(nextLine, indent + 2, _jsonPropBlockTokens(Array.isArray(value), key, last), diff)
       
-    block.id = parent.id ? `${parent.id}.${key}` : String(key)
+    const encodedKey = encodeKey(String(key))
+    block.id = parent.id ? `${parent.id}/${encodedKey}` : encodedKey
 
     buildDiffJson(value, block)
     block.addBlock(new DiffBlockData(block.nextLine, indent + 2, _jsonEndBlockTokens(Array.isArray(value), last), diff))

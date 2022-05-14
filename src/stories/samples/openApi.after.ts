@@ -196,7 +196,7 @@ export default {
         ]
       }
     },
-    "/pet/{petId}": {
+    "/pet/{petIds}": {
       get: {
         tags: [
           "pet"
@@ -206,7 +206,7 @@ export default {
         operationId: "getPetById",
         parameters: [
           {
-            name: "petId",
+            name: "petIds",
             in: "path",
             description: "ID of pet to return",
             required: true,
