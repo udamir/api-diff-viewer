@@ -58,7 +58,7 @@ export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
     <div id={data.id}>
       { !!data.tokens.length && <DiffLine data={data} tags={tags} onClick={() => setExpanded(!expanded)} /> }
       { !!lines.length && <StyledDiffNodeItems hidden={!expanded && !!data.tokens.length}>{lines}</StyledDiffNodeItems> }
-      { !hidden && !!hiddenItems && <DiffLine {...removeFilter} onClick={() => setVisible(true)} /> }
+      { !hidden && !!hiddenItems && expanded && <DiffLine {...removeFilter} onClick={() => setVisible(true)} /> }
     </div>
   )
 }
