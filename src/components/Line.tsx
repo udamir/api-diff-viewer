@@ -113,11 +113,14 @@ const StyledChangeMarker = styled(changeMarker)`
   left: -1px;
   position: absolute;
   display: ${({ hidden }) => hidden ? "none" : "block" };
-  width: 3px;
-  background-color: ${({ type }) => diffTypeBgColor(type)};
+  width: 15px;
   height: 100%;
-  z-index: 100;
+  z-index: 1;
+  overflow: hidden;
   color: transparent; 
+  transition: all .3s ease-in-out;
+  margin-right: 10px;
+  border-left: 3px solid ${({ type }) => diffTypeBgColor(type)};
 
   &:hover {
     padding-left: 10px;
