@@ -1,7 +1,7 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.2.5",
-  "description": "React component to view the difference between two JsonSchema/API specifications",
+  "version": "0.2.6",
+  "description": "React component to view the difference between two Json based API documents",
   "author": "Damir Yusipov",
   "license": "MIT",
   "files": [
