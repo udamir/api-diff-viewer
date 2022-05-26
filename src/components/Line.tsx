@@ -80,7 +80,7 @@ const StyledToggle = styled.span<{ tags: string[] }>`
 `
 
 const StyledLineContent = styled.p<{ hidden?: boolean, indent: number }>`
-  word-break: break-all;
+  word-break: break-word;
   overflow: visible;
   word-wrap: normal;
   text-align: left;

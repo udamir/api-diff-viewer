@@ -1,24 +1,18 @@
-import { apiMerge, BaseRulesType } from "api-smart-diff"
-import { DiffBlockData, metaKey } from "./common"
-import { buildDiffJson } from "./json-builder"
-import { buildDiffYaml } from "./yaml-builder"
+import { BaseRulesType } from "api-smart-diff"
+import { DiffBlockData } from "./common"
 
-export class DiffBuilder {
-  public source: any
-
-  constructor(before: any, after: any, rules: BaseRulesType) {
-    this.source = apiMerge(before, after, { rules, metaKey, arrayMeta: true })
-  }
-
-  public buildJson() {
-    const block = new DiffBlockData(1, -2, [])
-    buildDiffJson(this.source, block)
-    return block
-  }
-
-  public buildYaml() {
-    const block = new DiffBlockData(1, -2, [])
-    buildDiffYaml(this.source, block)
-    return block
-  }
+export const buildDiffBlock = (before: any, after: any, rules: BaseRulesType, format: "json" | "yaml" = "yaml"): Promise<DiffBlockData> => {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("../worker.js", import.meta.url))
+    worker.onmessage = (event) => {
+      worker.terminate()
+      resolve(event.data)
+    }
+    worker.onerror = (error) => {
+      worker.terminate()
+      reject(error)
+    }
+    worker.postMessage([before, after, rules, format])
+  })
 }
+

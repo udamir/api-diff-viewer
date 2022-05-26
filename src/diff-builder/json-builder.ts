@@ -6,7 +6,6 @@ export const buildDiffJson = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {
     for (let i = 0; i < input.length; i++) {
       buildDiffJsonBlock(input, i, parent, i === input.length - 1)
-
     }
   } else {
     const keys = Object.keys(input)
