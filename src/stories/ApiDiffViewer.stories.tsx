@@ -26,7 +26,8 @@ OpenApi3.args = {
   after: openApiAfter,
   display: "side-by-side",
   rules: "OpenApi3",
-  format: "yaml"
+  format: "yaml",
+  navigation: true,
 }
 
 export const AsyncApi = Template.bind({});
@@ -35,5 +36,6 @@ AsyncApi.args = {
   after: asyncApiAfter,
   display: "side-by-side",
   rules: "AsyncApi2",
-  format: "yaml"
+  format: "yaml",
+  navigation: false
 }
