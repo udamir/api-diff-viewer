@@ -8,7 +8,7 @@ import asyncApiBefore from "./samples/asyncApi.before"
 import asyncApiAfter from "./samples/asyncApi.after"
 
 export default {
-  title: 'ApiDiffViewer/JsonSchema',
+  title: 'ApiDiffViewer',
   component: ApiDiffViewer,
   argTypes: {
     filters: {

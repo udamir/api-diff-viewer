@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const useResize = (ref: any, step = 10) => {
+export const useResize = (ref: any, step = 1, minWidth = 200, maxWidth = 400) => {
   ref = ref || {}
   const [mouseX, setMouseX] = React.useState(Infinity)
   const [width, setWidth] = React.useState(Infinity)
@@ -8,12 +8,12 @@ export const useResize = (ref: any, step = 10) => {
   const initResize = (event: any) => {
     if (!ref.current) return
     setMouseX(event.clientX)
-    const { width, height } = window.getComputedStyle(ref.current)
+    const { width } = window.getComputedStyle(ref.current)
     setWidth(parseInt(width, 10))
   }
 
   React.useEffect(() => {
-    const getValue = (input: number) => Math.ceil(input / step) * step
+    const getValue = (input: number) => Math.min(Math.max(Math.ceil(input / step) * step, minWidth), maxWidth)
 
     const doDrag = (event: MouseEvent) => {
       if (!ref.current) return

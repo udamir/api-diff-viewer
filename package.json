@@ -1,7 +1,7 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.2.3",
-  "description": "React component to view the difference between two JsonSchema/API specifications",
+  "version": "0.2.8",
+  "description": "React component to view the difference between two Json based API documents",
   "author": "Damir Yusipov",
   "license": "MIT",
   "files": [
@@ -38,7 +38,7 @@
     "api"
   ],
   "dependencies": {
-    "api-smart-diff": "^0.3.1",
+    "api-smart-diff": "^0.4.1",
     "diff": "^5.0.0",
     "styled-components": "^5.3.5"
   },
@@ -51,11 +51,12 @@
     "@babel/preset-react": "^7.16.7",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.2.1",
-    "@storybook/addon-actions": "^6.4.22",
-    "@storybook/addon-essentials": "^6.4.22",
-    "@storybook/addon-interactions": "^6.4.22",
-    "@storybook/addon-links": "^6.4.22",
-    "@storybook/react": "^6.4.22",
+    "@storybook/builder-vite": "^0.1.35",
+    "@storybook/addon-actions": "^6.5.3",
+    "@storybook/addon-essentials": "^6.5.3",
+    "@storybook/addon-interactions": "^6.5.3",
+    "@storybook/addon-links": "^6.5.3",
+    "@storybook/react": "^6.5.3",
     "@storybook/testing-library": "^0.0.11",
     "@types/diff": "^5.0.2",
     "@types/react": "^17.0.39",

@@ -80,7 +80,7 @@ const StyledToggle = styled.span<{ tags: string[] }>`
 `
 
 const StyledLineContent = styled.p<{ hidden?: boolean, indent: number }>`
-  word-break: break-all;
+  word-break: break-word;
   overflow: visible;
   word-wrap: normal;
   text-align: left;
@@ -91,11 +91,13 @@ const StyledLineContent = styled.p<{ hidden?: boolean, indent: number }>`
   padding-left: ${({ indent }) => indent * 10 + 65}px;
 `
 
-const diffTypeBgColor = {
-  annotation: "mediumorchid",
-  "non-breaking": "#00aa00",
-  breaking: "red",
-  unclassified: "darkgray"
+const diffTypeBgColor = (type: DiffType = "unclassified", opacity: number = 1) => {
+  switch (type) {
+    case "annotation": return `rgba(186, 85, 211, ${opacity})`
+    case "non-breaking": return `rgba(15, 169, 56, ${opacity})`
+    case "breaking": return `rgba(235, 0, 0, ${opacity})`
+    case "unclassified": return `rgba(169, 169, 169, ${opacity})`
+  }
 }
 
 const tokenTypeColor: any = {
@@ -105,13 +107,28 @@ const tokenTypeColor: any = {
   string: "#0451a5",
 }
 
-const StyledChangeMarker = styled.div<{ hidden?: boolean, type?: DiffType }>`
+const changeMarker = styled.div<{ hidden?: boolean, type?: DiffType }>``
+
+const StyledChangeMarker = styled(changeMarker)`
   left: -1px;
   position: absolute;
   display: ${({ hidden }) => hidden ? "none" : "block" };
-  width: 3px;
-  background-color: ${({ type }) => diffTypeBgColor[type || "unclassified"]};
+  width: 15px;
   height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  color: transparent; 
+  transition: all .3s ease-in-out;
+  margin-right: 10px;
+  border-left: 3px solid ${({ type }) => diffTypeBgColor(type)};
+
+  &:hover {
+    padding-left: 10px;
+    width: 100px;
+    color: white; 
+    content: attr(data-hover);
+    background-color: ${({ type }) => diffTypeBgColor(type, 0.7)};
+  }
 `
 
 const StyledChangeBadge = styled.span<{ color: string }>`
@@ -174,13 +191,13 @@ export const Line = ({ index, indent, tokens, diff, tags }: LineProps) => {
 
   const content = tokens.filter((token) => token.tags.every((v) => tags.includes(v))).map((token, i) => 
     diffTypes.includes(token.type as any) 
-      ? <StyledChangeBadge key={i} color={diffTypeBgColor[token.type as DiffType]}>{ `${token.type}: ${token.value}` }</StyledChangeBadge> 
+      ? <StyledChangeBadge key={i} color={diffTypeBgColor(token.type as DiffType)}>{ `${token.type}: ${token.value}` }</StyledChangeBadge> 
       : <StyledToken key={i} {...token}>{ token.value }</StyledToken>
   )
 
   return (
     <StyledLine action={diff?.action} hidden={hidden} right={right}>
-      <StyledChangeMarker hidden={!showMarker} type={diff?.type} />
+      <StyledChangeMarker hidden={!showMarker} type={diff?.type}>{diff?.type}</StyledChangeMarker>
       <StyledLineNum>{index || ""}</StyledLineNum>
       <StyledToggle tags={tags} />      
       <StyledLineContent hidden={hidden} indent={indent}>
