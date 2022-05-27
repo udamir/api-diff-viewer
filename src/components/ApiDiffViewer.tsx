@@ -57,7 +57,7 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
     <DiffContext.Provider value={{ treeview, filters, display, selected, navigate: setSelected }}>
       <div id="api-diff-viewer">
         <StyledLayout>
-          { navigation && <SideBar><NavApiNavigation rules={rules} data={builder.source} /></SideBar> }
+          { navigation && <SideBar><NavApiNavigation data={builder.source} /></SideBar> }
           <DiffBlock data={block} />
         </StyledLayout>
       </div>

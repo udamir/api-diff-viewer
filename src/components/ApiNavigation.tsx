@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { useContext } from "react"
 import styled from "styled-components"
 import { encodeKey } from "../diff-builder/common"
 import { DiffContext } from "../helpers/context"
@@ -74,59 +74,76 @@ export interface ApiNavigationeProps {
    * Line data
    */
   data: any
-  /**
-   * Api compare rules
-   */
-  rules?: "OpenApi3" | "AsyncApi2" | "JsonSchema"
-
-  onClick?: () => any
 }
 
-export const NavApiNavigation = ({ data, rules }: ApiNavigationeProps) => {
+
+
+export const NavApiNavigation = ({ data }: ApiNavigationeProps) => {
   
   const { navigate } = useContext(DiffContext)
 
   const selectAnchor = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const block = document.getElementById(id)!
+    const y = block.getBoundingClientRect().top + window.pageYOffset - 150;
+    window.scrollTo({top: y, behavior: 'smooth'});
     navigate && navigate(id)
   }
 
   const nav = []
-  if (rules === "OpenApi3") {
-    let i = 0
-    nav.push(<StyledNavigationGroup key={i++}>Paths:</StyledNavigationGroup>)
-    const { paths = [], components = [] } = data
+  
+  if (/3.+/.test(data.openapi || "")) {
+    nav.push(<StyledNavigationGroup key={"openapi"}>OpenAPI:</StyledNavigationGroup>)
+
+    nav.push(...["info", "externalDocs", "servers", "tags"].map(key => {
+      if (data[key] === undefined) { return []}
+      const name = `- ${key}`.split("").reverse().join("")
+      return (
+        <StyledNavRef key={key}>
+          <StyledPath onClick={() => selectAnchor(key)}>{name}</StyledPath>
+        </StyledNavRef>
+      )
+    }))
+    nav.push(<StyledNavigationGroup key={"paths"}>Paths:</StyledNavigationGroup>)
+    const { paths = {}, components = {} } = data
     for (const path in paths) {
       const methods = []
       for (const method in paths[path]) {
         const id = `paths/${encodeKey(path)}/${method}`
-        methods.push(<StyledMethod key={i++} method={method} onClick={() => selectAnchor(id)}>{method.toLocaleUpperCase()}</StyledMethod>)
+        methods.push(<StyledMethod key={id} method={method} onClick={() => selectAnchor(id)}>{method.toLocaleUpperCase()}</StyledMethod>)
       }
       const _path = path.replace(new RegExp("\{(.*?)\}"), "}\u25CF{").split("").reverse().join("")
+      const id = `paths/${encodeKey(path)}`
       nav.push(
-        <div key={i++}>
-          <StyledNavRef  >
-            <StyledPath onClick={() => selectAnchor(`paths/${encodeKey(path)}`)}>{_path}</StyledPath> 
+        <div key={id}>
+          <StyledNavRef>
+            <StyledPath onClick={() => selectAnchor(id)}>{_path}</StyledPath> 
             {methods}
           </StyledNavRef>
         </div>)
     }
     const addComponentNavigation = (type: string, name: string) => {
       if (components?.[type]) {
-        nav.push(<StyledNavigationGroup key={i++}>{name}:</StyledNavigationGroup>)
+        nav.push(<StyledNavigationGroup key={`components/${type}`}>{name}:</StyledNavigationGroup>)
         for (const key in components[type]) {
-          const name = key.split("").reverse().join("")
+          const name = `- ${key}`.split("").reverse().join("")
+          const id = `components/${type}/${key}`
           nav.push(
-            <StyledNavRef key={i++} >
-              <StyledPath onClick={() => selectAnchor(`components/${type}/${key}`)}>{name}</StyledPath> 
+            <StyledNavRef key={id} >
+              <StyledPath onClick={() => selectAnchor(id)}>{name}</StyledPath> 
             </StyledNavRef>)
         }
       }
     }
 
     addComponentNavigation("schemas", "Models")
+    addComponentNavigation("responses", "Responses")
     addComponentNavigation("parameters", "Parameters")
+    addComponentNavigation("examples", "Exapmles")
+    addComponentNavigation("requestBodies", "Request bodies")
+    addComponentNavigation("headers", "Headers")
     addComponentNavigation("securitySchemes", "Security schemes")
+    addComponentNavigation("links", "Links")
+    addComponentNavigation("callbacks", "Callbacks")
   } 
 
   return <StyledApiNavigation>{nav}</StyledApiNavigation>
