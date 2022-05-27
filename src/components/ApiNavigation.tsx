@@ -111,7 +111,7 @@ export const NavApiNavigation = ({ data }: ApiNavigationeProps) => {
         const id = `paths/${encodeKey(path)}/${method}`
         methods.push(<StyledMethod key={id} method={method} onClick={() => selectAnchor(id)}>{method.toLocaleUpperCase()}</StyledMethod>)
       }
-      const _path = path.replace(new RegExp("\{(.*?)\}"), "}\u25CF{").split("").reverse().join("")
+      const _path = path.replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
       const id = `paths/${encodeKey(path)}`
       nav.push(
         <div key={id}>
