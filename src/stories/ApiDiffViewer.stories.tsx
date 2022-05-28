@@ -1,11 +1,13 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { ComponentStory, ComponentMeta } from '@storybook/react'
 
-import { ApiDiffViewer } from '../components/ApiDiffViewer';
+import { ApiDiffViewer } from '../components/ApiDiffViewer'
 import openApiBefore from "./samples/openApi.before"
 import openApiAfter from "./samples/openApi.after"
 import asyncApiBefore from "./samples/asyncApi.before"
 import asyncApiAfter from "./samples/asyncApi.after"
+import jsonSchemaBefore from "./samples/jsonSchema.before"
+import jsonSchemaAfter from "./samples/jsonSchema.after"
 
 export default {
   title: 'ApiDiffViewer',
@@ -26,7 +28,8 @@ OpenApi3.args = {
   after: openApiAfter,
   display: "side-by-side",
   rules: "OpenApi3",
-  format: "yaml"
+  format: "yaml",
+  navigation: true,
 }
 
 export const AsyncApi = Template.bind({});
@@ -35,5 +38,16 @@ AsyncApi.args = {
   after: asyncApiAfter,
   display: "side-by-side",
   rules: "AsyncApi2",
-  format: "yaml"
+  format: "yaml",
+  navigation: true
+}
+
+export const JsonSchema = Template.bind({});
+JsonSchema.args = {
+  before: jsonSchemaBefore,
+  after: jsonSchemaAfter,
+  display: "side-by-side",
+  rules: "JsonSchema",
+  format: "yaml",
+  navigation: true
 }

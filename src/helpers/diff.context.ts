@@ -14,6 +14,14 @@ export type DiffContextProps = {
    * Display document diff in inline or side-by-side mode
    */
   display?: "inline" | "side-by-side"
+  /**
+   * Selected id
+   */
+  selected?: string
+  /**
+   * Selected id
+   */
+  navigate?: (id: string) => void
 }
 
 export const DiffContext = createContext<DiffContextProps>({})

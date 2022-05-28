@@ -1,7 +1,8 @@
 import { ApiMergedMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
 import { YAML } from "../helpers/yaml"
-import { isEmpty, DiffBlockData, Token, TokenTag, metaKey, encodeKey } from "./common"
+import { encodeKey, isEmpty } from "../utils"
+import { DiffBlockData, Token, TokenTag, metaKey } from "./common"
 
 export const buildDiffYaml = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {
@@ -110,7 +111,7 @@ export const buildDiffYamlBlock = (input: any, key: string | number, parent: Dif
 
     const encodedKey = encodeKey(String(key))
     block.id = parent.id ? `${parent.id}/${encodedKey}` : encodedKey
-
+    
     buildDiffYaml(value, block)
   }
 

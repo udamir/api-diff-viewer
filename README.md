@@ -19,10 +19,10 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] View change summary on collaped blocks
 - [x] Collapse/expand all
 - [x] Filter changes by type (Hide unchanged/not filtered lines)
-- [ ] Navigation sidebar
+- [x] Navigation sidebar
+- [ ] Non-blocking loading
 - [ ] WebComponent
 - [ ] Color themes
-
 
 ## Documentation
 

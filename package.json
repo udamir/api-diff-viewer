@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "React component to view the difference between two Json based API documents",
   "author": "Damir Yusipov",
   "license": "MIT",
@@ -52,6 +52,7 @@
     "@babel/preset-react": "^7.16.7",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.2.1",
+    "@storybook/builder-vite": "^0.1.35",
     "@storybook/addon-actions": "^6.5.3",
     "@storybook/addon-essentials": "^6.5.3",
     "@storybook/addon-interactions": "^6.5.3",
