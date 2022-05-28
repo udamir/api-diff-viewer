@@ -1,6 +1,6 @@
 import { ActionType, ApiMergedMeta, DiffType } from "api-smart-diff"
 
-export const metaKey = Symbol("diff")
+export const metaKey = "$diff" //Symbol("diff")
 export const diffTypes: DiffType[] = ["breaking", "non-breaking", "annotation", "unclassified"]
 
 export type TokenTag = "before" | "after" | "empty" | "collapsed" | "expanded"

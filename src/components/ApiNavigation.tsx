@@ -116,8 +116,8 @@ export const JsonNavigation = () => {
 export const ApiNavigation = ({ data, navigate }: ApiNavigationeProps) => {
 
   const selectNavigationComponent = (data: any) => {
-    if (/3.+/.test(data.openapi || "")) { return OpenApi3Navigation }
-    if (/2.+/.test(data.asyncapi || "")) { return AsyncApi3Navigation }
+    if (/3.+/.test(data?.openapi || "")) { return OpenApi3Navigation }
+    if (/2.+/.test(data?.asyncapi || "")) { return AsyncApi3Navigation }
     return JsonNavigation
   }
 

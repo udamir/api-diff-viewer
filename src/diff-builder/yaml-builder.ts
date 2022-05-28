@@ -11,6 +11,7 @@ export const buildDiffYaml = (input: any, parent: DiffBlockData) => {
     }
   } else {
     for (const key in input) {
+      if (key === metaKey) { continue }
       buildDiffYamlBlock(input, key, parent)
     }
   }
@@ -85,7 +86,8 @@ export const _yamlPropBlockTokens = (isArray: boolean, key: string | number, dif
 
 export const buildDiffYamlBlock = (input: any, key: string | number, parent: DiffBlockData) => {
   const value = input[key]
-  let diff: ApiMergedMeta | undefined = metaKey in input && (input as any)[metaKey][key]
+  const { [metaKey]: meta, ...rest } = input
+  let diff: ApiMergedMeta | undefined = meta && meta[key]
 
   if (diff) {
     parent.addDiff(diff)

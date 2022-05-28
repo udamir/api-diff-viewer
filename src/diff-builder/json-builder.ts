@@ -11,6 +11,7 @@ export const buildDiffJson = (input: any, parent: DiffBlockData) => {
   } else {
     const keys = Object.keys(input)
     for (let i = 0; i < keys.length; i++) {
+      if (keys[i] === metaKey) { continue }
       buildDiffJsonBlock(input, keys[i], parent, i === keys.length - 1)
     }
   }

@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 
 import React, { useEffect, useState } from "react"
 import { BaseRulesType, DiffType } from "api-smart-diff"
@@ -47,7 +48,7 @@ export interface DiffTreeProps {
 
 export const merge = (before: any, after: any, rules: BaseRulesType): Promise<DiffBlockData> => {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL("../worker.js", import.meta.url))
+    const worker = new Worker(new URL("../worker.ts", import.meta.url), { type: "module" })
     worker.onmessage = (event) => {
       worker.terminate()
       resolve(event.data)
@@ -91,7 +92,7 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
       <div id="api-diff-viewer">
         <>
           { navigation && <SideBar><ApiNavigation data={data} navigate={navigate} /></SideBar> }
-          <DiffBlock data={block} />
+          { data ? <DiffBlock data={block} /> : <div>Loading...</div> }
         </>
       </div>
     </DiffContext.Provider>

@@ -9,6 +9,6 @@ declare const self: ServiceWorkerGlobalScope;
 
 self.onmessage =  (event) => {
   const rules = event.data[2]
-    const data = apiMerge(event.data[0], event.data[1], { rules, metaKey, arrayMeta: true })
-    postMessage(data)
+  const data = apiMerge(event.data[0], event.data[1], { rules, metaKey, arrayMeta: true })
+  postMessage(data)
 }
