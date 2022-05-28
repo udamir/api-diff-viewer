@@ -1,10 +1,10 @@
 /// <reference lib="dom" />
 
 import React, { useEffect, useState } from "react"
-import { BaseRulesType, DiffType } from "api-smart-diff"
+import { ApiDiffOptions, BaseRulesType, DiffType } from "api-smart-diff"
 import styled from "styled-components"
 
-import { DiffBlockData } from "../diff-builder/common"
+import { DiffBlockData, metaKey } from "../diff-builder/common"
 import { DiffContext } from "../helpers/diff.context"
 import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
@@ -51,7 +51,7 @@ const StyledLayout = styled.div`
   flex-direction: row;
 `
 
-export const merge = (before: any, after: any, rules: BaseRulesType): Promise<DiffBlockData> => {
+export const merge = (before: any, after: any, options: ApiDiffOptions): Promise<DiffBlockData> => {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("../worker.ts", import.meta.url), { type: "module" })
     worker.onmessage = (event) => {
@@ -62,7 +62,7 @@ export const merge = (before: any, after: any, rules: BaseRulesType): Promise<Di
       worker.terminate()
       reject(error)
     }
-    worker.postMessage([before, after, rules])
+    worker.postMessage([before, after, options])
   })
 }
 
@@ -74,7 +74,7 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
     
   useEffect(() => {
     const buildBlock = async () => {
-      const block = await merge(before, after, rules)
+      const block = await merge(before, after, { rules, metaKey, arrayMeta: true })
       setData(block);
     }
     buildBlock()
@@ -96,8 +96,9 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
     <DiffContext.Provider value={{ treeview, filters, display, selected, navigate }}>
       <div id="api-diff-viewer">
         <StyledLayout>
-          { navigation && <SideBar><ApiNavigation data={data} navigate={navigate} /></SideBar> }
+          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} navigate={navigate} /></SideBar> }
           { data ? <DiffBlock data={block} /> : <div>Processing...</div> }
+          { error && <div>Error: {error}</div> }
         </StyledLayout>
       </div>
     </DiffContext.Provider>

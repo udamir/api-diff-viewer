@@ -6,6 +6,10 @@ export type NavContextProps = {
    */
   data?: any
   /**
+   * diff metaKey
+   */
+  diffMetaKey?: any
+  /**
    * Navigation method
    */
   navigate?: (id: string) => void
