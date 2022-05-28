@@ -20,7 +20,7 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Collapse/expand all
 - [x] Filter changes by type (Hide unchanged/not filtered lines)
 - [x] Navigation sidebar
-- [ ] Non-blocking loading
+- [x] Non-blocking loading (via WebWorker)
 - [ ] WebComponent
 - [ ] Color themes
 

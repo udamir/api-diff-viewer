@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { BaseRulesType, DiffType } from "api-smart-diff"
+import styled from "styled-components"
 
 import { DiffBlockData } from "../diff-builder/common"
 import { DiffContext } from "../helpers/diff.context"
@@ -45,6 +46,10 @@ export interface DiffTreeProps {
   navigation?: boolean
 }
 
+const StyledLayout = styled.div`
+  display: flex;
+  flex-direction: row;
+`
 
 export const merge = (before: any, after: any, rules: BaseRulesType): Promise<DiffBlockData> => {
   return new Promise((resolve, reject) => {
@@ -90,10 +95,10 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
   return (
     <DiffContext.Provider value={{ treeview, filters, display, selected, navigate }}>
       <div id="api-diff-viewer">
-        <>
+        <StyledLayout>
           { navigation && <SideBar><ApiNavigation data={data} navigate={navigate} /></SideBar> }
-          { data ? <DiffBlock data={block} /> : <div>Loading...</div> }
-        </>
+          { data ? <DiffBlock data={block} /> : <div>Processing...</div> }
+        </StyledLayout>
       </div>
     </DiffContext.Provider>
   )

@@ -39,7 +39,6 @@
   ],
   "dependencies": {
     "api-smart-diff": "^0.4.1",
-    "comlink": "^4.3.1",
     "diff": "^5.0.0",
     "styled-components": "^5.3.5"
   },
@@ -70,7 +69,6 @@
     "ts-node": "^10.7.0",
     "typescript": "^4.6.4",
     "vite": "^2.9.8",
-    "vite-plugin-comlink": "^3.0.3",
     "vite-plugin-dts": "^1.1.1"
   }
 }
