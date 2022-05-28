@@ -3,7 +3,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { DiffBlock, DiffBlockProps } from '../components/DiffBlock';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
-import { DiffContext } from '../helpers/context';
+import { DiffContext } from '../helpers/diff.context';
 
 type DiffBlockStoryProps = DiffBlockProps & {
   display: "inline" | "side-by-side"

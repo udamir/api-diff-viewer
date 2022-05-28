@@ -2,7 +2,7 @@ import React, { useContext } from "react"
 import styled from "styled-components"
 
 import { DiffLineData } from "../diff-builder/common"
-import { DiffContext } from "../helpers/context"
+import { DiffContext } from "../helpers/diff.context"
 import { Line } from "./Line"
 
 const StyledDiffLine = styled.div<{ hidden: boolean }>`

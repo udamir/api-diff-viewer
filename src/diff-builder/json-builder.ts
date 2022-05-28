@@ -1,6 +1,7 @@
 import { ApiMergedMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
-import { isEmpty, DiffBlockData, Token, metaKey, encodeKey, TokenTag } from "./common"
+import { encodeKey, isEmpty } from "../utils"
+import { DiffBlockData, Token, metaKey, TokenTag } from "./common"
 
 export const buildDiffJson = (input: any, parent: DiffBlockData) => {
   if (input instanceof Array) {

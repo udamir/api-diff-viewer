@@ -121,7 +121,10 @@ const StyledChangeMarker = styled(changeMarker)`
   transition: all .3s ease-in-out;
   margin-right: 10px;
   border-left: 3px solid ${({ type }) => diffTypeBgColor(type)};
-
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
   &:hover {
     padding-left: 10px;
     width: 100px;

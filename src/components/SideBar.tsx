@@ -38,6 +38,14 @@ const StyledSidebarResizer = styled.div`
   }
 `
 
+const StyledNavigation = styled.div`
+  position: fixed;
+  overflow-y: auto;
+  top: 0px;
+  bottom: 0px;
+  width: inherit;
+`
+
 export interface ApiNavigationeProps {
   children?: React.ReactNode;
 }
@@ -49,7 +57,9 @@ export const SideBar = ({ children }: ApiNavigationeProps) => {
   return (
     <StyledSidebar>
       <StyledSidebarContent ref={ref}>
-        {  children }
+        <StyledNavigation>
+          { children }
+        </StyledNavigation>
       </StyledSidebarContent>
       <StyledSidebarResizer onMouseDown={initResize} />
     </StyledSidebar>

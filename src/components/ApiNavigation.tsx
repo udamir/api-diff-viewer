@@ -1,15 +1,10 @@
 import React, { useContext } from "react"
 import styled from "styled-components"
-import { encodeKey } from "../diff-builder/common"
-import { DiffContext } from "../helpers/context"
 
-const StyledApiNavigation = styled.div`
-  position: fixed;
-  overflow-y: auto;
-  top: 0px;
-  bottom: 0px;
-  width: inherit;
-`
+import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
+import { NavContext } from "../helpers/nav.context"
+import { NavigationItem } from "./NavigationItem"
+import { getPathValue } from "../utils"
 
 const methodColor = (method: string) => {
   switch (method) {
@@ -44,107 +39,93 @@ const StyledMethod = styled.span<{method: string}>`
   color: white;
 `
 
-const StyledNavRef = styled.span`
-  cursor: pointer;
-  white-space: nowrap;
-  color: #ebf1f5;
-  overflow: hidden;
-`
-
-const StyledPath = styled.div`
-  unicode-bidi: bidi-override;
-  overflow: hidden;
-  text-align: left;
-  direction: rtl;
-  white-space: nowrap;
-  font-size: 12px;
-  color: black;
-  text-overflow: ellipsis;
-  padding: 5px 0;
-`
-
-const StyledNavigationGroup = styled.div`
-  padding-bottom: 10px;
-  padding-top: 20px;
-  font-weight: bolder;
-`
-
 export interface ApiNavigationeProps {
   /**
-   * Line data
+   * Api document
    */
   data: any
+  /**
+   * navigation method
+   */
+  navigate: (id: string) => void
 }
 
+export const OpenApi3Navigation = () => {
+  const { data } = useContext(NavContext)
+  const nav = []
 
+  const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
+  nav.push(<NavigationGroup paths={openApiPaths} key="openapi" name="OpenAPI" />)
 
-export const NavApiNavigation = ({ data }: ApiNavigationeProps) => {
+  const methodPaths = Object.keys(data?.paths || {}).map((key) => ["paths", key])
+  const pathItem = ({ id, path, navigate }: CustomItemProps) => {
+    const methods = []
+    for (const op in getPathValue(data, path)) {
+      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={() => navigate && navigate(`${id}/${op}`)}>{op.toLocaleUpperCase()}</StyledMethod>)
+    }
+    const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
+    return <NavigationItem id={id} name={name} onClick={() => navigate && navigate(id)}>{methods}</NavigationItem>
+  }
+  nav.push(<NavigationGroup paths={methodPaths} key="paths" name="Paths" CustomItem={pathItem}/>)
   
-  const { navigate } = useContext(DiffContext)
+  nav.push(...["schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"].map((key) => {
+    const name = key.replace(/([A-Z])/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase()).trim()
+    const paths = Object.keys(data?.components?.[key] || {}).map((n) => ["components", key, n])
+    return <NavigationGroup paths={paths} key={`components/${key}`} name={name} />
+  }))
 
-  const selectAnchor = (id: string) => {
-    const block = document.getElementById(id)!
-    const y = block.getBoundingClientRect().top + window.pageYOffset - 150;
-    window.scrollTo({top: y, behavior: 'smooth'});
-    navigate && navigate(id)
+  return <>{nav}</  >
+}
+
+export const AsyncApi3Navigation = () => {
+  const { data } = useContext(NavContext)
+  const nav = []
+
+  const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
+  nav.push(<NavigationGroup paths={openApiPaths} key="asyncapi" name="AsyncAPI" />)
+
+  const methodPaths = Object.keys(data?.channels || {}).map((key) => ["channels", key])
+  const pathItem = ({ id, path, navigate }: CustomItemProps) => {
+    const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
+    return <NavigationItem id={id} name={name} onClick={() => navigate && navigate(id)} />
+  }
+  nav.push(<NavigationGroup paths={methodPaths} key="channels" name="Channels" CustomItem={pathItem}/>)
+  
+  nav.push(...["schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"].map((key) => {
+    const name = key.replace(/([A-Z])/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase()).trim()
+    const paths = Object.keys(data?.components?.[key] || {}).map((n) => ["components", key, n])
+    return <NavigationGroup paths={paths} key={`components/${key}`} name={name} />
+  }))
+
+  return <>{nav}</>
+}
+
+export const JsonNavigation = () => {
+  const { data } = useContext(NavContext)
+  const nav = []
+
+  for(const key of Object.keys(data || {})) {
+    if (typeof data[key] !== "object") { continue }
+    const paths = Object.keys(data[key] || {}).map((n) => [key, n])
+    nav.push(<NavigationGroup key={key} paths={paths} name={key} />)
   }
 
-  const nav = []
-  
-  if (/3.+/.test(data.openapi || "")) {
-    nav.push(<StyledNavigationGroup key={"openapi"}>OpenAPI:</StyledNavigationGroup>)
+  return <>{nav}</>
+}
 
-    nav.push(...["info", "externalDocs", "servers", "tags"].map(key => {
-      if (data[key] === undefined) { return []}
-      const name = `- ${key}`.split("").reverse().join("")
-      return (
-        <StyledNavRef key={key}>
-          <StyledPath onClick={() => selectAnchor(key)}>{name}</StyledPath>
-        </StyledNavRef>
-      )
-    }))
-    nav.push(<StyledNavigationGroup key={"paths"}>Paths:</StyledNavigationGroup>)
-    const { paths = {}, components = {} } = data
-    for (const path in paths) {
-      const methods = []
-      for (const method in paths[path]) {
-        const id = `paths/${encodeKey(path)}/${method}`
-        methods.push(<StyledMethod key={id} method={method} onClick={() => selectAnchor(id)}>{method.toLocaleUpperCase()}</StyledMethod>)
-      }
-      const _path = path.replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
-      const id = `paths/${encodeKey(path)}`
-      nav.push(
-        <div key={id}>
-          <StyledNavRef>
-            <StyledPath onClick={() => selectAnchor(id)}>{_path}</StyledPath> 
-            {methods}
-          </StyledNavRef>
-        </div>)
-    }
-    const addComponentNavigation = (type: string, name: string) => {
-      if (components?.[type]) {
-        nav.push(<StyledNavigationGroup key={`components/${type}`}>{name}:</StyledNavigationGroup>)
-        for (const key in components[type]) {
-          const name = `- ${key}`.split("").reverse().join("")
-          const id = `components/${type}/${key}`
-          nav.push(
-            <StyledNavRef key={id} >
-              <StyledPath onClick={() => selectAnchor(id)}>{name}</StyledPath> 
-            </StyledNavRef>)
-        }
-      }
-    }
+export const ApiNavigation = ({ data, navigate }: ApiNavigationeProps) => {
 
-    addComponentNavigation("schemas", "Models")
-    addComponentNavigation("responses", "Responses")
-    addComponentNavigation("parameters", "Parameters")
-    addComponentNavigation("examples", "Exapmles")
-    addComponentNavigation("requestBodies", "Request bodies")
-    addComponentNavigation("headers", "Headers")
-    addComponentNavigation("securitySchemes", "Security schemes")
-    addComponentNavigation("links", "Links")
-    addComponentNavigation("callbacks", "Callbacks")
-  } 
+  const selectNavigationComponent = (data: any) => {
+    if (/3.+/.test(data.openapi || "")) { return OpenApi3Navigation }
+    if (/2.+/.test(data.asyncapi || "")) { return AsyncApi3Navigation }
+    return JsonNavigation
+  }
 
-  return <StyledApiNavigation>{nav}</StyledApiNavigation>
+  const NavigationComponent = selectNavigationComponent(data)
+
+  return (
+    <NavContext.Provider value={{ navigate, data }}>
+      { NavigationComponent && <NavigationComponent /> }
+    </NavContext.Provider>
+  )
 }

@@ -3,7 +3,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { DiffLine, DiffLineProps } from '../components/DiffLine';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
-import { DiffContext } from '../helpers/context';
+import { DiffContext } from '../helpers/diff.context';
 
 type DiffLineStoryProps = DiffLineProps & {
   display: "inline" | "side-by-side"

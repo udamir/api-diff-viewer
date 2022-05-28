@@ -1,12 +1,12 @@
 import React, { useState } from "react"
 import styled from "styled-components"
 
-import { DiffType } from "api-smart-diff"
+import { DiffContext } from "../helpers/diff.context"
+import { ApiNavigation } from "./ApiNavigation"
 import { DiffBuilder } from "../diff-builder"
+import { DiffType } from "api-smart-diff"
 import { DiffBlock } from "./DiffBlock"
-import { DiffContext } from "../helpers/context"
 import { SideBar } from "./SideBar"
-import { NavApiNavigation } from "./ApiNavigation"
 
 export interface DiffTreeProps {
   /**
@@ -53,11 +53,19 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
   const block = format === "yaml" ? builder.buildYaml() : builder.buildJson()
   const [selected, setSelected] = useState("")
 
+  const navigate = (id: string) => {
+    setSelected(id)
+    const block = document.getElementById(id)!
+    if (!block) { return }
+    const y = block.getBoundingClientRect().top + window.pageYOffset - 150;
+    window.scrollTo({top: y, behavior: 'smooth'});
+  }
+
   return (
-    <DiffContext.Provider value={{ treeview, filters, display, selected, navigate: setSelected }}>
+    <DiffContext.Provider value={{ treeview, filters, display, selected, navigate }}>
       <div id="api-diff-viewer">
         <StyledLayout>
-          { navigation && <SideBar><NavApiNavigation data={builder.source} /></SideBar> }
+          { navigation && <SideBar><ApiNavigation data={builder.source} navigate={navigate} /></SideBar> }
           <DiffBlock data={block} />
         </StyledLayout>
       </div>

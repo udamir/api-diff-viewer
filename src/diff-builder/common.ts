@@ -97,15 +97,3 @@ export class DiffBlockData extends DiffLineData {
     block.diffs.forEach((v, i) => this.diffs[i] += v)
   }
 }
-
-export const isEmpty = (value: any) => {
-  return !value || value === '0' || (value instanceof Array && value.length === 0) || (value instanceof Object && !Object.keys(value))
-}
-
-export const encodeKey = (key: string): string => {
-  return key.replace(new RegExp("/", "g"), "~1")
-}
-
-export const decodeKey = (key: string): string => {
-  return key.replace(new RegExp("~1", "g"), "/")
-}
