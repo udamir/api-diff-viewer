@@ -22,7 +22,9 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Navigation sidebar
 - [x] Non-blocking loading (via WebWorker)
 - [ ] WebComponent
-- [ ] Color themes
+- [ ] Default themes
+- [ ] Custom themes support
+- [ ] Tests
 
 ## Documentation
 

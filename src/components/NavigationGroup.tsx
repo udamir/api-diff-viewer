@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React, { useContext, useState } from "react"
 import styled from "styled-components"
 
 import { NavContext } from "../helpers/nav.context"
@@ -6,9 +6,33 @@ import { encodeKey, getPathValue } from "../utils"
 import { NavigationItem } from "./NavigationItem"
 
 const StyledNavigationGroup = styled.div`
-  padding-bottom: 10px;
-  padding-top: 20px;
+  padding-left: 12px;
+  padding-bottom: 5px;
+  padding-top: 10px;
   font-weight: bolder;
+  cursor: pointer;
+`
+
+const collapsedIcon = `
+  margin-top: 6px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+`
+
+const StyledToggle = styled.span<{ collapsed?: boolean }>`
+  left: 2px;
+  position: absolute;
+  cursor: pointer;
+
+  border: solid black;
+  border-width: 0 2px 2px 0;
+  padding: 2px;
+  margin-top: 5px;
+
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+
+  ${({ collapsed }) => collapsed && collapsedIcon}
 `
 
 export interface CustomItemProps {
@@ -25,7 +49,7 @@ export interface NavigationGroupProps {
 }
 
 export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProps) => {
-
+  const [ collapsed, setCollapsed ] = useState(false)
   const { data, onNavigate, selected } = useContext(NavContext)
 
   const items = []
@@ -34,7 +58,7 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
     if (getPathValue(data, path) === undefined) { continue }
     const itemId = path.map(encodeKey).join("/")
     const active = itemId === selected
-    console.log("selected:", selected, itemId)
+
     const onClick = () => onNavigate && onNavigate(itemId)
     if (CustomItem) {
       items.push(<CustomItem key={itemId} id={itemId} active={active} path={path} onClick={onClick} />)
@@ -47,8 +71,11 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
   if (items.length) {
     return (
       <div>
-        <StyledNavigationGroup key={name}>{name}:</StyledNavigationGroup>
-        {items}
+        <StyledNavigationGroup key={name} onClick={() => setCollapsed(!collapsed)}>
+          <StyledToggle collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}></StyledToggle>
+          {name}
+        </StyledNavigationGroup>
+        { !collapsed && items}
       </div>
     )
   }
