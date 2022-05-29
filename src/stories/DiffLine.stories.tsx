@@ -4,6 +4,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { DiffLine, DiffLineProps } from '../components/DiffLine';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
 import { DiffContext } from '../helpers/diff.context';
+import { defaultTheme } from '../themes';
 
 type DiffLineStoryProps = DiffLineProps & {
   display: "inline" | "side-by-side"
@@ -21,7 +22,7 @@ export default {
 } as ComponentMeta<typeof DiffLine>;
 
 const Template: ComponentStory<any> = ({ display, ...args}: DiffLineStoryProps) => 
-  <DiffContext.Provider value={{ display }}>
+  <DiffContext.Provider value={{ treeview: "expanded", display, theme: defaultTheme, themeType: "default" }}>
     <DiffLine {...args} />
   </DiffContext.Provider  >
 

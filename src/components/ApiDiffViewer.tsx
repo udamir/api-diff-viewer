@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 
 import React, { useEffect, useState } from "react"
-import { ApiDiffOptions, BaseRulesType, DiffType } from "api-smart-diff"
+import { BaseRulesType, DiffType } from "api-smart-diff"
 import styled from "styled-components"
 
 import { DiffBlockData, metaKey } from "../diff-builder/common"
@@ -10,6 +10,8 @@ import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { DiffBlock } from "./DiffBlock"
 import { SideBar } from "./SideBar"
+import { useAsyncMerge } from "../hooks/useApiMerge"
+import { defaultTheme, Theme } from "../themes"
 
 export interface DiffTreeProps {
   /**
@@ -44,6 +46,15 @@ export interface DiffTreeProps {
    * Show navigation sidebar
    */
   navigation?: boolean
+  /**
+   * Custom themes
+   */
+  customThemes: { [key: string]: Theme }
+  /**
+   * Lifecycle events
+   */
+  onLoading?: () => {}
+  onReady?: () => {}
 }
 
 const StyledLayout = styled.div`
@@ -51,40 +62,35 @@ const StyledLayout = styled.div`
   flex-direction: row;
 `
 
-export const merge = (before: any, after: any, options: ApiDiffOptions): Promise<DiffBlockData> => {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL("../worker.ts", import.meta.url), { type: "module" })
-    worker.onmessage = (event) => {
-      worker.terminate()
-      resolve(event.data)
-    }
-    worker.onerror = (error) => {
-      worker.terminate()
-      reject(error)
-    }
-    worker.postMessage([before, after, options])
-  })
-}
+export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "side-by-side", format="yaml", treeview="expanded", filters=[], navigation = false, onLoading, onReady, customThemes }: DiffTreeProps) => {
 
-
-export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "side-by-side", format="yaml", treeview="expanded", filters=[], navigation = false }: DiffTreeProps) => {
-
-  const [data, setData] = useState<DiffBlockData>()
+  const [data, setData] = useState<any>()
+  const [block, setBlock] = useState<DiffBlockData>()
   const [error, setError] = useState("")
-    
+  const [selected, setSelected] = useState("")
+  const [themeType, setCurrentTheme] = useState('dafault');
+  const [themes, setThemes] = useState<{[key:string]: Theme}>({
+    default: defaultTheme
+  })
+
+  useEffect(() => setThemes({...themes, ...customThemes}), [])
+
   useEffect(() => {
+    onLoading && onLoading()
     const buildBlock = async () => {
-      const block = await merge(before, after, { rules, metaKey, arrayMeta: true })
-      setData(block);
+      setData(await useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }));
     }
     buildBlock()
       .catch(setError);
-  }, [before, after, rules, format])
+  }, [before, after, rules])
 
-  const block = buildDiffBlock(data, format)
-  const [selected, setSelected] = useState("")
-
-  const navigate = (id: string) => {
+  useEffect(() => {
+    if (!data) { return }
+    setBlock(buildDiffBlock(data, format))
+    onReady && onReady()
+  }, [data, format])
+  
+  const onNavigate = (id: string) => {
     setSelected(id)
     const block = document.getElementById(id)!
     if (!block) { return }
@@ -92,12 +98,14 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
     window.scrollTo({top: y, behavior: 'smooth'});
   }
 
+  const theme = themes[themeType] || themes.default
+
   return (
-    <DiffContext.Provider value={{ treeview, filters, display, selected, navigate }}>
+    <DiffContext.Provider value={{ treeview, filters, display, selected, themeType, setCurrentTheme, theme }}>
       <div id="api-diff-viewer">
         <StyledLayout>
-          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} navigate={navigate} /></SideBar> }
-          { data ? <DiffBlock data={block} /> : <div>Processing...</div> }
+          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
+          { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
           { error && <div>Error: {error}</div> }
         </StyledLayout>
       </div>

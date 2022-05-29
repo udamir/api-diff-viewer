@@ -51,7 +51,7 @@ export interface ApiNavigationeProps {
   /**
    * navigation method
    */
-  navigate: (id: string) => void
+   onNavigate: (id: string) => void
 }
 
 export const OpenApi3Navigation = () => {
@@ -119,7 +119,7 @@ export const JsonNavigation = () => {
   return <>{nav}</>
 }
 
-export const ApiNavigation = ({ data, diffMetaKey, navigate }: ApiNavigationeProps) => {
+export const ApiNavigation = ({ data, diffMetaKey, onNavigate }: ApiNavigationeProps) => {
 
   const selectNavigationComponent = (data: any) => {
     if (/3.+/.test(data?.openapi || "")) { return OpenApi3Navigation }
@@ -130,7 +130,7 @@ export const ApiNavigation = ({ data, diffMetaKey, navigate }: ApiNavigationePro
   const NavigationComponent = selectNavigationComponent(data)
 
   return (
-    <NavContext.Provider value={{ navigate, diffMetaKey, data }}>
+    <NavContext.Provider value={{ navigate: onNavigate, diffMetaKey, data }}>
       { NavigationComponent && <NavigationComponent /> }
     </NavContext.Provider>
   )

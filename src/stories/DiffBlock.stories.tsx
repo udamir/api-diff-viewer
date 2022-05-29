@@ -4,6 +4,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { DiffBlock, DiffBlockProps } from '../components/DiffBlock';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
 import { DiffContext } from '../helpers/diff.context';
+import { defaultTheme } from '../themes';
 
 type DiffBlockStoryProps = DiffBlockProps & {
   display: "inline" | "side-by-side"
@@ -21,7 +22,7 @@ export default {
 } as ComponentMeta<typeof DiffBlock>;
 
 const Template: ComponentStory<any> = ({data, display }: DiffBlockStoryProps) => 
-  <DiffContext.Provider value={{ display }}>
+  <DiffContext.Provider value={{ display, theme: defaultTheme }}>
     <DiffBlock data={data} />
   </DiffContext.Provider  >
 

@@ -1,5 +1,6 @@
 import { DiffType } from "api-smart-diff";
-import { createContext } from "react";
+import { createContext, Dispatch, SetStateAction } from "react";
+import { defaultTheme, Theme } from "../themes";
 
 export type DiffContextProps = {
   /**
@@ -19,9 +20,22 @@ export type DiffContextProps = {
    */
   selected?: string
   /**
-   * Selected id
+   * Selected theme type
    */
-  navigate?: (id: string) => void
+  themeType?: string;
+  /**
+   * Selected theme
+   */
+  theme: Theme,
+  /**
+   * Theme select function
+   */
+  setCurrentTheme?: Dispatch<SetStateAction<string>>
 }
 
-export const DiffContext = createContext<DiffContextProps>({})
+export const DiffContext = createContext<DiffContextProps>({
+  treeview: 'expanded',
+  display: "side-by-side",
+  themeType: 'default',
+  theme: defaultTheme,
+})
