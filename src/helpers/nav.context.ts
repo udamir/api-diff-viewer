@@ -10,9 +10,13 @@ export type NavContextProps = {
    */
   diffMetaKey?: any
   /**
+   * current selected item
+   */
+  selected?: string
+  /**
    * Navigation method
    */
-  navigate?: (id: string) => void
+  onNavigate?: (id: string) => void
 }
 
 export const NavContext = createContext<NavContextProps>({})

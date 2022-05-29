@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react"
 import { BaseRulesType, DiffType } from "api-smart-diff"
-import styled from "styled-components"
+import styled, { ThemeProvider } from "styled-components"
 
 import { DiffBlockData, metaKey } from "../diff-builder/common"
-import { DiffContext } from "../helpers/diff.context"
+import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { DiffBlock } from "./DiffBlock"
@@ -54,7 +54,7 @@ export interface DiffTreeProps {
    * Lifecycle events
    */
   onLoading?: () => {}
-  onReady?: () => {}
+  onReady?: (ctx: DiffContextProps) => {}
 }
 
 const StyledLayout = styled.div`
@@ -73,7 +73,7 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
     default: defaultTheme
   })
 
-  useEffect(() => setThemes({...themes, ...customThemes}), [])
+  useEffect(() => setThemes({ ...themes, ...customThemes }), [])
 
   useEffect(() => {
     onLoading && onLoading()
@@ -87,7 +87,7 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
   useEffect(() => {
     if (!data) { return }
     setBlock(buildDiffBlock(data, format))
-    onReady && onReady()
+    onReady && onReady(ctx)
   }, [data, format])
   
   const onNavigate = (id: string) => {
@@ -99,16 +99,19 @@ export const ApiDiffViewer = ({ before, after, rules = "JsonSchema", display = "
   }
 
   const theme = themes[themeType] || themes.default
+  const ctx = { treeview, filters, display, selected, themeType, setCurrentTheme, theme }
 
   return (
-    <DiffContext.Provider value={{ treeview, filters, display, selected, themeType, setCurrentTheme, theme }}>
-      <div id="api-diff-viewer">
-        <StyledLayout>
-          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
-          { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
-          { error && <div>Error: {error}</div> }
-        </StyledLayout>
-      </div>
-    </DiffContext.Provider>
+    <ThemeProvider theme={theme}>
+      <DiffContext.Provider value={ctx}>
+        <div id="api-diff-viewer">
+          <StyledLayout>
+            { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
+            { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
+            { error && <div>Error: {error}</div> }
+          </StyledLayout>
+        </div>
+      </DiffContext.Provider>
+    </ThemeProvider>
   )
 }

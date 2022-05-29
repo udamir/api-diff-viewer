@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React, { useContext, useState } from "react"
 import styled from "styled-components"
 
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
@@ -55,27 +55,29 @@ export interface ApiNavigationeProps {
 }
 
 export const OpenApi3Navigation = () => {
-  const { data, diffMetaKey } = useContext(NavContext)
+  const { data, diffMetaKey, selected, onNavigate } = useContext(NavContext)
   const nav = []
 
   const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
   nav.push(<NavigationGroup paths={openApiPaths} key="openapi" name="OpenAPI" />)
 
   const { [diffMetaKey]: diff, ...rest } = data?.paths || {}
-  const methodPaths = Object.keys(rest).map((key) => ["paths", key])
-  const pathItem = ({ id, path, navigate }: CustomItemProps) => {
+  const methodPaths = Object.keys(rest).filter((n) => n !== diffMetaKey).map((key) => ["paths", key])
+  const pathItem = ({ id, path, active, onClick }: CustomItemProps) => {
     const methods = []
+    let activeMethod = false
     for (const op in getPathValue(data, path)) {
-      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={() => navigate && navigate(`${id}/${op}`)}>{op.toLocaleUpperCase()}</StyledMethod>)
+      activeMethod = activeMethod || `${id}/${op}` === selected
+      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={() => onNavigate && onNavigate(`${id}/${op}`)}>{op.toLocaleUpperCase()}</StyledMethod>)
     }
     const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
-    return <NavigationItem id={id} name={name} onClick={() => navigate && navigate(id)}>{methods}</NavigationItem>
+    return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>
   }
   nav.push(<NavigationGroup paths={methodPaths} key="paths" name="Paths" CustomItem={pathItem}/>)
   
   nav.push(...["schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"].map((key) => {
     const name = key.replace(/([A-Z])/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase()).trim()
-    const paths = Object.keys(data?.components?.[key] || {}).map((n) => ["components", key, n])
+    const paths = Object.keys(data?.components?.[key] || {}).filter((n) => n !== diffMetaKey).map((n) => ["components", key, n])
     return <NavigationGroup paths={paths} key={`components/${key}`} name={name} />
   }))
 
@@ -90,16 +92,16 @@ export const AsyncApi3Navigation = () => {
   nav.push(<NavigationGroup paths={openApiPaths} key="asyncapi" name="AsyncAPI" />)
 
   const { [diffMetaKey]: diff, ...rest } = data?.channels || {}
-  const channelPaths = Object.keys(rest).map((key) => ["channels", key])
-  const pathItem = ({ id, path, navigate }: CustomItemProps) => {
+  const channelPaths = Object.keys(rest).filter((n) => n !== diffMetaKey).map((key) => ["channels", key])
+  const pathItem = ({ id, path, active, onClick }: CustomItemProps) => {
     const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
-    return <NavigationItem id={id} name={name} onClick={() => navigate && navigate(id)} />
+    return <NavigationItem id={id} active={active} name={name} onClick={onClick} />
   }
   nav.push(<NavigationGroup paths={channelPaths} key="channels" name="Channels" CustomItem={pathItem}/>)
   
   nav.push(...["schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"].map((key) => {
     const name = key.replace(/([A-Z])/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase()).trim()
-    const paths = Object.keys(data?.components?.[key] || {}).map((n) => ["components", key, n])
+    const paths = Object.keys(data?.components?.[key] || {}).filter((n) => n !== diffMetaKey).map((n) => ["components", key, n])
     return <NavigationGroup paths={paths} key={`components/${key}`} name={name} />
   }))
 
@@ -112,7 +114,7 @@ export const JsonNavigation = () => {
 
   for(const key of Object.keys(data || {})) {
     if (typeof data[key] !== "object" || key === diffMetaKey) { continue }
-    const paths = Object.keys(data[key] || {}).map((n) => [key, n])
+    const paths = Object.keys(data[key] || {}).filter((n) => n !== diffMetaKey).map((n) => [key, n])
     nav.push(<NavigationGroup key={key} paths={paths} name={key} />)
   }
 
@@ -120,6 +122,7 @@ export const JsonNavigation = () => {
 }
 
 export const ApiNavigation = ({ data, diffMetaKey, onNavigate }: ApiNavigationeProps) => {
+  const [selected, setSelected] = useState("")
 
   const selectNavigationComponent = (data: any) => {
     if (/3.+/.test(data?.openapi || "")) { return OpenApi3Navigation }
@@ -129,8 +132,14 @@ export const ApiNavigation = ({ data, diffMetaKey, onNavigate }: ApiNavigationeP
 
   const NavigationComponent = selectNavigationComponent(data)
 
+
+  const navigate = (id: string) => {
+    onNavigate(id)
+    setSelected(id)
+  }
+
   return (
-    <NavContext.Provider value={{ navigate: onNavigate, diffMetaKey, data }}>
+    <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
       { NavigationComponent && <NavigationComponent /> }
     </NavContext.Provider>
   )

@@ -14,7 +14,8 @@ const StyledNavigationGroup = styled.div`
 export interface CustomItemProps {
   id: string
   path: string[]
-  navigate?: (id: string) => void
+  active?: boolean
+  onClick?: () => void
 }
 
 export interface NavigationGroupProps {
@@ -25,28 +26,30 @@ export interface NavigationGroupProps {
 
 export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProps) => {
 
-  const { data, navigate } = useContext(NavContext)
+  const { data, onNavigate, selected } = useContext(NavContext)
 
   const items = []
 
   for (const path of paths) {
     if (getPathValue(data, path) === undefined) { continue }
     const itemId = path.map(encodeKey).join("/")
-    const onClick = () => navigate && navigate(itemId)
+    const active = itemId === selected
+    console.log("selected:", selected, itemId)
+    const onClick = () => onNavigate && onNavigate(itemId)
     if (CustomItem) {
-      items.push(<CustomItem key={itemId} id={itemId} path={path} navigate={navigate} />)
+      items.push(<CustomItem key={itemId} id={itemId} active={active} path={path} onClick={onClick} />)
     } else {
       const name = `- ${path.slice(-1).pop()}`.split("").reverse().join("")
-      items.push(<NavigationItem key={itemId} id={itemId} name={name} onClick={onClick} />)
+      items.push(<NavigationItem key={itemId} id={itemId} active={active} name={name} onClick={onClick} />)
     }
   }
 
   if (items.length) {
     return (
-      <>
+      <div>
         <StyledNavigationGroup key={name}>{name}:</StyledNavigationGroup>
         {items}
-      </>
+      </div>
     )
   }
   return <div />

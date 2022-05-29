@@ -1,11 +1,15 @@
 import React from "react"
 import styled from "styled-components"
 
-const StyledNavRef = styled.span`
+const StyledNavRef = styled.div<{ active: boolean }>`
   cursor: pointer;
   white-space: nowrap;
   color: #ebf1f5;
   overflow: hidden;
+  background-color: ${ ({ active }) => active ? "lightgray" : "white" };
+  &:hover {
+    background-color: #F2F3F5;
+  }
 `
 
 const StyledPath = styled.div`
@@ -23,14 +27,15 @@ const StyledPath = styled.div`
 export interface NavigationItemProps {
   id: string
   name: string
-  onClick: (id: string) => void
+  onClick?: () => void
+  active?: boolean
   children?: React.ReactNode
 }
 
-export const NavigationItem = ({ id, name, onClick, children }: NavigationItemProps) => {
+export const NavigationItem = ({ name, onClick, children, active }: NavigationItemProps) => {
   return (
-    <StyledNavRef>
-      <StyledPath onClick={() => onClick(id)}>{name}</StyledPath>
+    <StyledNavRef active={!!active} >
+      <StyledPath onClick={onClick}>{name}</StyledPath>
       { children }
     </StyledNavRef>
   )
