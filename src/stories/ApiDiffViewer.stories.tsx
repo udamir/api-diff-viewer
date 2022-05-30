@@ -17,6 +17,22 @@ export default {
       options: ['breaking', 'non-breaking', 'annotation', "unclassified"],
       control: { type: 'multi-select' },
     },
+    onLoading: {
+      table: {
+        disable: true,
+      }
+    },
+    onReady: {
+      table: {
+        disable: true,
+      }
+    },
+    // TODO remove after implementation
+    customThemes: {
+      table: {
+        disable: true
+      }
+    }
   },
 } as ComponentMeta<typeof ApiDiffViewer>;
 

@@ -21,10 +21,6 @@ export interface ApiViewerProps {
    */
   format?: "json" | "yaml"
   /**
-   * Treeview parameters
-   */
-  treeview?: "expanded" | "collapsed" | "filtered"
-  /**
    * Change filters for filtered treeview
    */
   navigation?: boolean
@@ -32,6 +28,11 @@ export interface ApiViewerProps {
    * Custom themes
    */
   customThemes: { [key: string]: Theme }
+  /**
+   * Lifecycle events
+   */
+  onLoading?: () => {}
+  onReady?: (ctx: DiffContextProps) => {}
 }
 
 const StyledLayout = styled.div`
@@ -39,8 +40,8 @@ const StyledLayout = styled.div`
   flex-direction: row;
 `
 
-export const ApiViewer = ({ data, format="yaml", treeview="expanded", navigation = false, customThemes }: ApiViewerProps) => {
-
+export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, onReady, onLoading }: ApiViewerProps) => {
+  const [treeview, setTreeview] = useState<"expanded" | "collapsed">()
   const [block, setBlock] = useState<DiffBlockData>()
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState('dafault');
@@ -53,7 +54,9 @@ export const ApiViewer = ({ data, format="yaml", treeview="expanded", navigation
   }, [])
 
   useEffect(() => {
+    onLoading && onLoading()
     setBlock(buildDiffBlock(data, format))
+    onReady && onReady(ctx)
   }, [data, format])
  
   const onNavigate = (id: string) => {
@@ -65,7 +68,10 @@ export const ApiViewer = ({ data, format="yaml", treeview="expanded", navigation
   }
 
   const theme = themes[themeType] || themes.default
-  const ctx: DiffContextProps = { treeview, selected, display: "inline", themeType, setCurrentTheme, theme }
+  const ctx: DiffContextProps = { treeview, selected, display: "inline", themeType, setCurrentTheme, theme,
+    expandAll: () => setTreeview("expanded"),
+    collapseAll: () => setTreeview("collapsed"),
+  }
 
   return (
     <ThemeProvider theme={theme}>

@@ -34,8 +34,8 @@ export interface NavigationItemProps {
 
 export const NavigationItem = ({ name, onClick, children, active }: NavigationItemProps) => {
   return (
-    <StyledNavRef active={!!active} >
-      <StyledPath onClick={onClick}>{name}</StyledPath>
+    <StyledNavRef active={!!active} onClick={onClick}>
+      <StyledPath>{name}</StyledPath>
       { children }
     </StyledNavRef>
   )

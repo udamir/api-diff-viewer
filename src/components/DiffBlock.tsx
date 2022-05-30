@@ -53,9 +53,10 @@ export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
     return true
   }
 
+  const filtered = !!filters?.length
   let hiddenItems = 0
   const lines = data.children.map((line, i) => {
-    const hide = visible || treeview !== "filtered" ? false : isHidden(line)
+    const hide = visible || !filtered ? false : isHidden(line)
     hiddenItems+= hide ? 1 : 0
     return <DiffBlock key={i} data={line} hidden={hide} />
   })
@@ -65,8 +66,6 @@ export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
   if (hidden) {
     tags.push("hidden")
   }
-
-  // const selected = window.location.href.split('#')[1] === data.id
 
   const removeFilter = { data: { index: 0, indent: data.indent + 2, tokens: [Token.Spec("...")] } }
 

@@ -6,7 +6,7 @@ export type DiffContextProps = {
   /**
    * Treeview parameters
    */
-  treeview?: "expanded" | "collapsed" | "filtered"
+  treeview?: "expanded" | "collapsed"
   /**
    * Change filters
    */
@@ -27,6 +27,18 @@ export type DiffContextProps = {
    * Selected theme
    */
   theme: Theme,
+  /**
+   * Expand all blocks
+   */
+  expandAll?: () => void
+  /**
+   * Collapse all blocks
+   */
+  collapseAll?: () => void
+  /**
+   * Navigate to id
+   */
+  navigateTo?: (id: string) => void
   /**
    * Theme select function
    */
