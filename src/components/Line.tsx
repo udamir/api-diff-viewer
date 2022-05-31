@@ -12,6 +12,13 @@ const actionBgColor = {
   test: "none",
 }
 
+const nonSelectable = `
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+`
+
 const StyledLine = styled.div<{ action?: ActionType, hidden?: boolean, right?: boolean }>`
   position: relative;
   display: flex;
@@ -24,6 +31,7 @@ const StyledLine = styled.div<{ action?: ActionType, hidden?: boolean, right?: b
   font-size: 12px;
   line-height: 18px;
   letter-spacing: 0px;
+  ${ ({ right }) => right ? nonSelectable : "" }
   border-left: ${({ right }) => right ? "solid 1px lightgray;" : "none" };
   background-color: ${({ action, hidden }) => action ? hidden ? "#F2F3F5" : actionBgColor[action] : "white" };
 `
@@ -36,10 +44,7 @@ const StyledLineNum = styled.span`
   text-align: right;
   white-space: nowrap;
   font-size: 12px;
-  user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
+  ${ nonSelectable }
   position: absolute;
   width: 30px;
 `
@@ -65,6 +70,7 @@ const StyledToggle = styled.span<{ tags: string[] }>`
   flex-flow: row nowrap;
   align-items: center;
   cursor: pointer;
+  ${ nonSelectable }
 
   border: solid lightgray;
   border-width: 0 1px 1px 0;
@@ -79,7 +85,7 @@ const StyledToggle = styled.span<{ tags: string[] }>`
   ${({ tags }) => tags.includes("collapsed") ? collapsedIcon : ""}
 `
 
-const StyledLineContent = styled.p<{ hidden?: boolean, indent: number }>`
+const StyledLineContent = styled.div<{ hidden?: boolean, indent: number }>`
   word-break: break-word;
   overflow: visible;
   word-wrap: normal;
@@ -121,10 +127,7 @@ const StyledChangeMarker = styled(changeMarker)`
   transition: all .3s ease-in-out;
   margin-right: 10px;
   border-left: 3px solid ${({ type }) => diffTypeBgColor(type)};
-  user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
+  ${ nonSelectable }
   &:hover {
     padding-left: 10px;
     width: 100px;
@@ -146,10 +149,7 @@ const StyledChangeBadge = styled.span<{ color: string }>`
   text-align: center;
   border-color: ${({ color }) => color || "darkgray"};
   color: ${({ color }) => color || "darkgray"};
-  user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
+  ${ nonSelectable }
 `
 
 const StyledToken = styled.span<{ type?: TokenType, tags?: string[] }>`

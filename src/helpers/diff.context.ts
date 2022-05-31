@@ -4,6 +4,10 @@ import { defaultTheme, Theme } from "../themes";
 
 export type DiffContextProps = {
   /**
+   * Merged API document
+   */
+  data?: any
+  /**
    * Treeview parameters
    */
   treeview?: "expanded" | "collapsed"

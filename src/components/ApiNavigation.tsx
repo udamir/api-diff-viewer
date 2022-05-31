@@ -69,7 +69,11 @@ export const OpenApi3Navigation = () => {
     for (const op in getPathValue(data, path)) {
       if (!["get", "post", "delete", "put", "patch", "head", "trace", "options"].includes(op.toLocaleLowerCase())) { continue }
       activeMethod = activeMethod || `${id}/${op}` === selected
-      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={() => onNavigate && onNavigate(`${id}/${op}`)}>{op.toLocaleUpperCase()}</StyledMethod>)
+      const onClick: React.MouseEventHandler = (event) => {
+        event.stopPropagation()
+        onNavigate && onNavigate(`${id}/${op}`)
+      }
+      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={onClick}>{op.toLocaleUpperCase()}</StyledMethod>)
     }
     const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
     return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>

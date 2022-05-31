@@ -58,6 +58,10 @@ const StyledLayout = styled.div`
   flex-direction: row;
 `
 
+const StyledContent = styled.div`
+
+`
+
 export const ApiDiffViewer = ({
   before,
   after,
@@ -91,9 +95,7 @@ export const ApiDiffViewer = ({
   }, [before, after, rules])
 
   useEffect(() => {
-    if (!data) {
-      return
-    }
+    if (!data) { return }
     setBlock(buildDiffBlock(data, format))
     onReady && onReady(ctx)
   }, [data, format])
@@ -101,15 +103,14 @@ export const ApiDiffViewer = ({
   const onNavigate = (id: string) => {
     setSelected(id)
     const block = document.getElementById(id)!
-    if (!block) {
-      return
-    }
+    if (!block) { return }
     const y = block.getBoundingClientRect().top + window.pageYOffset - 150
     window.scrollTo({ top: y, behavior: "smooth" })
   }
 
   const theme = themes[themeType] || themes.default
   const ctx = {
+    data,
     treeview,
     filters,
     display,
@@ -132,8 +133,10 @@ export const ApiDiffViewer = ({
                 <ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} />
               </SideBar>
             )}
-            {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
-            {error && <div>Error: {error}</div>}
+            <StyledContent>
+              {data && block ?  <DiffBlock data={block} /> : <div>Processing...</div>}
+              {error && <div>Error: {error}</div>}
+            </StyledContent>
           </StyledLayout>
         </div>
       </DiffContext.Provider>
