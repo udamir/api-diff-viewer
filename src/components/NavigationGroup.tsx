@@ -75,7 +75,7 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
           <StyledToggle collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}></StyledToggle>
           {name}
         </StyledNavigationGroup>
-        { !collapsed && items}
+        { !collapsed && items }
       </div>
     )
   }

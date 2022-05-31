@@ -5,5 +5,8 @@ module.exports = {
   core: {
     builder: "@storybook/builder-vite",
   },
+  features: {
+    interactionsDebugger: true,
+  },
   watch: true,
 }

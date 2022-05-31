@@ -205,7 +205,7 @@ export const Line = ({ index, indent, tokens, diff, tags }: LineProps) => {
       <StyledToggle tags={tags} />      
       <StyledLineContent hidden={hidden} indent={indent}>
         <span>{" ".repeat(indent).replace(/ /g, "\u00a0")}</span>
-        {content}
+        { content }
       </StyledLineContent>
     </StyledLine>
   )

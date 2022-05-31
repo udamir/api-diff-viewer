@@ -51,7 +51,7 @@ export interface ApiNavigationeProps {
   /**
    * navigation method
    */
-   onNavigate: (id: string) => void
+  onNavigate?: (id: string) => void
 }
 
 export const OpenApi3Navigation = () => {
@@ -67,6 +67,7 @@ export const OpenApi3Navigation = () => {
     const methods = []
     let activeMethod = false
     for (const op in getPathValue(data, path)) {
+      if (!["get", "post", "delete", "put", "patch", "head", "trace", "options"].includes(op.toLocaleLowerCase())) { continue }
       activeMethod = activeMethod || `${id}/${op}` === selected
       methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={() => onNavigate && onNavigate(`${id}/${op}`)}>{op.toLocaleUpperCase()}</StyledMethod>)
     }
@@ -134,7 +135,7 @@ export const ApiNavigation = ({ data, diffMetaKey, onNavigate }: ApiNavigationeP
 
 
   const navigate = (id: string) => {
-    onNavigate(id)
+    onNavigate && onNavigate(id)
     setSelected(id)
   }
 

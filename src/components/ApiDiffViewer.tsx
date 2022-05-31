@@ -45,12 +45,12 @@ export interface ApiDiffViewerProps {
   /**
    * Custom themes
    */
-  customThemes: { [key: string]: Theme }
+  customThemes?: { [key: string]: Theme }
   /**
    * Lifecycle events
    */
-  onLoading?: () => {}
-  onReady?: (ctx: DiffContextProps) => {}
+  onLoading?: () => void
+  onReady?: (ctx: DiffContextProps) => void
 }
 
 const StyledLayout = styled.div`
