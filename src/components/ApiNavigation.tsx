@@ -4,6 +4,7 @@ import styled from "styled-components"
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
 import { NavContext } from "../helpers/nav.context"
 import { NavigationItem } from "./NavigationItem"
+import { metaKey } from "../diff-builder/common"
 import { getPathValue } from "../utils"
 
 const methodColor = (method: string) => {
@@ -47,7 +48,7 @@ export interface ApiNavigationeProps {
   /**
    * Diff metaKey
    */
-  diffMetaKey: any
+  diffMetaKey?: any
   /**
    * navigation method
    */
@@ -126,7 +127,7 @@ export const JsonNavigation = () => {
   return <>{nav}</>
 }
 
-export const ApiNavigation = ({ data, diffMetaKey, onNavigate }: ApiNavigationeProps) => {
+export const ApiNavigation = ({ data, diffMetaKey = metaKey, onNavigate }: ApiNavigationeProps) => {
   const [selected, setSelected] = useState("")
 
   const selectNavigationComponent = (data: any) => {
