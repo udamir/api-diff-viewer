@@ -17,11 +17,11 @@ export interface ApiDiffViewerProps {
   /**
    * object before
    */
-  before: any
+  before: object
   /**
    * object after
    */
-  after: any
+  after: object
   /**
    * Display document diff in inline or side-by-side mode
    */
@@ -59,7 +59,7 @@ const StyledLayout = styled.div`
 `
 
 const StyledContent = styled.div`
-
+  width: 100%
 `
 
 export const ApiDiffViewer = ({
@@ -88,10 +88,7 @@ export const ApiDiffViewer = ({
 
   useEffect(() => {
     onLoading && onLoading()
-    const buildBlock = async () => {
-      setData(await useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }))
-    }
-    buildBlock().catch(setError)
+    useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(setError)
   }, [before, after, rules])
 
   useEffect(() => {
@@ -134,7 +131,7 @@ export const ApiDiffViewer = ({
               </SideBar>
             )}
             <StyledContent>
-              {data && block ?  <DiffBlock data={block} /> : <div>Processing...</div>}
+              {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
               {error && <div>Error: {error}</div>}
             </StyledContent>
           </StyledLayout>
