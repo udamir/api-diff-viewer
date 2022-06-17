@@ -6,7 +6,6 @@ import { encodeKey, getPathValue } from "../utils"
 import { NavigationItem } from "./NavigationItem"
 
 const StyledNavigationGroup = styled.div`
-  padding-left: 12px;
   padding-bottom: 5px;
   padding-top: 10px;
   font-weight: bolder;
@@ -20,7 +19,6 @@ const collapsedIcon = `
 `
 
 const StyledToggle = styled.span<{ collapsed?: boolean }>`
-  left: 2px;
   position: absolute;
   cursor: pointer;
 
@@ -33,6 +31,10 @@ const StyledToggle = styled.span<{ collapsed?: boolean }>`
   -webkit-transform: rotate(45deg);
 
   ${({ collapsed }) => collapsed && collapsedIcon}
+`
+
+const StyledName = styled.span`
+  padding-left: 12px;
 `
 
 export interface CustomItemProps {
@@ -73,7 +75,7 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
       <div>
         <StyledNavigationGroup key={name} onClick={() => setCollapsed(!collapsed)}>
           <StyledToggle collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}></StyledToggle>
-          {name}
+          <StyledName>{name}</StyledName>
         </StyledNavigationGroup>
         { !collapsed && items }
       </div>

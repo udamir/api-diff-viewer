@@ -10,7 +10,7 @@ import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { DiffBlock } from "./DiffBlock"
 import { SideBar } from "./SideBar"
-import { useAsyncMerge } from "../hooks/useApiMerge"
+import { useMergeWorker, useAsyncMerge } from "../hooks/useApiMerge"
 import { defaultTheme, Theme } from "../themes"
 
 export interface ApiDiffViewerProps {
@@ -51,6 +51,7 @@ export interface ApiDiffViewerProps {
    */
   onLoading?: () => void
   onReady?: (ctx: DiffContextProps) => void
+  onError?: (error: string) => void
 }
 
 const StyledLayout = styled.div`
@@ -72,37 +73,43 @@ export const ApiDiffViewer = ({
   navigation = false,
   onLoading,
   onReady,
+  onError,
   customThemes,
 }: ApiDiffViewerProps) => {
   const [data, setData] = useState<any>()
   const [treeview, setTreeview] = useState<"expanded" | "collapsed">()
   const [block, setBlock] = useState<DiffBlockData>()
-  const [error, setError] = useState("")
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState("dafault")
   const [themes, setThemes] = useState<{ [key: string]: Theme }>({
     default: defaultTheme,
   })
-
+  // const { data, run, error } = useMergeWorker()
+  
+  // useEffect(() => onError && onError(error), [error])
   useEffect(() => setThemes({ ...themes, ...customThemes }), [])
 
   useEffect(() => {
     onLoading && onLoading()
-    useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(setError)
+    useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(onError)
   }, [before, after, rules])
 
   useEffect(() => {
     if (!data) { return }
-    setBlock(buildDiffBlock(data, format))
-    onReady && onReady(ctx)
+    try {
+      setBlock(buildDiffBlock(data, format))
+      onReady && onReady(ctx)
+    } catch (error) {
+      onError && onError("Diff cannot be build, unexpected data!")
+    }
   }, [data, format])
 
-  const onNavigate = (id: string) => {
+  const onNavigate = (id: string, parent = window) => {
     setSelected(id)
     const block = document.getElementById(id)!
     if (!block) { return }
-    const y = block.getBoundingClientRect().top + window.pageYOffset - 150
-    window.scrollTo({ top: y, behavior: "smooth" })
+    const y = block.getBoundingClientRect().top + parent.pageYOffset - 150
+    parent.scrollTo({ top: y, behavior: "smooth" })
   }
 
   const theme = themes[themeType] || themes.default
@@ -132,7 +139,6 @@ export const ApiDiffViewer = ({
             )}
             <StyledContent>
               {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
-              {error && <div>Error: {error}</div>}
             </StyledContent>
           </StyledLayout>
         </div>

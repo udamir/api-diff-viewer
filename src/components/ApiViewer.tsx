@@ -33,6 +33,7 @@ export interface ApiViewerProps {
    */
   onLoading?: () => void
   onReady?: (ctx: DiffContextProps) => void
+  onError?: (error: string) => void
 }
 
 const StyledLayout = styled.div`
@@ -40,7 +41,7 @@ const StyledLayout = styled.div`
   flex-direction: row;
 `
 
-export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, onReady, onLoading }: ApiViewerProps) => {
+export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, onReady, onLoading, onError }: ApiViewerProps) => {
   const [treeview, setTreeview] = useState<"expanded" | "collapsed">()
   const [block, setBlock] = useState<DiffBlockData>()
   const [selected, setSelected] = useState("")
@@ -55,8 +56,12 @@ export const ApiViewer = ({ data, format="yaml", navigation = false, customTheme
 
   useEffect(() => {
     onLoading && onLoading()
-    setBlock(buildDiffBlock(data, format))
-    onReady && onReady(ctx)
+    try {
+      setBlock(buildDiffBlock(data, format))
+      onReady && onReady(ctx)
+    } catch (error) {
+      onError && onError("Diff cannot be build, unexpected data!")
+    }
   }, [data, format])
  
   const onNavigate = (id: string) => {

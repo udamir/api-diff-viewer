@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { ApiDiffOptions } from 'api-smart-diff'
 
 // @ts-ignore
@@ -16,4 +17,27 @@ export const useAsyncMerge = (before: any, after: any, options: ApiDiffOptions):
     }
     worker.postMessage([before, after, options])
   })
+}
+
+export const useMergeWorker = () => {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState("")
+  const workerRef = useRef<Worker | null>(null)
+  
+  useEffect(() => {
+    const worker: Worker = MergeWorker()
+    workerRef.current = worker
+    worker.onmessage = (event) => setData(event.data)
+    worker.onerror = () => setError('There is an error with worker!')
+    return () => worker.terminate()
+  }, [])
+  
+  return {
+    data,
+    error,
+    run: (before: any, after: any, options: ApiDiffOptions) => {
+      setData(null)
+      workerRef.current?.postMessage([before, after, options])
+    }
+  }
 }
