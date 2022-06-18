@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Api-Diff-Viewer Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/indent-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="../dist/api-diff-viewer.umd.js"></script>
+    <link rel="stylesheet" href="../dist/style.css">
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body style="margin: 0">
+
+  <style>
+    .CodeMirror {border: 1px solid silver; border-width: 1px 2px; }
+  </style>
+
+
+  <div id="input" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0">
+    <div style='float: left; width: 49%; height: 100%; margin: 0 0.25%;'>
+      <h2 style="margin-top: 30px; margin-bottom: 10px;">Before (json or yaml)</h2>
+      <textarea id="before" title="before">
+      </textarea>
+    </div>
+    <div style='float: left; width: 49%; height: 100%; margin: 0 0.25%;'>
+      <h2 style="margin-top: 30px; margin-bottom: 10px;">After (json or yaml)</h2>
+      <textarea id="after" title="after">
+      </textarea>
+    </div>
+    <div id="action" style='position: fixed; width: 100%; padding: 5px;'>
+      <button onclick="showResult('compare')">compare</button>
+      <label for="rules">API type:</label>
+
+      <select name="rules" id="rules">
+        <option value="JsonSchema">JsonSchema</option>
+        <option value="OpenApi3">OpenApi3</option>
+        <option value="AsyncApi2">AsyncApi2</option>
+      </select>
+      <label for="format">Output format:</label>
+      <select name="format" id="format">
+        <option value="yaml">yaml</option>
+        <option value="json">json</option>
+      </select>
+    </div>
+  </div>
+  <div id="result" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0">
+    <div id="diff-action" style='position: fixed; width: 100%; padding: 5px;'>
+      <button onclick="hideResult()">close</button>
+    </div>
+    <div id="root" style="margin-top: 40px; height: calc(100% - 40px); overflow-y: scroll"></div>
+  </div>
+  <script id="script">
+    function parseEditor(editor) {
+      try {
+        return JSON.parse(editor.getValue());
+      } catch (error) {
+        return jsyaml.load(editor.getValue());
+      }
+    }
+
+    function showResult(type) {
+      document.getElementById("result").hidden = false;
+      document.getElementById("input").hidden = true;
+      compare()
+      // const format = document.getElementById("format").value;
+      // const res = getResultData(type)
+
+      // let result = format === "yaml" 
+      //   ? jsyaml.dump(res, { noRefs: true, quotingType: '"' })
+      //   : JSON.stringify(res, null, 2);
+
+      // result = format === "js" ? result.replace(/"([^"]+)":/g, '$1:') : result;
+      // merged.getDoc().setValue(result);
+    }
+
+    function hideResult() {
+      document.getElementById("result").hidden = true;
+      document.getElementById("input").hidden = false;
+    }
+
+    function createCodeMirror(id) {
+      const editor = CodeMirror.fromTextArea(document.getElementById(id), {
+        mode: "yaml",
+        styleActiveLine: true,
+        lineNumbers: true,
+        lineWrapping: true,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+      });
+      fetch(`/demo/assets/schema-${id}.yaml`).then(function(response) {
+        response.text().then(function(text) {
+          editor.getDoc().setValue(text)
+        });
+      });
+      editor.setSize("100%", "90%");
+      editor.on('change', hideResult);
+      return editor;
+    }
+
+    var before = createCodeMirror("before");
+    var after = createCodeMirror("after");
+
+    hideResult();
+  </script>
+  <script type="text/babel">
+    
+    function compare() {
+      console.time("parsing")
+      const args = {
+        before: parseEditor(before),
+        after: parseEditor(after),
+        display: "side-by-side",
+        rules: document.getElementById("rules").value,
+        format: document.getElementById("format").value,
+        navigation: false,
+      }
+      console.timeEnd("parsing")
+      const root = ReactDOM.createRoot(container);
+      root.render(<ApiDiffViewer.ApiDiffViewer {...args} />);
+    }
+    const container = document.getElementById('root');
+  </script>
+  </body>
+</html>

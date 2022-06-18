@@ -74,19 +74,26 @@ export const ApiDiffViewer = ({
   const [themes, setThemes] = useState<{ [key: string]: Theme }>({})
   // const { data, run, error } = useMergeWorker()
   
+  console.time("render")
+
   // useEffect(() => onError && onError(error), [error])
   useEffect(() => setThemes({ ...defaultThemes, ...customThemes }), [])
+  useEffect(() => console.timeEnd("render"))
 
   useEffect(() => {
     onLoading && onLoading()
+    console.time("merge")
     setData(null)
     useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(onError)
   }, [before, after, rules])
 
   useEffect(() => {
     if (!data) { return }
+    console.timeEnd("merge")
+    console.time("build")
     try {
       setBlock(buildDiffBlock(data, format))
+      console.timeEnd("build")
       onReady && onReady(ctx)
     } catch (error) {
       onError && onError("Diff cannot be build, unexpected data!")
