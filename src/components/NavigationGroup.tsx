@@ -1,41 +1,10 @@
 import React, { useContext, useState } from "react"
-import styled from "styled-components"
+import "./NavigationGroup.css"
 
 import { NavContext } from "../helpers/nav.context"
 import { encodeKey, getPathValue } from "../utils"
 import { NavigationItem } from "./NavigationItem"
 
-const StyledNavigationGroup = styled.div`
-  padding-bottom: 5px;
-  padding-top: 10px;
-  font-weight: bolder;
-  cursor: pointer;
-`
-
-const collapsedIcon = `
-  margin-top: 6px;
-  transform: rotate(-45deg);
-  -webkit-transform: rotate(-45deg);
-`
-
-const StyledToggle = styled.span<{ collapsed?: boolean }>`
-  position: absolute;
-  cursor: pointer;
-
-  border: solid black;
-  border-width: 0 2px 2px 0;
-  padding: 2px;
-  margin-top: 5px;
-
-  transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
-
-  ${({ collapsed }) => collapsed && collapsedIcon}
-`
-
-const StyledName = styled.span`
-  padding-left: 12px;
-`
 
 export interface CustomItemProps {
   id: string
@@ -73,10 +42,10 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
   if (items.length) {
     return (
       <div>
-        <StyledNavigationGroup key={name} onClick={() => setCollapsed(!collapsed)}>
-          <StyledToggle collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}></StyledToggle>
-          <StyledName>{name}</StyledName>
-        </StyledNavigationGroup>
+        <div className="navigation-group" key={name} onClick={() => setCollapsed(!collapsed)}>
+          <span className={`group-toggle${collapsed ? " collapsed" : ""}`} onClick={() => setCollapsed(!collapsed)}></span>
+          <span className="group-name">{name}</span>
+        </div>
         { !collapsed && items }
       </div>
     )

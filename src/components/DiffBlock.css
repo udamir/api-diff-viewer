@@ -1,0 +1,13 @@
+.block {
+  position: relative;
+}
+
+.block-selection {
+  position: absolute;
+  display: block;
+  width: 15px;
+  height: 100%;
+  z-index: 1;
+  margin-left: 50px;
+  border-left: 3px solid var(--block-selection-color);
+}

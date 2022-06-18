@@ -1,0 +1,29 @@
+.navigation-group {
+  padding-bottom: 5px;
+  padding-top: 10px;
+  font-weight: bolder;
+  cursor: pointer;
+}
+
+.group-toggle {
+  position: absolute;
+  cursor: pointer;
+
+  border: solid black;
+  border-width: 0 2px 2px 0;
+  padding: 2px;
+  margin-top: 5px;
+
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.group-toggle.collapsed {
+  margin-top: 6px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.group-name {
+  padding-left: 12px;
+}

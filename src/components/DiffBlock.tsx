@@ -1,27 +1,9 @@
 import React, { useContext, useEffect, useState } from "react"
-import styled from "styled-components"
 
 import { DiffBlockData, diffTypes, Token } from "../diff-builder/common"
 import { DiffContext } from "../helpers/diff.context"
 import { DiffLine } from "./DiffLine"
-
-const StyledDiffNodeItems = styled.div<{ hidden: boolean }>`
-  display: ${({ hidden }) => hidden ? "none" : "block"};
-`
-
-const StyledBlock = styled.div`
-  position: relative;
-`
-
-const StyledBlockSelection = styled.div`
-  position: absolute;
-  display: block;
-  width: 15px;
-  height: 100%;
-  z-index: 1;
-  margin-left: 50px;
-  border-left: 3px solid blue;
-`
+import "./DiffBlock.css"
 
 export interface DiffBlockProps {
   /**
@@ -70,11 +52,11 @@ export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
   const removeFilter = { data: { index: 0, indent: data.indent + 2, tokens: [Token.Spec("...")] } }
 
   return (
-    <StyledBlock id={data.id}>
-      { selected && selected === data.id && <StyledBlockSelection />}
+    <div id={data.id} className="block">
+      { selected && selected === data.id && <div className="block-selection" />}
       { !!data.tokens.length && <DiffLine data={data} tags={tags} onClick={() => setExpanded(!expanded)} /> }
-      { !!lines.length && <StyledDiffNodeItems hidden={!expanded && !!data.tokens.length}>{lines}</StyledDiffNodeItems> }
+      { !!lines.length && (expanded || !data.tokens.length) && <div>{lines}</div> }
       { !hidden && !!hiddenItems && expanded && <DiffLine {...removeFilter} onClick={() => setVisible(true)} /> }
-    </StyledBlock>
+    </div>
   )
 }

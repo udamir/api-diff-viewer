@@ -1,0 +1,26 @@
+.navigation-ref {
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  background-color: var(--base-bg-color);
+}
+
+.navigation-ref.active {
+  background-color: var(--navigation-active-bg-color);
+}
+
+.navigation-ref:hover {
+  background-color: var(--navigation-hover-bg-color);
+}
+
+.navigation-path {
+  unicode-bidi: bidi-override;
+  overflow: hidden;
+  text-align: left;
+  direction: rtl;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--navigation-text-color);
+  text-overflow: ellipsis;
+  padding: 5px 0;
+}

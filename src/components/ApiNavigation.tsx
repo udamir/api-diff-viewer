@@ -1,44 +1,11 @@
 import React, { useContext, useState } from "react"
-import styled from "styled-components"
+import "./ApiNavigation.css"
 
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
 import { NavContext } from "../helpers/nav.context"
 import { NavigationItem } from "./NavigationItem"
 import { metaKey } from "../diff-builder/common"
 import { getPathValue } from "../utils"
-
-const methodColor = (method: string) => {
-  switch (method) {
-    case "get": return "#48bb78"
-    case "post": return "#008eff"
-    case "put": return "#ed8936"
-    case "delete": return "#f56565"
-    default: return "#ed8936"
-  }
-}
-
-const StyledMethod = styled.span<{method: string}>`
-  cursor: pointer;
-  font-size: 12px;
-  opacity: .75;
-  margin-right: 0.5rem;
-  margin-bottom: 0.25rem;
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  background-color: ${({ method}) => methodColor(method)};
-  border: none;
-  border-radius: 3px;
-  line-height: 12px;
-  max-width: 100%;
-  min-height: 16px;
-  min-width: 16px;
-  padding: 0px 6px;
-  position: relative;
-  overflow: hidden;
-  text-decoration: none;
-  color: white;
-`
 
 export interface ApiNavigationeProps {
   /**
@@ -74,7 +41,7 @@ export const OpenApi3Navigation = () => {
         event.stopPropagation()
         onNavigate && onNavigate(`${id}/${op}`)
       }
-      methods.push(<StyledMethod key={`${id}/${op}`} method={op} onClick={onClick}>{op.toLocaleUpperCase()}</StyledMethod>)
+      methods.push(<div className={`method ${op}`} key={`${id}/${op}`} onClick={onClick}>{op.toLocaleUpperCase()}</div>)
     }
     const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
     return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>

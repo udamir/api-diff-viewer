@@ -1,8 +1,7 @@
 /// <reference lib="dom" />
 
-import React, { useEffect, useState } from "react"
+import React, { CSSProperties, useEffect, useState } from "react"
 import { BaseRulesType, DiffType } from "api-smart-diff"
-import styled, { ThemeProvider } from "styled-components"
 
 import { DiffBlockData, metaKey } from "../diff-builder/common"
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
@@ -11,7 +10,7 @@ import { buildDiffBlock } from "../diff-builder"
 import { DiffBlock } from "./DiffBlock"
 import { SideBar } from "./SideBar"
 import { useMergeWorker, useAsyncMerge } from "../hooks/useApiMerge"
-import { defaultTheme, Theme } from "../themes"
+import { Theme, defaultThemes } from "../theme"
 
 export interface ApiDiffViewerProps {
   /**
@@ -54,15 +53,6 @@ export interface ApiDiffViewerProps {
   onError?: (error: string) => void
 }
 
-const StyledLayout = styled.div`
-  display: flex;
-  flex-direction: row;
-`
-
-const StyledContent = styled.div`
-  width: 100%
-`
-
 export const ApiDiffViewer = ({
   before,
   after,
@@ -81,16 +71,15 @@ export const ApiDiffViewer = ({
   const [block, setBlock] = useState<DiffBlockData>()
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState("dafault")
-  const [themes, setThemes] = useState<{ [key: string]: Theme }>({
-    default: defaultTheme,
-  })
+  const [themes, setThemes] = useState<{ [key: string]: Theme }>({})
   // const { data, run, error } = useMergeWorker()
   
   // useEffect(() => onError && onError(error), [error])
-  useEffect(() => setThemes({ ...themes, ...customThemes }), [])
+  useEffect(() => setThemes({ ...defaultThemes, ...customThemes }), [])
 
   useEffect(() => {
     onLoading && onLoading()
+    setData(null)
     useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(onError)
   }, [before, after, rules])
 
@@ -128,21 +117,19 @@ export const ApiDiffViewer = ({
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <DiffContext.Provider value={ctx}>
-        <div id="api-diff-viewer">
-          <StyledLayout>
-            {navigation && (
-              <SideBar>
-                <ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} />
-              </SideBar>
-            )}
-            <StyledContent>
-              {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
-            </StyledContent>
-          </StyledLayout>
+    <DiffContext.Provider value={ctx}>
+      <div id="api-diff-viewer" style={theme as CSSProperties}>
+        <div style={{  display: "flex", flexDirection: "row" }}>
+          {navigation && (
+            <SideBar>
+              <ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} />
+            </SideBar>
+          )}
+          <div style={{ width: "100%" }}>
+            {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
+          </div>
         </div>
-      </DiffContext.Provider>
-    </ThemeProvider>
+      </div>
+    </DiffContext.Provider>
   )
 }

@@ -1,0 +1,38 @@
+.method {
+  cursor: pointer;
+  font-size: 12px;
+  opacity: .75;
+  margin-right: 0.5rem;
+  margin-bottom: 0.25rem;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--navigation-default-color);
+  border: none;
+  border-radius: 3px;
+  line-height: 12px;
+  max-width: 100%;
+  min-height: 16px;
+  min-width: 16px;
+  padding: 0px 6px;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  color: white;
+}
+
+.method.get {
+  background-color: var(--navigation-get-color);
+}
+
+.method.post {
+  background-color: var(--navigation-post-color);
+}
+
+.method.delete {
+  background-color: var(--navigation-delete-color);
+}
+
+.method.put {
+  background-color: var(--navigation-put-color);
+}

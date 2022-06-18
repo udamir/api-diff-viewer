@@ -1,0 +1,199 @@
+.line {
+  position: relative;
+  display: flex;
+  font-family: var(--base-font-family);
+  font-size: 0;
+  color: var(--base-text-color);
+  margin: 0;
+  width: 100%;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0px;
+  background-color: var(--base-bg-color);
+}
+
+.non-selectable {
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+}
+
+.line.right {
+  border-left: solid 1px var(--base-splitter-color);
+}
+
+.line.bg-add {
+  background-color: var(--add-bg-color);
+}
+.line.bg-remove {
+  background-color: var(--remove-bg-color);
+}
+.line.bg-replace {
+  background-color: var(--replace-bg-color);
+}
+.line.bg-rename {
+  background-color: var(--rename-bg-color);
+}
+.line.bg-hidden {
+  background-color: var(--hidden-bg-color);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.change-marker {
+  left: -1px;
+  position: absolute;
+  width: 15px;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  color: transparent; 
+  transition: all .3s ease-in-out;
+  margin-right: 10px;
+}
+
+.change-marker.annotation {
+  border-left: 3px solid var(--annotation-color);
+}
+.change-marker.non-breaking {
+  border-left: 3px solid var(--non-breaking-color);
+}
+.change-marker.breaking {
+  border-left: 3px solid var(--breaking-color);
+}
+.change-marker.unclassified {
+  border-left: 3px solid var(--unclassified-color);
+}
+
+.change-marker:hover {
+  padding-left: 10px;
+  width: 100px;
+  color: var(--base-bg-color); 
+  content: attr(data-hover);
+}
+.change-marker.annotation:hover {
+  background-color: var(--annotation-bg-color);
+}
+.change-marker.non-breaking:hover {
+  background-color: var(--non-breaking-bg-color);
+}
+.change-marker.breaking:hover  {
+  background-color: var(--breaking-bg-color);
+}
+.change-marker.unclassified:hover  {
+  background-color: var(--unclassified-bg-color);
+}
+
+.line-num {
+  line-height: 18px;  
+  padding-left: 10px;
+  padding-right: 15px;
+  color: var(--line-num-text-color);
+  text-align: right;
+  white-space: nowrap;
+  font-size: 12px;
+  position: absolute;
+  width: 30px;
+}
+
+.toggle {
+  flex: none;
+  position: absolute;
+  display: inline-block;
+  flex-flow: row nowrap;
+  align-items: center;
+  cursor: pointer;
+
+  border: solid var(--toggle-color);
+  border-width: 0 1px 1px 0;
+  padding: 2px;
+
+  margin-left: 43px;
+  margin-top: 5px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.toggle.expanded {
+  margin-left: 43px;
+  margin-top: 5px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.toggle.collapsed {
+  margin-left: 41px;
+  margin-top: 6px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.change-badge {
+  margin-left: 4px;
+  font-size: 10px;
+  min-width: 16px;
+  padding: 1px 3px;
+  height: 14px;
+  border-radius: 4px;
+  text-indent: -1px;
+  text-align: center;
+}
+
+.change-badge.annotation {
+  border: 1px solid var(--annotation-color);
+  color: var(--annotation-color);
+}
+
+.change-badge.breaking {
+  border: 1px solid var(--breaking-color);
+  color: var(--breaking-color);
+}
+
+.change-badge.non-breaking {
+  border: 1px solid var(--non-breaking-color);
+  color: var(--non-breaking-color);
+}
+
+.change-badge.unclassified {
+  border: 1px solid var(--unclassified-color);
+  color: var(--unclassified-color);
+}
+
+.token.spec {
+  color: var(--token-spec-text-color)
+}
+
+.token.key {
+  color: var(--token-index-text-color)
+}
+
+.token.index {
+  color: var(--token-index-text-color)
+}
+
+.token.string {
+  color: var(--token-string-text-color)
+}
+
+.token.before {
+  text-decoration: line-through;
+  background-color: var(--token-deleted-text-color)
+}
+
+.token.after {
+  background-color: var(--token-added-text-color)
+}
+
+.line-content {
+  word-break: break-word;
+  overflow: visible;
+  word-wrap: normal;
+  text-align: left;
+  font-size: 12px;
+  display: inline-block;
+  margin: 0;
+}

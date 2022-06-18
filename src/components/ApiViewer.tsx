@@ -1,13 +1,12 @@
 /// <reference lib="dom" />
 
 import React, { useEffect, useState } from "react"
-import styled, { ThemeProvider } from "styled-components"
 
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { DiffBlockData, metaKey } from "../diff-builder/common"
 import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
-import { defaultTheme, Theme } from "../themes"
+import { defaultThemes, Theme } from "../theme"
 import { DiffBlock } from "./DiffBlock"
 import { SideBar } from "./SideBar"
 
@@ -36,22 +35,15 @@ export interface ApiViewerProps {
   onError?: (error: string) => void
 }
 
-const StyledLayout = styled.div`
-  display: flex;
-  flex-direction: row;
-`
-
 export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, onReady, onLoading, onError }: ApiViewerProps) => {
   const [treeview, setTreeview] = useState<"expanded" | "collapsed">()
   const [block, setBlock] = useState<DiffBlockData>()
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState('dafault');
-  const [themes, setThemes] = useState<{[key:string]: Theme}>({
-    default: defaultTheme
-  })
+  const [themes, setThemes] = useState<{[key:string]: Theme}>({})
 
   useEffect(() => {
-    setThemes({ ...themes, ...customThemes })
+    setThemes({ ...defaultThemes, ...customThemes })
   }, [])
 
   useEffect(() => {
@@ -79,15 +71,13 @@ export const ApiViewer = ({ data, format="yaml", navigation = false, customTheme
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <DiffContext.Provider value={ctx}>
-        <div id="api-viewer">
-          <StyledLayout>
-            { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
-            { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
-          </StyledLayout>
+    <DiffContext.Provider value={ctx}>
+      <div id="api-viewer">
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
+          { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
         </div>
-      </DiffContext.Provider>
-    </ThemeProvider>
+      </div>
+    </DiffContext.Provider>
   )
 }

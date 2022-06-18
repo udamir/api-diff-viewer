@@ -1,6 +1,6 @@
 import { DiffType } from "api-smart-diff";
 import { createContext, Dispatch, SetStateAction } from "react";
-import { defaultTheme, Theme } from "../themes";
+import { defaultThemes, Theme } from "../theme";
 
 export type DiffContextProps = {
   /**
@@ -53,5 +53,5 @@ export const DiffContext = createContext<DiffContextProps>({
   treeview: 'expanded',
   display: "side-by-side",
   themeType: 'default',
-  theme: defaultTheme,
+  theme: defaultThemes.default,
 })

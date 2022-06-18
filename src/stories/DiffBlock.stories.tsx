@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { DiffBlock, DiffBlockProps } from '../components/DiffBlock';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
 import { DiffContext } from '../helpers/diff.context';
-import { defaultTheme } from '../themes';
+import { defaultThemes } from '../theme';
 
 type DiffBlockStoryProps = DiffBlockProps & {
   display: "inline" | "side-by-side"
@@ -22,8 +22,10 @@ export default {
 } as ComponentMeta<typeof DiffBlock>;
 
 const Template: ComponentStory<any> = ({data, display }: DiffBlockStoryProps) => 
-  <DiffContext.Provider value={{ display, theme: defaultTheme }}>
-    <DiffBlock data={data} />
+  <DiffContext.Provider value={{ display, theme: defaultThemes.default }}>
+    <div style={defaultThemes.default as CSSProperties} >
+      <DiffBlock data={data} />
+    </div>
   </DiffContext.Provider  >
 
 let l = 1
