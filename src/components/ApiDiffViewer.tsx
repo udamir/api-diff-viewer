@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 
 import React, { CSSProperties, useEffect, useState } from "react"
-import { BaseRulesType, DiffType } from "api-smart-diff"
+import { apiMerge, BaseRulesType, DiffType } from "api-smart-diff"
 
 import { DiffBlockData, metaKey } from "../diff-builder/common"
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
@@ -9,7 +9,7 @@ import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { DiffBlock } from "./DiffBlock"
 import { SideBar } from "./SideBar"
-import { useMergeWorker, useAsyncMerge } from "../hooks/useApiMerge"
+import { useMergeWorker } from "../hooks/useApiMerge"
 import { Theme, defaultThemes } from "../theme"
 
 export interface ApiDiffViewerProps {
@@ -42,6 +42,10 @@ export interface ApiDiffViewerProps {
    */
   navigation?: boolean
   /**
+   * Use web worker for processing, default true
+   */
+  useWorker?: boolean
+  /**
    * Custom themes
    */
   customThemes?: { [key: string]: Theme }
@@ -61,6 +65,7 @@ export const ApiDiffViewer = ({
   format = "yaml",
   filters = [],
   navigation = false,
+  useWorker = true,
   onLoading,
   onReady,
   onError,
@@ -72,28 +77,35 @@ export const ApiDiffViewer = ({
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState("dafault")
   const [themes, setThemes] = useState<{ [key: string]: Theme }>({})
-  // const { data, run, error } = useMergeWorker()
+  const merge = useMergeWorker(setData, onError)
   
-  console.time("render")
+  // console.time("render")
 
-  // useEffect(() => onError && onError(error), [error])
   useEffect(() => setThemes({ ...defaultThemes, ...customThemes }), [])
-  useEffect(() => console.timeEnd("render"))
+  // useEffect(() => console.timeEnd("render"))
 
   useEffect(() => {
     onLoading && onLoading()
-    console.time("merge")
+    // console.time("merge")
     setData(null)
-    useAsyncMerge(before, after, { rules, metaKey, arrayMeta: true }).then(setData).catch(onError)
+    if (useWorker) {
+      merge(before, after, { rules, metaKey, arrayMeta: true })
+    } else {
+      try {
+        setData(apiMerge(before, after, { rules, metaKey, arrayMeta: true }))
+      } catch (error) {
+        onError && onError("Unexpected data")
+      }
+    }
   }, [before, after, rules])
 
   useEffect(() => {
     if (!data) { return }
-    console.timeEnd("merge")
-    console.time("build")
+    // console.timeEnd("merge")
+    // console.time("build")
     try {
       setBlock(buildDiffBlock(data, format))
-      console.timeEnd("build")
+      // console.timeEnd("build")
       onReady && onReady(ctx)
     } catch (error) {
       onError && onError("Diff cannot be build, unexpected data!")

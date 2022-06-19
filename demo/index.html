@@ -41,15 +41,19 @@
       <label for="rules">API type:</label>
 
       <select name="rules" id="rules">
-        <option value="JsonSchema">JsonSchema</option>
         <option value="OpenApi3">OpenApi3</option>
         <option value="AsyncApi2">AsyncApi2</option>
+        <option value="JsonSchema">JsonSchema</option>
       </select>
       <label for="format">Output format:</label>
       <select name="format" id="format">
         <option value="yaml">yaml</option>
         <option value="json">json</option>
       </select>
+      <label for="format">Inline changes:</label>
+      <input type="checkbox" id="inline">
+      <label for="format">Use worker:</label>
+      <input type="checkbox" id="worker" checked>
     </div>
   </div>
   <div id="result" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0">
@@ -71,15 +75,6 @@
       document.getElementById("result").hidden = false;
       document.getElementById("input").hidden = true;
       compare()
-      // const format = document.getElementById("format").value;
-      // const res = getResultData(type)
-
-      // let result = format === "yaml" 
-      //   ? jsyaml.dump(res, { noRefs: true, quotingType: '"' })
-      //   : JSON.stringify(res, null, 2);
-
-      // result = format === "js" ? result.replace(/"([^"]+)":/g, '$1:') : result;
-      // merged.getDoc().setValue(result);
     }
 
     function hideResult() {
@@ -96,7 +91,7 @@
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       });
-      fetch(`/demo/assets/schema-${id}.yaml`).then(function(response) {
+      fetch(`/demo/assets/${id}.yaml`).then(function(response) {
         response.text().then(function(text) {
           editor.getDoc().setValue(text)
         });
@@ -114,16 +109,15 @@
   <script type="text/babel">
     
     function compare() {
-      console.time("parsing")
       const args = {
         before: parseEditor(before),
         after: parseEditor(after),
-        display: "side-by-side",
+        display: document.getElementById("inline").checked ? "inline" : "side-by-side",
+        useWorker: document.getElementById("worker").checked,
         rules: document.getElementById("rules").value,
         format: document.getElementById("format").value,
         navigation: false,
       }
-      console.timeEnd("parsing")
       const root = ReactDOM.createRoot(container);
       root.render(<ApiDiffViewer.ApiDiffViewer {...args} />);
     }
