@@ -22,8 +22,8 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Navigation sidebar
 - [x] Non-blocking loading (via WebWorker)
 - [ ] WebComponent
-- [ ] Default themes
-- [ ] Custom themes support
+- [x] Default themes
+- [x] Custom themes support
 - [ ] Tests
 
 ## Documentation
