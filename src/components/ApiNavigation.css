@@ -1,3 +1,7 @@
+.navigation {
+  font-family: var(--navigation-font-family);
+}
+
 .method {
   cursor: pointer;
   font-size: 12px;

@@ -30,7 +30,7 @@ export type DiffContextProps = {
   /**
    * Selected theme
    */
-  theme: Theme,
+  theme?: Theme,
   /**
    * Expand all blocks
    */
@@ -40,9 +40,9 @@ export type DiffContextProps = {
    */
   collapseAll?: () => void
   /**
-   * Navigate to id
+   * Scroll to id in parent element, default window
    */
-  navigateTo?: (id: string) => void
+  navigateTo?: (id: string, parent?: HTMLElement | Window) => void
   /**
    * Theme select function
    */

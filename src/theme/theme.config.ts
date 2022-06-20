@@ -8,6 +8,7 @@ export const defaultThemes: Record<ThemeType, Theme> = {
     "--rename-bg-color": "#FFB02E12",
     "--hidden-bg-color": "#F2F3F5",
     "--base-font-family": 'Menlo, Monaco, "Courier New", monospace',
+    "--navigation-font-family": 'ui-sans-serif, system-ui, "Segoe UI", Roboto',
     "--base-bg-color": "white",
     "--base-text-color": "#0451a5",
     "--base-splitter-color": "lightgray",

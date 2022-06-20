@@ -1,0 +1,101 @@
+import React, { useRef, useState } from 'react';
+import { ComponentStory, ComponentMeta } from '@storybook/react'
+
+import { ApiDiffViewer } from '../components/ApiDiffViewer'
+import openApiBefore from "./samples/openApi.before"
+import openApiAfter from "./samples/openApi.after"
+import asyncApiBefore from "./samples/asyncApi.before"
+import asyncApiAfter from "./samples/asyncApi.after"
+import jsonSchemaBefore from "./samples/jsonSchema.before"
+import jsonSchemaAfter from "./samples/jsonSchema.after"
+import { ApiNavigation } from '../components/ApiNavigation';
+import { DiffContextProps } from '../helpers/diff.context';
+
+export default {
+  title: 'E2E',
+  component: ApiDiffViewer,
+  argTypes: {
+    filters: {
+      options: ['breaking', 'non-breaking', 'annotation', "unclassified"],
+      control: { type: 'multi-select' },
+    },
+    onLoading: {
+      table: {
+        disable: true,
+      }
+    },
+    navigation: {
+      table: {
+        disable: true,
+      }
+    },
+    onReady: {
+      table: {
+        disable: true,
+      }
+    },
+    // TODO remove after implementation
+    customThemes: {
+      table: {
+        disable: true
+      }
+    }
+  },
+} as ComponentMeta<typeof ApiDiffViewer>;
+
+const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
+  const [data, setData] = useState()
+  const navigateTo = useRef<(id: string, parent?: HTMLElement) => void>()
+
+  const onReady = (c: DiffContextProps) => {
+    setData(c.data)
+    navigateTo.current = c.navigateTo
+  }
+
+  const onNavigate = (id: string) => {
+    if (!navigateTo.current) { return }
+    const parent = document.getElementById("api-diff-viewer-div")!
+    navigateTo.current(id, parent)
+  }
+
+  const props = {...args, navigation: false, onReady}
+
+  return (<div style={{ margin: "40px" }}>
+    <div style={{ width: "200px", height: "500px", overflowY: "auto", float: "left" }}>
+      <ApiNavigation data={data} onNavigate={onNavigate} />
+    </div>
+    <div id="api-diff-viewer-div" style={{ height: "500px", overflowY: "auto" }}>
+      <ApiDiffViewer {...props} />
+    </div>
+  </div>)
+}
+
+export const OpenApi3 = Template.bind({});
+OpenApi3.args = {
+  before: openApiBefore,
+  after: openApiAfter,
+  display: "side-by-side",
+  rules: "OpenApi3",
+  format: "yaml",
+  navigation: true,
+}
+
+export const AsyncApi = Template.bind({});
+AsyncApi.args = {
+  before: asyncApiBefore,
+  after: asyncApiAfter,
+  display: "side-by-side",
+  rules: "AsyncApi2",
+  format: "yaml",
+  navigation: true
+}
+
+export const JsonSchema = Template.bind({});
+JsonSchema.args = {
+  before: jsonSchemaBefore,
+  after: jsonSchemaAfter,
+  display: "side-by-side",
+  rules: "JsonSchema",
+  format: "yaml",
+  navigation: true
+}

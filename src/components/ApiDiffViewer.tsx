@@ -112,11 +112,12 @@ export const ApiDiffViewer = ({
     }
   }, [data, format])
 
-  const onNavigate = (id: string, parent = window) => {
+  const onNavigate = (id: string, parent: HTMLElement | Window = window) => {
     setSelected(id)
     const block = document.getElementById(id)!
     if (!block) { return }
-    const y = block.getBoundingClientRect().top + parent.pageYOffset - 150
+    const offset = parent instanceof Window ? parent.scrollY : parent.scrollTop
+    const y = block.getBoundingClientRect().top + offset - 150
     parent.scrollTo({ top: y, behavior: "smooth" })
   }
 

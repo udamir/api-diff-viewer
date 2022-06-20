@@ -119,7 +119,9 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, theme = defaultThem
   return (
     <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
       <div id="api-navigation" style={theme as CSSProperties}>
-        { NavigationComponent && <NavigationComponent /> }
+        <div className="navigation">
+          { NavigationComponent && <NavigationComponent /> }
+        </div>
       </div>
     </NavContext.Provider>
   )

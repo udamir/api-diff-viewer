@@ -7,6 +7,7 @@ export type Theme = {
   "--rename-bg-color"?: string
   "--hidden-bg-color"?: string
   "--base-font-family"?: string
+  "--navigation-font-family"?: string
   "--base-bg-color"?: string
   "--base-text-color"?: string
   "--base-splitter-color"?: string
