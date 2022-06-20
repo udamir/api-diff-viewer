@@ -53,9 +53,7 @@ const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
   }
 
   const onNavigate = (id: string) => {
-    if (!navigateTo.current) { return }
-    const parent = document.getElementById("api-diff-viewer-div")!
-    navigateTo.current(id, parent)
+    navigateTo.current && navigateTo.current(id, document.getElementById("api-diff-viewer-div")!)
   }
 
   const props = {...args, navigation: false, onReady}

@@ -1,4 +1,4 @@
-.navigation-group {
+.api-navigation .navigation-group {
   padding-bottom: 5px;
   padding-top: 10px;
   font-weight: bolder;
@@ -6,7 +6,7 @@
   position: relative;
 }
 
-.group-toggle {
+.api-navigation .navigation-group .group-toggle {
   position: absolute;
   cursor: pointer;
 
@@ -19,12 +19,12 @@
   -webkit-transform: rotate(45deg);
 }
 
-.group-toggle.collapsed {
+.api-navigation .navigation-group .group-toggle.collapsed {
   margin-top: 6px;
   transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
 }
 
-.group-name {
+.api-navigation .navigation-group .group-name {
   padding-left: 12px;
 }

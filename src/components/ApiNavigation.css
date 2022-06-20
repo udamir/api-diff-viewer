@@ -1,8 +1,8 @@
-.navigation {
+.api-navigation {
   font-family: var(--navigation-font-family);
 }
 
-.method {
+.api-navigation .api-method {
   cursor: pointer;
   font-size: 12px;
   opacity: .75;
@@ -25,18 +25,18 @@
   color: white;
 }
 
-.method.get {
+.api-navigation .api-method.get {
   background-color: var(--navigation-get-color);
 }
 
-.method.post {
+.api-navigation .api-method.post {
   background-color: var(--navigation-post-color);
 }
 
-.method.delete {
+.api-navigation .api-method.delete {
   background-color: var(--navigation-delete-color);
 }
 
-.method.put {
+.api-navigation .api-method.put {
   background-color: var(--navigation-put-color);
 }

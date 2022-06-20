@@ -46,7 +46,7 @@ export const OpenApi3Navigation = () => {
         event.stopPropagation()
         onNavigate && onNavigate(`${id}/${op}`)
       }
-      methods.push(<div className={`method ${op}`} key={`${id}/${op}`} onClick={onClick}>{op.toLocaleUpperCase()}</div>)
+      methods.push(<div className={`api-method ${op}`} key={`${id}/${op}`} onClick={onClick}>{op.toLocaleUpperCase()}</div>)
     }
     const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
     return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>
@@ -119,7 +119,7 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, theme = defaultThem
   return (
     <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
       <div id="api-navigation" style={theme as CSSProperties}>
-        <div className="navigation">
+        <div className="api-navigation">
           { NavigationComponent && <NavigationComponent /> }
         </div>
       </div>
