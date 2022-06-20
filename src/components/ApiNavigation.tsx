@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { CSSProperties, useContext, useState } from "react"
 import "./ApiNavigation.css"
 
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
@@ -6,6 +6,7 @@ import { NavContext } from "../helpers/nav.context"
 import { NavigationItem } from "./NavigationItem"
 import { metaKey } from "../diff-builder/common"
 import { getPathValue } from "../utils"
+import { defaultThemes, Theme } from "../theme"
 
 export interface ApiNavigationeProps {
   /**
@@ -16,6 +17,10 @@ export interface ApiNavigationeProps {
    * Diff metaKey
    */
   diffMetaKey?: any
+  /**
+   * current theme
+   */
+  theme?: Theme
   /**
    * navigation method
    */
@@ -94,7 +99,7 @@ export const JsonNavigation = () => {
   return <>{nav}</>
 }
 
-export const ApiNavigation = ({ data, diffMetaKey = metaKey, onNavigate }: ApiNavigationeProps) => {
+export const ApiNavigation = ({ data, diffMetaKey = metaKey, theme = defaultThemes.default, onNavigate }: ApiNavigationeProps) => {
   const [selected, setSelected] = useState("")
 
   const selectNavigationComponent = (data: any) => {
@@ -113,7 +118,9 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, onNavigate }: ApiNa
 
   return (
     <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
-      { NavigationComponent && <NavigationComponent /> }
+      <div id="api-navigation" style={theme as CSSProperties}>
+        { NavigationComponent && <NavigationComponent /> }
+      </div>
     </NavContext.Provider>
   )
 }

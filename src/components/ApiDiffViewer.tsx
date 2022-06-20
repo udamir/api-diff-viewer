@@ -141,7 +141,7 @@ export const ApiDiffViewer = ({
         <div style={{  display: "flex", flexDirection: "row" }}>
           {navigation && (
             <SideBar>
-              <ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} />
+              <ApiNavigation data={data} theme={theme} diffMetaKey={metaKey} onNavigate={onNavigate} />
             </SideBar>
           )}
           <div style={{ width: "100%" }}>
