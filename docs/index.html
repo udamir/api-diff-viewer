@@ -125,6 +125,7 @@
         rules: document.getElementById("rules").value,
         format: document.getElementById("format").value,
         navigation: true,
+        height: "inherit"
       }
       const root = ReactDOM.createRoot(container);
       root.render(<ApiDiffViewer.ApiDiffViewer {...args} />);
