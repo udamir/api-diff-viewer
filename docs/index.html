@@ -65,6 +65,9 @@
     <div id="root" style="margin-top: 40px; height: calc(100% - 40px); overflow-y: scroll"></div>
   </div>
   <script id="script">
+    const path = window.location.pathname.split('/').slice(0,-1)
+    const baseUrl = window.location.origin + path.join('/')
+
     function parseEditor(editor) {
       try {
         return JSON.parse(editor.getValue());
@@ -93,7 +96,7 @@
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       });
-      fetch(`/demo/assets/${id}.yaml`).then(function(response) {
+      fetch(baseUrl+`/assets/${id}.yaml`).then(function(response) {
         response.text().then(function(text) {
           editor.getDoc().setValue(text)
         });
