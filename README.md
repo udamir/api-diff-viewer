@@ -3,7 +3,7 @@
 
 React component to view the difference between two Json based API documents. Supported specifications: JsonSchema, OpenAPI 3.x, AsyncAPI 2.x.
 
-View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://api-diff-viewer.vercel.app/)
+View [online demo](https://udamir.github.io/api-diff-viewer/) and [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://api-diff-viewer.vercel.app/)
 
 ## Current status and plans:
 - [x] JsonSchema support
