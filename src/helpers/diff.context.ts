@@ -32,6 +32,14 @@ export type DiffContextProps = {
    */
   theme?: Theme,
   /**
+   * Text selection side
+   */
+  textSelectionSide?: "before" | "after", 
+  /**
+   * Set text selection side
+   */
+  setTextSelectionSide?: (side?: "before" | "after") => void
+  /**
    * Expand all blocks
    */
   expandAll?: () => void

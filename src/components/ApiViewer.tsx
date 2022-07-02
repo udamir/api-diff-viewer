@@ -14,7 +14,7 @@ export interface ApiViewerProps {
   /**
    * Api spec
    */
-  data: any
+  data: object | string
   /**
    * Output format
    */
@@ -49,7 +49,8 @@ export const ApiViewer = ({ data, format="yaml", navigation = false, customTheme
   useEffect(() => {
     onLoading && onLoading()
     try {
-      setBlock(buildDiffBlock(data, format))
+      const _data = typeof data === "string" ? JSON.parse(data) : data
+      setBlock(buildDiffBlock(_data, format))
       onReady && onReady(ctx)
     } catch (error) {
       onError && onError("Diff cannot be build, unexpected data!")

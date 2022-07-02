@@ -21,9 +21,9 @@ View demo on [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/
 - [x] Filter changes by type (Hide unchanged/not filtered lines)
 - [x] Navigation sidebar
 - [x] Non-blocking loading (via WebWorker)
-- [ ] WebComponent
-- [x] Default themes
 - [x] Custom themes support
+- [ ] Default themes
+- [ ] WebComponent
 - [ ] Tests
 
 ## Documentation

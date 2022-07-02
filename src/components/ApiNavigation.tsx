@@ -1,12 +1,14 @@
 import React, { CSSProperties, useContext, useState } from "react"
+import { DiffType } from "api-smart-diff"
 import "./ApiNavigation.css"
 
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
+import { NavigationPathItem } from "./NavigationPathItem"
 import { NavContext } from "../helpers/nav.context"
 import { NavigationItem } from "./NavigationItem"
 import { metaKey } from "../diff-builder/common"
-import { getPathValue } from "../utils"
 import { defaultThemes, Theme } from "../theme"
+import { SideBar } from "./SideBar"
 
 export interface ApiNavigationeProps {
   /**
@@ -18,6 +20,14 @@ export interface ApiNavigationeProps {
    */
   diffMetaKey?: any
   /**
+   * resizable navigation, default true
+   */
+  resizable?: boolean
+  /**
+   * TODO: Change filters for navigation items
+   */
+  // filters?: DiffType[]
+  /**
    * current theme
    */
   theme?: Theme
@@ -28,7 +38,7 @@ export interface ApiNavigationeProps {
 }
 
 export const OpenApi3Navigation = () => {
-  const { data, diffMetaKey, selected, onNavigate } = useContext(NavContext)
+  const { data, diffMetaKey } = useContext(NavContext)
   const nav = []
 
   const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
@@ -36,22 +46,8 @@ export const OpenApi3Navigation = () => {
 
   const { [diffMetaKey]: diff, ...rest } = data?.paths || {}
   const methodPaths = Object.keys(rest).filter((n) => n !== diffMetaKey).map((key) => ["paths", key])
-  const pathItem = ({ id, path, active, onClick }: CustomItemProps) => {
-    const methods = []
-    let activeMethod = false
-    for (const op in getPathValue(data, path)) {
-      if (!["get", "post", "delete", "put", "patch", "head", "trace", "options"].includes(op.toLocaleLowerCase())) { continue }
-      activeMethod = activeMethod || `${id}/${op}` === selected
-      const onClick: React.MouseEventHandler = (event) => {
-        event.stopPropagation()
-        onNavigate && onNavigate(`${id}/${op}`)
-      }
-      methods.push(<div className={`api-method ${op}`} key={`${id}/${op}`} onClick={onClick}>{op.toLocaleUpperCase()}</div>)
-    }
-    const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
-    return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>
-  }
-  nav.push(<NavigationGroup paths={methodPaths} key="paths" name="Paths" CustomItem={pathItem}/>)
+
+  nav.push(<NavigationGroup paths={methodPaths} key="paths" name="Paths" CustomItem={NavigationPathItem}/>)
   
   nav.push(...["schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"].map((key) => {
     const name = key.replace(/([A-Z])/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase()).trim()
@@ -99,7 +95,7 @@ export const JsonNavigation = () => {
   return <>{nav}</>
 }
 
-export const ApiNavigation = ({ data, diffMetaKey = metaKey, theme = defaultThemes.default, onNavigate }: ApiNavigationeProps) => {
+export const ApiNavigation = ({ data, diffMetaKey = metaKey, resizable = true, theme = defaultThemes.default, onNavigate }: ApiNavigationeProps) => {
   const [selected, setSelected] = useState("")
 
   const selectNavigationComponent = (data: any) => {
@@ -110,19 +106,16 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, theme = defaultThem
 
   const NavigationComponent = selectNavigationComponent(data)
 
-
   const navigate = (id: string) => {
     onNavigate && onNavigate(id)
     setSelected(id)
   }
 
-  return (
-    <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
-      <div id="api-navigation" style={theme as CSSProperties}>
-        <div className="api-navigation">
-          { NavigationComponent && <NavigationComponent /> }
-        </div>
-      </div>
-    </NavContext.Provider>
-  )
+  const navigation = <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
+    <div id="api-navigation" className="api-navigation" style={theme as CSSProperties}>
+      { NavigationComponent && <NavigationComponent /> }
+    </div>
+  </NavContext.Provider>
+
+  return resizable ? <SideBar>{navigation}</SideBar> : navigation
 }

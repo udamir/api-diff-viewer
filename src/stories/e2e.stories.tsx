@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react'
 
 import { ApiDiffViewer } from '../components/ApiDiffViewer'
@@ -34,18 +34,25 @@ export default {
         disable: true,
       }
     },
-    // TODO remove after implementation
-    customThemes: {
-      table: {
-        disable: true
-      }
-    }
   },
 } as ComponentMeta<typeof ApiDiffViewer>;
 
 const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
   const [data, setData] = useState()
   const navigateTo = useRef<(id: string, parent?: HTMLElement) => void>()
+  const layout = useRef<HTMLDivElement>(null)
+
+  function setWindowHeight(){
+    if (!layout.current) { return }
+    layout.current.style.height = `${window.innerHeight}px`
+  }
+
+  useEffect(() => {
+    setWindowHeight()
+    // initiate the event handler
+    window.addEventListener("resize",setWindowHeight,false);
+    return () => window.removeEventListener("resize", setWindowHeight)
+  }, [])
 
   const onReady = (c: DiffContextProps) => {
     setData(c.data)
@@ -58,11 +65,11 @@ const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
 
   const props = {...args, navigation: false, onReady}
 
-  return (<div style={{ margin: "40px" }}>
-    <div style={{ width: "200px", height: "500px", overflowY: "auto", float: "left" }}>
+  return (<div ref={layout}>
+    <div style={{ height: "inherit", overflowY: "auto", float: "left" }}>
       <ApiNavigation data={data} onNavigate={onNavigate} />
     </div>
-    <div id="api-diff-viewer-div" style={{ height: "500px", overflowY: "auto" }}>
+    <div id="api-diff-viewer-div" style={{ height: "inherit", overflowY: "auto" }}>
       <ApiDiffViewer {...props} />
     </div>
   </div>)

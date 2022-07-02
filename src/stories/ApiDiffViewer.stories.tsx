@@ -27,12 +27,6 @@ export default {
         disable: true,
       }
     },
-    // TODO remove after implementation
-    customThemes: {
-      table: {
-        disable: true
-      }
-    }
   },
 } as ComponentMeta<typeof ApiDiffViewer>;
 
@@ -46,6 +40,7 @@ OpenApi3.args = {
   rules: "OpenApi3",
   format: "yaml",
   navigation: true,
+  height: "100vh"
 }
 
 export const AsyncApi = Template.bind({});

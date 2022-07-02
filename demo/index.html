@@ -13,8 +13,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/indent-fold.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-    <script src="../dist/api-diff-viewer.umd.js"></script>
-    <link rel="stylesheet" href="../dist/style.css">
+    <!-- <script src="../dist/api-diff-viewer.umd.js"></script> -->
+    <!-- <link rel="stylesheet" href="../dist/style.css"> -->
+    <script src="https://cdn.jsdelivr.net/npm/api-diff-viewer"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/api-diff-viewer/dist/style.css">
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
@@ -116,7 +118,7 @@
         useWorker: document.getElementById("worker").checked,
         rules: document.getElementById("rules").value,
         format: document.getElementById("format").value,
-        navigation: false,
+        navigation: true,
       }
       const root = ReactDOM.createRoot(container);
       root.render(<ApiDiffViewer.ApiDiffViewer {...args} />);

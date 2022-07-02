@@ -3,6 +3,7 @@
   white-space: nowrap;
   overflow: hidden;
   background-color: var(--base-bg-color);
+  padding: 0 10px;
 }
 
 .api-navigation .navigation-ref.active {
@@ -19,7 +20,7 @@
   text-align: left;
   direction: rtl;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--navigation-text-color);
   text-overflow: ellipsis;
   padding: 5px 0;

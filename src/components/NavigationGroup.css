@@ -1,9 +1,16 @@
+.api-navigation {
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+}
+
 .api-navigation .navigation-group {
-  padding-bottom: 5px;
-  padding-top: 10px;
+  padding: 5px 10px;
   font-weight: bolder;
   cursor: pointer;
   position: relative;
+
 }
 
 .api-navigation .navigation-group .group-toggle {
