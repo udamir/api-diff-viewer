@@ -26,7 +26,6 @@
     .CodeMirror {border: 1px solid silver; border-width: 1px 2px; }
   </style>
 
-
   <div id="input" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0">
     <div style='float: left; width: 49%; height: 100%; margin: 0 0.25%;'>
       <h2 style="margin-top: 30px; margin-bottom: 10px;">Before (json or yaml)</h2>
@@ -62,8 +61,12 @@
     <div id="diff-action" style='position: fixed; width: 100%; padding: 5px;'>
       <button onclick="hideResult()">close</button>
     </div>
-    <div id="root" style="margin-top: 40px; height: calc(100% - 40px); overflow-y: scroll"></div>
+    <div id="root" style="margin-top: 40px; height: calc(100vh - 40px); overflow-y: scroll"></div>
   </div>
+  <a href="https://github.com/udamir/api-diff-viewer" style="position: absolute; right: 0px; z-index: 10">
+    <img loading="lazy" width="120" height="120" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_red_aa0000.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1">
+  </a>
+
   <script id="script">
     const path = window.location.pathname.split('/').slice(0,-1)
     const baseUrl = window.location.origin + path.join('/')
