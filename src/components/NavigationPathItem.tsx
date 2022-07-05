@@ -4,7 +4,7 @@ import { getPathValue } from "../utils"
 import { CustomItemProps } from "./NavigationGroup"
 import { NavigationItem } from "./NavigationItem"
 
-export const NavigationPathItem = ({ id, path, active, onClick }: CustomItemProps) => {
+export const NavigationPathItem = ({ id, path, change, active, onClick }: CustomItemProps) => {
   const { data, selected, onNavigate } = useContext(NavContext)
   
   const methods = []
@@ -19,5 +19,5 @@ export const NavigationPathItem = ({ id, path, active, onClick }: CustomItemProp
     methods.push(<div className={`api-method ${op}`} key={`${id}/${op}`} onClick={onClick}>{op.toLocaleUpperCase()}</div>)
   }
   const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "\u2022").split("").reverse().join("")
-  return <NavigationItem id={id} name={name} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>
+  return <NavigationItem id={id} name={name} change={change} active={active || activeMethod} onClick={onClick}>{methods}</NavigationItem>
 }

@@ -14,9 +14,13 @@ export interface DiffBlockProps {
    * Line is hidden
    */
   hidden?: boolean
+  /**
+   * Filters need to be applied to Line
+   */
+  filtered?: boolean
 }
 
-export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
+export const DiffBlock = ({ data, hidden=false, filtered=false }: DiffBlockProps) => {
   const [expanded, setExpanded] = useState(true)
   const [visible, setVisible] = useState(false)
   const { treeview = "expanded", filters, selected } = useContext(DiffContext)
@@ -35,13 +39,18 @@ export const DiffBlock = ({ data, hidden=false }: DiffBlockProps) => {
     return true
   }
 
-  const filtered = !!filters?.length
+  // const filtered = !!filters?.length
   let hiddenItems = 0
-  const lines = data.children.map((line, i) => {
+  let lines = data.children.map((line, i) => {
     const hide = visible || !filtered ? false : isHidden(line)
-    hiddenItems+= hide ? 1 : 0
-    return <DiffBlock key={i} data={line} hidden={hide} />
+    hiddenItems += hide ? 1 : 0
+    return <DiffBlock key={i} data={line} hidden={hide} filtered={visible ? false : filtered} />
   })
+
+  if (hiddenItems === 1 && !hidden) {
+    lines = data.children.map((line, i) => <DiffBlock key={i} data={line} filtered={visible ? false : filtered} />)
+    hiddenItems = 0
+  }
 
   const tags = data.children.length ? expanded ? ["expanded"] : ["collapsed"] : []
 

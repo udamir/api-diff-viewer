@@ -1,5 +1,4 @@
 import React, { CSSProperties, useContext, useState } from "react"
-import { DiffType } from "api-smart-diff"
 import "./ApiNavigation.css"
 
 import { CustomItemProps, NavigationGroup } from "./NavigationGroup"
@@ -24,10 +23,6 @@ export interface ApiNavigationeProps {
    */
   resizable?: boolean
   /**
-   * TODO: Change filters for navigation items
-   */
-  // filters?: DiffType[]
-  /**
    * current theme
    */
   theme?: Theme
@@ -37,9 +32,10 @@ export interface ApiNavigationeProps {
   onNavigate?: (id: string) => void
 }
 
-export const OpenApi3Navigation = () => {
-  const { data, diffMetaKey } = useContext(NavContext)
+export const OpenApi3Navigation = ({ data }: any) => {
+  const { diffMetaKey } = useContext(NavContext)
   const nav = []
+  console.log("render")
 
   const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
   nav.push(<NavigationGroup paths={openApiPaths} key="openapi" name="OpenAPI" />)
@@ -58,8 +54,8 @@ export const OpenApi3Navigation = () => {
   return <>{nav}</  >
 }
 
-export const AsyncApi3Navigation = () => {
-  const { data, diffMetaKey } = useContext(NavContext)
+export const AsyncApi3Navigation = ({data}: any) => {
+  const { diffMetaKey } = useContext(NavContext)
   const nav = []
 
   const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
@@ -82,8 +78,8 @@ export const AsyncApi3Navigation = () => {
   return <>{nav}</>
 }
 
-export const JsonNavigation = () => {
-  const { data, diffMetaKey } = useContext(NavContext)
+export const JsonNavigation = ({data}: any) => {
+  const { diffMetaKey } = useContext(NavContext)
   const nav = []
 
   for(const key of Object.keys(data || {})) {
@@ -113,7 +109,7 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, resizable = true, t
 
   const navigation = <NavContext.Provider value={{ onNavigate: navigate, selected, diffMetaKey, data }}>
     <div id="api-navigation" className="api-navigation" style={theme as CSSProperties}>
-      { NavigationComponent && <NavigationComponent /> }
+      { NavigationComponent && <NavigationComponent data={data} /> }
     </div>
   </NavContext.Provider>
 

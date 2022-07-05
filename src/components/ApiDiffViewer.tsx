@@ -157,7 +157,7 @@ export const ApiDiffViewer = ({
       <div id="api-diff-viewer" ref={layout} style={{...theme as CSSProperties, height }}>
         {navigation && <ApiNavigation data={data} theme={theme} diffMetaKey={metaKey} onNavigate={onNavigate} />}
         <div ref={viewer} className="diff-viewer">
-          {data && block ? <DiffBlock data={block} /> : <div>Processing...</div>}
+          {data && block ? <DiffBlock data={block} filtered={!!filters.length} /> : <div>Processing...</div>}
         </div>
       </div>
     </DiffContext.Provider>

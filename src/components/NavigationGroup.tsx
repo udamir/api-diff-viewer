@@ -10,6 +10,7 @@ export interface CustomItemProps {
   id: string
   path: string[]
   active?: boolean
+  change?: string
   onClick?: () => void
 }
 
@@ -19,6 +20,33 @@ export interface NavigationGroupProps {
   CustomItem?: (props: CustomItemProps) => JSX.Element
 }
 
+const isModified = (obj: any, diffKey: any) => {
+  if (typeof obj !== "object" || obj === null) { return false }
+
+  const { [diffKey]: diff, ...rest } = obj
+  if (diff) { return true }
+  
+  for (const key in rest) {
+    const res = isModified(rest[key], diffKey)
+    if (res) { return true }
+  }
+
+  return false
+}
+
+const getPathChange = (path: string[]) => {
+  const { data, diffMetaKey } = useContext(NavContext)
+  path = path.slice(0)
+  const key = path.pop() 
+  const { [diffMetaKey]: diff, ...rest } = getPathValue(data, path) || {}
+
+  if (key && diff && diff[key]) {
+    return diff[key].action
+  } else {
+    return key && isModified(rest[key], diffMetaKey) ? "replace" : ""
+  }
+}
+
 export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProps) => {
   const [ collapsed, setCollapsed ] = useState(false)
   const { data, onNavigate, selected } = useContext(NavContext)
@@ -26,16 +54,18 @@ export const NavigationGroup = ({ paths, name, CustomItem }: NavigationGroupProp
   const items = []
 
   for (const path of paths) {
-    if (getPathValue(data, path) === undefined) { continue }
+    const value = getPathValue(data, path)
+    if (value === undefined) { continue }
+    const change = getPathChange(path)
     const itemId = path.map(encodeKey).join("/")
     const active = itemId === selected
 
     const onClick = () => onNavigate && onNavigate(itemId)
     if (CustomItem) {
-      items.push(<CustomItem key={itemId} id={itemId} active={active} path={path} onClick={onClick} />)
+      items.push(<CustomItem key={itemId} id={itemId} active={active} change={change} path={path} onClick={onClick} />)
     } else {
       const name = `- ${path.slice(-1).pop()}`.split("").reverse().join("")
-      items.push(<NavigationItem key={itemId} id={itemId} active={active} name={name} onClick={onClick} />)
+      items.push(<NavigationItem key={itemId} id={itemId} active={active} change={change} name={name} onClick={onClick} />)
     }
   }
 

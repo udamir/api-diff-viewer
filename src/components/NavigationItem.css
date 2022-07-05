@@ -14,6 +14,18 @@
   background-color: var(--navigation-hover-bg-color);
 }
 
+.api-navigation .replace {
+  background-color: var(--replace-bg-color);
+}
+
+.api-navigation .add {
+  background-color: var(--add-bg-color);
+}
+
+.api-navigation .remove {
+  background-color: var(--remove-bg-color);
+}
+
 .api-navigation .navigation-ref .navigation-path {
   unicode-bidi: bidi-override;
   overflow: hidden;
