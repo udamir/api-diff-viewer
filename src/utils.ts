@@ -1,3 +1,5 @@
+import { BaseRulesType } from "api-smart-diff"
+
 export const isEmpty = (value: any) => {
   return !value || value === '0' || (value instanceof Array && value.length === 0) || (value instanceof Object && !Object.keys(value))
 }
@@ -17,4 +19,12 @@ export const getPathValue = (data: any, path: string[]) => {
     if (item === undefined) { return undefined }
   }
   return item
+}
+
+export const calcRulesType = (data: any): BaseRulesType => {
+  if (typeof data !== "object" || !data) { return "JsonSchema"}
+
+  if (/3.+/.test(data?.openapi || "")) return "OpenApi3"
+  if (/2.+/.test(data?.asyncapi || "")) return "AsyncApi2"
+  return "JsonSchema"
 }
