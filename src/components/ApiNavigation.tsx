@@ -35,7 +35,6 @@ export interface ApiNavigationeProps {
 export const OpenApi3Navigation = ({ data }: any) => {
   const { diffMetaKey } = useContext(NavContext)
   const nav = []
-  console.log("render")
 
   const openApiPaths = [["info"], ["externalDocs"], ["servers"], ["tags"]]
   nav.push(<NavigationGroup paths={openApiPaths} key="openapi" name="OpenAPI" />)
