@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "React component to view the difference between two Json based API documents",
   "author": "Damir Yusipov",
   "license": "MIT",
@@ -42,7 +42,7 @@
     "api"
   ],
   "dependencies": {
-    "api-smart-diff": "^0.4.3",
+    "api-smart-diff": "^0.4.4",
     "diff": "^5.0.0"
   },
   "peerDependencies": {
