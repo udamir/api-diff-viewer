@@ -63,7 +63,7 @@ export const AsyncApi3Navigation = ({data}: any) => {
   const { [diffMetaKey]: diff, ...rest } = data?.channels || {}
   const channelPaths = Object.keys(rest).filter((n) => n !== diffMetaKey).map((key) => ["channels", key])
   const pathItem = ({ id, path, active, onClick }: CustomItemProps) => {
-    const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "}\u25CF{").split("").reverse().join("")
+    const name = path[path.length - 1].replaceAll(new RegExp("\{(.*?)\}", "ig"), "\u2022").split("").reverse().join("")
     return <NavigationItem id={id} active={active} name={name} onClick={onClick} />
   }
   nav.push(<NavigationGroup paths={channelPaths} key="channels" name="Channels" CustomItem={pathItem}/>)

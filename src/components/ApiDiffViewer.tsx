@@ -86,8 +86,6 @@ export const ApiDiffViewer = ({
   const layout = useRef<HTMLDivElement>(null)
   const viewer = useRef<HTMLDivElement>(null)
 
-  // console.time("render")
-
   useEffect(() => {
     setThemes({ ...defaultThemes, ...customThemes }) 
   }, [])

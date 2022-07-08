@@ -70,7 +70,7 @@ export const Line = ({ index, indent, tokens, diff, tags }: LineProps) => {
       {showMarker && <div className={`change-marker non-selectable ${diff?.type}`}>{diff?.type}</div>}
       <span className="line-num non-selectable">{index || ""}</span>
       {tags.includes("expanded") && <span className="toggle expanded non-selectable" />}
-      {tags.includes("collapsed") && <span className="toggle collabsed non-selectable" />}
+      {tags.includes("collapsed") && <span className="toggle collapsed non-selectable" />}
       <div
         className={`line-content${hidden ? " hidden" : ""}`}
         style={contentIndentStyle}

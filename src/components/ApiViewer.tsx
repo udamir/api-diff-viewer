@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-import React, { useEffect, useState } from "react"
+import React, { CSSProperties, useEffect, useRef, useState } from "react"
 
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { DiffBlockData, metaKey } from "../diff-builder/common"
@@ -8,7 +8,7 @@ import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { defaultThemes, Theme } from "../theme"
 import { DiffBlock } from "./DiffBlock"
-import { SideBar } from "./SideBar"
+import "./ApiViewer.css"
 
 export interface ApiViewerProps {
   /**
@@ -20,13 +20,17 @@ export interface ApiViewerProps {
    */
   format?: "json" | "yaml"
   /**
-   * Change filters for filtered treeview
+   * Show navigation sidebar
    */
   navigation?: boolean
   /**
    * Custom themes
    */
   customThemes?: { [key: string]: Theme }
+  /**
+   * Component height, default "100vh"
+   */
+  height?: string
   /**
    * Lifecycle events
    */
@@ -35,11 +39,13 @@ export interface ApiViewerProps {
   onError?: (error: string) => void
 }
 
-export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, onReady, onLoading, onError }: ApiViewerProps) => {
+export const ApiViewer = ({ data, format="yaml", navigation = false, customThemes, height = "100vh", onReady, onLoading, onError }: ApiViewerProps) => {
   const [treeview, setTreeview] = useState<"expanded" | "collapsed">()
   const [block, setBlock] = useState<DiffBlockData>()
   const [selected, setSelected] = useState("")
   const [themeType, setCurrentTheme] = useState('dafault');
+  const layout = useRef<HTMLDivElement>(null)
+  const viewer = useRef<HTMLDivElement>(null)
   const [themes, setThemes] = useState<{[key:string]: Theme}>({})
 
   useEffect(() => {
@@ -57,12 +63,19 @@ export const ApiViewer = ({ data, format="yaml", navigation = false, customTheme
     }
   }, [data, format])
  
+  useEffect(() => {
+    if (layout.current?.style) {
+      layout.current.style.height = height || "100vh"
+    }
+  }, [height])
+
   const onNavigate = (id: string) => {
     setSelected(id)
-    const el = document.getElementById(id)!
-    if (!el) { return }
-    const y = el.getBoundingClientRect().top + window.pageYOffset - 150;
-    window.scrollTo({top: y, behavior: 'smooth'});
+    const block = document.getElementById(id)!
+    if (!block || !viewer.current) { return }
+    const offset = viewer.current.scrollTop
+    const y = block.getBoundingClientRect().top + offset - 150
+    viewer.current.scrollTo({ top: y, behavior: "smooth" })
   }
 
   const theme = themes[themeType] || themes.default
@@ -73,9 +86,9 @@ export const ApiViewer = ({ data, format="yaml", navigation = false, customTheme
 
   return (
     <DiffContext.Provider value={ctx}>
-      <div id="api-viewer">
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          { navigation && <SideBar><ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /></SideBar> }
+      <div id="api-viewer" ref={layout} style={{...theme as CSSProperties, height }}>
+        { navigation && <ApiNavigation data={data} diffMetaKey={metaKey} onNavigate={onNavigate} /> }
+        <div ref={viewer} className="viewer">
           { data && block ? <DiffBlock data={block} /> : <div>Processing...</div> }
         </div>
       </div>

@@ -1,0 +1,8 @@
+.viewer {
+  height: inherit;
+  overflow-y: auto;
+}
+
+.sidebar {
+  float: left;
+}
