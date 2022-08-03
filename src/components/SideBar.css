@@ -26,13 +26,18 @@
   justify-self: flex-end;
   cursor: col-resize;
   resize: horizontal;  
+  width: 2px;
 }
 
 .sidebar .resizer:hover {
-  width: 3px;
+  width: 2px;
   background: #c1c3c5b4;
   user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   -webkit-user-select: none;
+}
+
+.hidden {
+  display: none;
 }

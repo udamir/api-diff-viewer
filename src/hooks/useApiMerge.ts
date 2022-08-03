@@ -27,11 +27,7 @@ export const useMergeWorker = (setData: (value: any) => void, setError?: (value:
     workerRef.current = worker
     worker.onmessage = (event) => setData(event.data)
     worker.onerror = () => setError && setError('There is an error with worker!')
-    // console.log("worker created")
-    return () => {
-      // console.log("worker terminated")
-      worker.terminate()
-    }
+    return () => worker.terminate()
   }, [])
   
   return (before: any, after: any, options: ApiDiffOptions) => {

@@ -25,10 +25,6 @@ export interface ApiDiffViewerProps {
    */
   display?: "inline" | "side-by-side"
   /**
-   * Api compare rules
-   */
-  rules?: BaseRulesType
-  /**
    * Output format
    */
   format?: "json" | "yaml"
@@ -63,7 +59,6 @@ export interface ApiDiffViewerProps {
 export const ApiDiffViewer = ({
   before,
   after,
-  rules,
   display = "side-by-side",
   format = "yaml",
   filters = [],
@@ -99,7 +94,7 @@ export const ApiDiffViewer = ({
     try {
       const _before = typeof before === "string" ? JSON.parse(before) : before
       const _after = typeof after === "string" ? JSON.parse(after) : after
-      const _rules = rules || calcRulesType(_after)
+      const _rules = calcRulesType(_after)
 
       if (useWorker) {
         merge(_before, _after, { rules: _rules, metaKey, arrayMeta: true })
@@ -109,7 +104,7 @@ export const ApiDiffViewer = ({
     } catch (error) {
       onError && onError("Unexpected data")
     }
-  }, [before, after, rules])
+  }, [before, after])
 
   useEffect(() => {
     if (!data) { return }

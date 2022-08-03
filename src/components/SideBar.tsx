@@ -8,7 +8,7 @@ export interface ApiNavigationeProps {
 
 export const SideBar = ({ children }: ApiNavigationeProps) => {
   const ref = useRef<any>()
-  const { initResize } = useResize(ref)
+  const { resizing, initResize } = useResize(ref)
 
   return (
     <div className="sidebar">
@@ -17,7 +17,7 @@ export const SideBar = ({ children }: ApiNavigationeProps) => {
           { children }
         </div>
       </div>
-      <div className="resizer" onMouseDown={initResize} />
+      <div className={`resizer${resizing ? " hidden" : ""}`} onMouseDown={initResize} />
     </div>
   )
 }

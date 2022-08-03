@@ -80,7 +80,6 @@ OpenApi3.args = {
   before: openApiBefore,
   after: openApiAfter,
   display: "side-by-side",
-  rules: "OpenApi3",
   format: "yaml",
   navigation: true,
 }
@@ -90,7 +89,6 @@ AsyncApi.args = {
   before: asyncApiBefore,
   after: asyncApiAfter,
   display: "side-by-side",
-  rules: "AsyncApi2",
   format: "yaml",
   navigation: true
 }
@@ -100,7 +98,6 @@ JsonSchema.args = {
   before: jsonSchemaBefore,
   after: jsonSchemaAfter,
   display: "side-by-side",
-  rules: "JsonSchema",
   format: "yaml",
   navigation: true
 }
