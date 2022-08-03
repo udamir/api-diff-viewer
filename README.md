@@ -24,6 +24,7 @@ View [online demo](https://udamir.github.io/api-diff-viewer/) and [![Storybook](
 - [x] Custom themes support
 - [ ] Default themes
 - [ ] WebComponent
+- [ ] Performance improvement
 - [ ] Tests
 
 ## Documentation
