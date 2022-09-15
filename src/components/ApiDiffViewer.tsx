@@ -1,5 +1,5 @@
 import React, { CSSProperties, useEffect, useRef, useState } from "react"
-import { apiMerge, BaseRulesType, DiffType } from "api-smart-diff"
+import { apiMerge, DiffType } from "api-smart-diff"
 
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { DiffBlockData, metaKey } from "../diff-builder/common"
@@ -7,7 +7,6 @@ import { useMergeWorker } from "../hooks/useApiMerge"
 import { ApiNavigation } from "./ApiNavigation"
 import { buildDiffBlock } from "../diff-builder"
 import { Theme, defaultThemes } from "../theme"
-import { calcRulesType } from "../utils"
 import { DiffBlock } from "./DiffBlock"
 import "./ApiDiffViewer.css"
 
@@ -94,12 +93,12 @@ export const ApiDiffViewer = ({
     try {
       const _before = typeof before === "string" ? JSON.parse(before) : before
       const _after = typeof after === "string" ? JSON.parse(after) : after
-      const _rules = calcRulesType(_after)
+
 
       if (useWorker) {
-        merge(_before, _after, { rules: _rules, metaKey, arrayMeta: true })
+        merge(_before, _after, { metaKey, arrayMeta: true })
       } else {
-        setData(apiMerge(_before, _after, { rules: _rules, metaKey, arrayMeta: true }))
+        setData(apiMerge(_before, _after, { metaKey, arrayMeta: true }))
       }
     } catch (error) {
       onError && onError("Unexpected data")
