@@ -53,7 +53,7 @@ export const OpenApi3Navigation = ({ data }: any) => {
   return <>{nav}</  >
 }
 
-export const AsyncApi3Navigation = ({data}: any) => {
+export const AsyncApi2Navigation = ({data}: any) => {
   const { diffMetaKey } = useContext(NavContext)
   const nav = []
 
@@ -95,7 +95,7 @@ export const ApiNavigation = ({ data, diffMetaKey = metaKey, resizable = true, t
 
   const selectNavigationComponent = (data: any) => {
     if (/3.+/.test(data?.openapi || "")) { return OpenApi3Navigation }
-    if (/2.+/.test(data?.asyncapi || "")) { return AsyncApi3Navigation }
+    if (/2.+/.test(data?.asyncapi || "")) { return AsyncApi2Navigation }
     return JsonNavigation
   }
 
