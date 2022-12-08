@@ -348,6 +348,7 @@ export default {
         tags: [
           "pet"
         ],
+        deprecated: true,
         summary: "uploads an image",
         operationId: "uploadFile",
         parameters: [
