@@ -43,7 +43,10 @@ paths:
           required: true
           explode: true
           schema:
-            type: string
+            type: array
+            items:
+              type: string
+              maxLength: 16
       responses:
         '200':
           description: successful operation

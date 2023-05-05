@@ -15,7 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <!-- <script src="../dist/api-diff-viewer.umd.js"></script> -->
     <!-- <link rel="stylesheet" href="../dist/style.css"> -->
-    <script src="https://cdn.jsdelivr.net/npm/api-diff-viewer@0.6.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/api-diff-viewer@0.6.13"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/api-diff-viewer/dist/style.css">
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -39,13 +39,7 @@
     </div>
     <div id="action" style='position: fixed; width: 100%; padding: 5px;'>
       <button onclick="showResult('compare')">compare</button>
-      <label for="rules">API type:</label>
 
-      <select name="rules" id="rules">
-        <option value="OpenApi3">OpenApi3</option>
-        <option value="AsyncApi2">AsyncApi2</option>
-        <option value="JsonSchema">JsonSchema</option>
-      </select>
       <label for="format">Output format:</label>
       <select name="format" id="format">
         <option value="yaml">yaml</option>
@@ -122,7 +116,6 @@
         after: parseEditor(after),
         display: document.getElementById("inline").checked ? "inline" : "side-by-side",
         useWorker: document.getElementById("worker").checked,
-        rules: document.getElementById("rules").value,
         format: document.getElementById("format").value,
         navigation: true,
         height: "inherit"
