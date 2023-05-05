@@ -3340,10 +3340,10 @@ anymatch@^3.0.0, anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-api-smart-diff@0.5.5:
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/api-smart-diff/-/api-smart-diff-0.5.5.tgz#d96d645ac562a3ba15ae62164818ec5e27fdad91"
-  integrity sha512-mpCwrcXf1cD52lkOjlY3s/z8a8Qmsn7nf+J6FyfHZe64RbCLEK1BpR5d5InfKnG9zW2S7zVC4ckQzKLD2OWTcA==
+api-smart-diff@0.6.7:
+  version "0.6.7"
+  resolved "https://registry.yarnpkg.com/api-smart-diff/-/api-smart-diff-0.6.7.tgz#813d969909076efbf94237e26e8cf1e2507f609e"
+  integrity sha512-9QUXiobc+k2qPmmdsx92n6rFjkCHexvvi7/ADn3j88SQLYjpZ2JeW4ToWe5MbNK1oGKJzRd7x7UUHlDiA6RuAA==
 
 app-root-dir@^1.0.2:
   version "1.0.2"
