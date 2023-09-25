@@ -1,5 +1,5 @@
 import React, { CSSProperties, useEffect, useRef, useState } from "react"
-import { apiMerge, DiffType } from "api-smart-diff"
+import { apiMerge, DiffType, Rules } from "api-smart-diff"
 
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { DiffBlockData, metaKey } from "../diff-builder/common"
@@ -19,6 +19,10 @@ export interface ApiDiffViewerProps {
    * object after
    */
   after: object | string
+  /**
+   * Custom merge rules
+   */
+  rules?: Rules
   /**
    * Display document diff in inline or side-by-side mode
    */
@@ -61,6 +65,7 @@ export const ApiDiffViewer = ({
   display = "side-by-side",
   format = "yaml",
   filters = [],
+  rules,
   navigation = false,
   useWorker = true,
   height = "100vh",
@@ -96,9 +101,9 @@ export const ApiDiffViewer = ({
 
 
       if (useWorker) {
-        merge(_before, _after, { metaKey, arrayMeta: true })
+        merge(_before, _after, { metaKey, arrayMeta: true, rules })
       } else {
-        setData(apiMerge(_before, _after, { metaKey, arrayMeta: true }))
+        setData(apiMerge(_before, _after, { metaKey, arrayMeta: true, rules }))
       }
     } catch (error) {
       onError && onError("Unexpected data")
