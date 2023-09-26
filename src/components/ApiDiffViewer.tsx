@@ -20,7 +20,7 @@ export interface ApiDiffViewerProps {
    */
   after: object | string
   /**
-   * Custom merge rules
+   * Custom merge rules (ignored if useWorker is true)
    */
   rules?: Rules
   /**
@@ -101,7 +101,7 @@ export const ApiDiffViewer = ({
 
 
       if (useWorker) {
-        merge(_before, _after, { metaKey, arrayMeta: true, rules })
+        merge(_before, _after, { metaKey, arrayMeta: true })
       } else {
         setData(apiMerge(_before, _after, { metaKey, arrayMeta: true, rules }))
       }
