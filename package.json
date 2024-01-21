@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "0.6.15",
+  "version": "0.7.0",
   "description": "React component to view the difference between two Json based API documents",
   "author": "Damir Yusipov",
   "license": "MIT",
@@ -12,6 +12,7 @@
   "types": "dist/api-diff-viewer.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/api-diff-viewer.d.ts",
       "import": "./dist/api-diff-viewer.es.js",
       "require": "./dist/api-diff-viewer.umd.js"
     },
@@ -23,8 +24,8 @@
   "scripts": {
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "repository": {
     "type": "git",
@@ -42,7 +43,7 @@
     "api"
   ],
   "dependencies": {
-    "api-smart-diff": "^0.7.0",
+    "api-smart-diff": "^1.0.1",
     "diff": "^5.0.0"
   },
   "peerDependencies": {
@@ -52,26 +53,29 @@
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/preset-react": "^7.16.7",
-    "@rollup/plugin-commonjs": "^22.0.0",
-    "@rollup/plugin-node-resolve": "^13.2.1",
-    "@storybook/addon-actions": "^6.5.8",
-    "@storybook/addon-essentials": "^6.5.8",
-    "@storybook/addon-interactions": "^6.5.8",
-    "@storybook/addon-links": "^6.5.8",
-    "@storybook/builder-vite": "^0.1.36",
-    "@storybook/jest": "^0.0.10",
-    "@storybook/react": "^6.5.8",
-    "@storybook/testing-library": "^0.0.11",
+    "@storybook/addon-essentials": "^7.6.10",
+    "@storybook/addon-interactions": "^7.6.10",
+    "@storybook/addon-links": "^7.6.10",
+    "@storybook/addon-onboarding": "^1.0.10",
+    "@storybook/blocks": "^7.6.10",
+    "@storybook/react": "^7.6.10",
+    "@storybook/react-vite": "^7.6.10",
+    "@storybook/test": "^7.6.10",
     "@types/diff": "^5.0.2",
-    "@types/react": "^17.0.39",
-    "@types/react-dom": "^17.0.0",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^1.3.2",
     "babel-loader": "^8.2.5",
-    "react": "17.0.0",
-    "react-dom": "17.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "storybook": "^7.6.10",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.4",
-    "vite": "^2.9.8",
+    "vite": "^5.0.12",
     "vite-plugin-dts": "^1.1.1"
+  },
+  "resolutions": {
+    "strip-ansi": "6.0.1",
+    "jackspeak": "2.1.1"
   }
 }

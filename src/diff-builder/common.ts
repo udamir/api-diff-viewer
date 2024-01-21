@@ -1,4 +1,4 @@
-import { ActionType, ApiMergedMeta, DiffType } from "api-smart-diff"
+import { ActionType, DiffMeta, DiffType } from "api-smart-diff"
 
 export const metaKey = "$diff" //Symbol("diff") // TODO handle "$diff" key in file
 export const diffTypes: DiffType[] = ["breaking", "non-breaking", "annotation", "unclassified"]
@@ -54,9 +54,9 @@ export class DiffLineData {
   public index: number
   public indent: number
   public tokens: Token[]
-  public diff?: ApiMergedMeta
+  public diff?: DiffMeta
   
-  constructor(index: number, indent: number, tokens: Token[], diff?: ApiMergedMeta) {
+  constructor(index: number, indent: number, tokens: Token[], diff?: DiffMeta) {
     this.index = index
     this.indent = indent
     this.tokens = tokens
@@ -77,7 +77,7 @@ export class DiffBlockData extends DiffLineData {
     return this.index + this.lines
   }
   
-  constructor(index: number, indent: number, tokens: Token[], diff?: ApiMergedMeta, level = 0, id = "") {
+  constructor(index: number, indent: number, tokens: Token[], diff?: DiffMeta, level = 0, id = "") {
     super(index, indent, tokens, diff)
     this.id = id
     this.children = []
@@ -86,7 +86,7 @@ export class DiffBlockData extends DiffLineData {
     this.level = level
   }
 
-  public addDiff(diff: ApiMergedMeta) {
+  public addDiff(diff: DiffMeta) {
     const i = diffTypes.indexOf(diff.type)
     this.diffs[i]++
   }

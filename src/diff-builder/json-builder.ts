@@ -1,4 +1,4 @@
-import { ApiMergedMeta, DiffAction } from "api-smart-diff"
+import { DiffMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
 import { encodeKey, isEmpty } from "../utils"
 import { DiffBlockData, Token, metaKey, TokenTag } from "./common"
@@ -33,7 +33,7 @@ export const addJsonBlockTokens = (block: DiffBlockData) => {
   }
 }
 
-export const _jsonValueTokens = (tokenConstrucor: (value: any, tags?: TokenTag | TokenTag[]) => Token, value: any, diff?: ApiMergedMeta) => {
+export const _jsonValueTokens = (tokenConstrucor: (value: any, tags?: TokenTag | TokenTag[]) => Token, value: any, diff?: DiffMeta) => {
   const _value = JSON.stringify(value)
   if (diff?.replaced !== undefined && typeof value === "string") {
     const changes = diffWords(_value, JSON.stringify(diff.replaced))
@@ -48,7 +48,7 @@ export const _jsonValueTokens = (tokenConstrucor: (value: any, tags?: TokenTag |
   }
 }
 
-export const _jsonPropLineTokens = (key: string | number, value: any, diff?: ApiMergedMeta, last = false) => {
+export const _jsonPropLineTokens = (key: string | number, value: any, diff?: DiffMeta, last = false) => {
   return [
     ...diff?.action === DiffAction.rename ? _jsonValueTokens(Token.Key, key, diff) : [Token.Key(JSON.stringify(key))],
     Token.Spec(": "),
@@ -57,14 +57,14 @@ export const _jsonPropLineTokens = (key: string | number, value: any, diff?: Api
   ] 
 }
 
-export const _jsonArrLineTokens = (value: any, diff?: ApiMergedMeta, last?: boolean) => {
+export const _jsonArrLineTokens = (value: any, diff?: DiffMeta, last?: boolean) => {
   return [
     ..._jsonValueTokens(Token.Value, value, diff),
     ...last ? [] : [Token.Spec(",")],
   ]
 }
 
-export const _jsonPropBlockTokens = (isArray: boolean, key: string | number, diff?: ApiMergedMeta, last = false) => {
+export const _jsonPropBlockTokens = (isArray: boolean, key: string | number, diff?: DiffMeta, last = false) => {
   return [
     ...diff?.action === DiffAction.rename ? _jsonValueTokens(Token.Key, key, diff) : [Token.Key(JSON.stringify(key))],
     Token.Spec(": "),
@@ -92,7 +92,7 @@ export const _jsonEndBlockTokens = (isArray: boolean, last: boolean) => {
 
 export const buildDiffJsonBlock = (input: any, key: string | number, parent: DiffBlockData, last: boolean) => {
   const value = input[key]
-  let diff: ApiMergedMeta | undefined = metaKey in input && (input as any)[metaKey][key]
+  let diff: DiffMeta | undefined = metaKey in input && (input as any)[metaKey][key]
 
   if (diff) {
     parent.addDiff(diff)

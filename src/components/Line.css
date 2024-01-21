@@ -62,7 +62,7 @@
 .change-marker.non-breaking {
   border-left: 3px solid var(--non-breaking-color);
 }
-.change-marker.deprecate {
+.change-marker.deprecated {
   border-left: 3px solid var(--non-breaking-color);
 }
 .change-marker.breaking {
@@ -84,7 +84,7 @@
 .change-marker.non-breaking:hover {
   background-color: var(--non-breaking-bg-color);
 }
-.change-marker.deprecate:hover {
+.change-marker.deprecated:hover {
   background-color: var(--non-breaking-bg-color);
 }
 .change-marker.breaking:hover  {

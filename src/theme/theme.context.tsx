@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, ReactNode, SetStateAction } from 'react';
 import { defaultThemes } from './theme.config';
 import { ThemeType, Theme } from './theme.model';
 
@@ -13,7 +13,7 @@ export const ThemeContext = React.createContext<ThemeContextProps>({
   theme: defaultThemes['default'],
 } as ThemeContextProps);
 
-export const ThemeProvider: React.FC = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = React.useState<ThemeType>('default');
 
   return (

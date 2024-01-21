@@ -1,5 +1,5 @@
 import React, { CSSProperties, useEffect, useRef, useState } from "react"
-import { apiMerge, DiffType, Rules } from "api-smart-diff"
+import { apiMerge, DiffType, CompareRules } from "api-smart-diff"
 
 import { DiffContext, DiffContextProps } from "../helpers/diff.context"
 import { DiffBlockData, metaKey } from "../diff-builder/common"
@@ -22,7 +22,7 @@ export interface ApiDiffViewerProps {
   /**
    * Custom merge rules (ignored if useWorker is true)
    */
-  rules?: Rules
+  rules?: CompareRules
   /**
    * Display document diff in inline or side-by-side mode
    */
