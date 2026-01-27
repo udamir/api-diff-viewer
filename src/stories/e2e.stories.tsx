@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react'
+import type { StoryFn, Meta } from '@storybook/react'
 
 import { ApiDiffViewer } from '../components/ApiDiffViewer'
 import openApiBefore from "./samples/openApi.before"
@@ -35,11 +35,11 @@ export default {
       }
     },
   },
-} as ComponentMeta<typeof ApiDiffViewer>;
+} as Meta<typeof ApiDiffViewer>;
 
-const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
+const Template: StoryFn<typeof ApiDiffViewer> = (args) => {
   const [data, setData] = useState()
-  const navigateTo = useRef<(id: string, parent?: HTMLElement) => void>()
+  const navigateTo = useRef<((id: string, parent?: HTMLElement | Window) => void) | null>(null)
   const layout = useRef<HTMLDivElement>(null)
 
   function setWindowHeight(){
@@ -56,7 +56,7 @@ const Template: ComponentStory<typeof ApiDiffViewer> = (args) => {
 
   const onReady = (c: DiffContextProps) => {
     setData(c.data)
-    navigateTo.current = c.navigateTo
+    navigateTo.current = c.navigateTo ?? null
   }
 
   const onNavigate = (id: string) => {

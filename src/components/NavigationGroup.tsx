@@ -17,7 +17,7 @@ export interface CustomItemProps {
 export interface NavigationGroupProps {
   paths: string[][]
   name: string
-  CustomItem?: (props: CustomItemProps) => JSX.Element
+  CustomItem?: (props: CustomItemProps) => React.JSX.Element
 }
 
 const isModified = (obj: any, diffKey: any) => {

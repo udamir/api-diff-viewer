@@ -13,7 +13,7 @@ export const ThemeContext = React.createContext<ThemeContextProps>({
   theme: defaultThemes['default'],
 } as ThemeContextProps);
 
-export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [currentTheme, setCurrentTheme] = React.useState<ThemeType>('default');
 
   return (

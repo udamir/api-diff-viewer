@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import type { StoryFn, Meta } from '@storybook/react';
 
 import { DiffLine, DiffLineProps } from '../components/DiffLine';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
@@ -19,9 +19,9 @@ export default {
       control: { type: 'radio' },
     }
   },
-} as ComponentMeta<typeof DiffLine>;
+} as Meta<typeof DiffLine>;
 
-const Template: ComponentStory<any> = ({ display, ...args}: DiffLineStoryProps) => 
+const Template: StoryFn<any> = ({ display, ...args}: DiffLineStoryProps) => 
   <DiffContext.Provider value={{ treeview: "expanded", display, theme: defaultThemes.default, themeType: "default" }}>
     <div style={defaultThemes.default as CSSProperties} >
       <DiffLine {...args}/>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react'
+import type { StoryFn, Meta } from '@storybook/react'
 
 import { ApiNavigation } from '../components/ApiNavigation'
 import openApiBefore from "./samples/openApi.before"
@@ -9,9 +9,9 @@ import jsonSchemaAfter from "./samples/jsonSchema.after"
 export default {
   title: 'Components/ApiNavigation',
   component: ApiNavigation,
-} as ComponentMeta<typeof ApiNavigation>
+} as Meta<typeof ApiNavigation>
 
-const Template: ComponentStory<any> = (args) => <ApiNavigation {...args} />
+const Template: StoryFn<any> = (args) => <ApiNavigation {...args} />
 
 export const OpenApi3Navigation = Template.bind({});
 OpenApi3Navigation.args = {

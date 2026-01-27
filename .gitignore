@@ -26,3 +26,6 @@ storybook-static
 *.sln
 *.sw?
 node_modules
+
+.claude
+claude.md

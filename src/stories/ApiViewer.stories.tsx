@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react'
+import type { StoryFn, Meta } from '@storybook/react'
 
 import openApiBefore from "./samples/openApi.before"
 import asyncApiBefore from "./samples/asyncApi.before"
@@ -16,9 +16,9 @@ export default {
       control: { type: 'radio' },
     }
   },
-} as ComponentMeta<typeof ApiViewer>;
+} as Meta<typeof ApiViewer>;
 
-const Template: ComponentStory<typeof ApiViewer> = (args) => 
+const Template: StoryFn<typeof ApiViewer> = (args) => 
   <div style={defaultThemes.default as CSSProperties} >
     <ApiViewer {...args} />
   </div>

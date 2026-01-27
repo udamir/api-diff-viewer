@@ -7,7 +7,7 @@ export interface ApiNavigationeProps {
 }
 
 export const SideBar = ({ children }: ApiNavigationeProps) => {
-  const ref = useRef<any>()
+  const ref = useRef<any>(null)
   const { resizing, initResize } = useResize(ref)
 
   return (

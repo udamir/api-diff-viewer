@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import type { StoryFn, Meta } from '@storybook/react';
 
 import { DiffBlock, DiffBlockProps } from '../components/DiffBlock';
 import { _added, _removed, _replaced, _yamlArrLine, _yamlPropBlock, _yamlPropLine } from './helpers';
@@ -19,9 +19,9 @@ export default {
       control: { type: 'radio' },
     }
   },
-} as ComponentMeta<typeof DiffBlock>;
+} as Meta<typeof DiffBlock>;
 
-const Template: ComponentStory<any> = ({data, display }: DiffBlockStoryProps) => 
+const Template: StoryFn<any> = ({data, display }: DiffBlockStoryProps) => 
   <DiffContext.Provider value={{ display, theme: defaultThemes.default }}>
     <div style={defaultThemes.default as CSSProperties} >
       <DiffBlock data={data} />

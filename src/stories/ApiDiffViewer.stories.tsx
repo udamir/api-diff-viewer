@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react'
+import type { StoryFn, Meta } from '@storybook/react'
 
 import { ApiDiffViewer } from '../components/ApiDiffViewer'
 import openApiBefore from "./samples/openApi.before"
@@ -28,9 +28,9 @@ export default {
       }
     },
   },
-} as ComponentMeta<typeof ApiDiffViewer>;
+} as Meta<typeof ApiDiffViewer>;
 
-const Template: ComponentStory<typeof ApiDiffViewer> = (args) => <ApiDiffViewer {...args} />;
+const Template: StoryFn<typeof ApiDiffViewer> = (args) => <ApiDiffViewer {...args} />;
 
 export const OpenApi3 = Template.bind({});
 OpenApi3.args = {
