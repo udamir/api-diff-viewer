@@ -1,6 +1,6 @@
-import { DiffMeta, DiffAction } from "api-smart-diff"
+import { type DiffMeta, DiffAction } from "api-smart-diff"
 import { diffWords } from "diff"
-import { encodeKey, isEmpty } from "../utils"
+import { encodeKey, isEmpty } from "../utils/common"
 import { DiffBlockData, Token, metaKey, TokenTag } from "./common"
 
 export const buildDiffJson = (input: any, parent: DiffBlockData) => {

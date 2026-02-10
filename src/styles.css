@@ -1,0 +1,65 @@
+/**
+ * CodeMirror Diff Viewer Styles
+ *
+ * CSS variables for theming the CodeMirror-based diff viewer.
+ * The actual component styles are handled by CodeMirror extensions.
+ */
+
+/* =============================================================================
+   CSS Variables - Theme Colors
+   ============================================================================= */
+
+:root {
+  /* Light theme defaults */
+  --diff-added-bg: rgba(46, 160, 67, 0.15);
+  --diff-removed-bg: rgba(248, 81, 73, 0.15);
+  --diff-modified-bg: rgba(227, 179, 65, 0.15);
+  --diff-added-text-bg: rgba(46, 160, 67, 0.4);
+  --diff-removed-text-bg: rgba(248, 81, 73, 0.4);
+
+  --diff-breaking-color: #cf222e;
+  --diff-non-breaking-color: #1a7f37;
+  --diff-annotation-color: #8250df;
+  --diff-unclassified-color: #656d76;
+
+  --diff-selected-bg: rgba(56, 139, 253, 0.15);
+  --diff-selected-border: rgba(56, 139, 253, 0.4);
+
+  --diff-spacer-bg: #f6f8fa;
+  --diff-spacer-stripe: #e1e4e8;
+
+  --diff-gutter-bg: #f6f8fa;
+  --diff-gutter-border: #d0d7de;
+
+  --diff-border-color: #d0d7de;
+  --diff-header-bg: #f6f8fa;
+  --diff-header-color: #1f2328;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"],
+.dark {
+  --diff-added-bg: rgba(46, 160, 67, 0.2);
+  --diff-removed-bg: rgba(248, 81, 73, 0.2);
+  --diff-modified-bg: rgba(227, 179, 65, 0.2);
+  --diff-added-text-bg: rgba(46, 160, 67, 0.5);
+  --diff-removed-text-bg: rgba(248, 81, 73, 0.5);
+
+  --diff-breaking-color: #f85149;
+  --diff-non-breaking-color: #3fb950;
+  --diff-annotation-color: #a371f7;
+  --diff-unclassified-color: #768390;
+
+  --diff-selected-bg: rgba(56, 139, 253, 0.2);
+  --diff-selected-border: rgba(56, 139, 253, 0.5);
+
+  --diff-spacer-bg: #161b22;
+  --diff-spacer-stripe: #30363d;
+
+  --diff-gutter-bg: #161b22;
+  --diff-gutter-border: #30363d;
+
+  --diff-border-color: #30363d;
+  --diff-header-bg: #161b22;
+  --diff-header-color: #e6edf3;
+}

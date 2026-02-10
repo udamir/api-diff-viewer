@@ -1,0 +1,7 @@
+export * from "./aligned-decorations"
+export * from "./diff-decorations"
+export * from "./diff-folding"
+export * from "./change-badges"
+export * from "./word-diff"
+export * from "./inline-word-diff"
+export * from "./diff-gutter"

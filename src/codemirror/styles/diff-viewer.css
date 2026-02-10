@@ -1,0 +1,343 @@
+/**
+ * CodeMirror Diff Viewer Styles
+ *
+ * This file contains all CSS styles for the CodeMirror-based diff viewer.
+ * Import this file to style the diff components.
+ */
+
+/* =============================================================================
+   CSS Variables - Theme Colors
+   ============================================================================= */
+
+:root {
+  /* Light theme defaults */
+  --diff-added-bg: rgba(46, 160, 67, 0.15);
+  --diff-removed-bg: rgba(248, 81, 73, 0.15);
+  --diff-modified-bg: rgba(227, 179, 65, 0.15);
+  --diff-added-text-bg: rgba(46, 160, 67, 0.4);
+  --diff-removed-text-bg: rgba(248, 81, 73, 0.4);
+
+  --diff-breaking-color: #cf222e;
+  --diff-non-breaking-color: #1a7f37;
+  --diff-annotation-color: #8250df;
+  --diff-unclassified-color: #656d76;
+
+  --diff-selected-bg: rgba(56, 139, 253, 0.15);
+  --diff-selected-border: rgba(56, 139, 253, 0.4);
+
+  --diff-spacer-bg: #f6f8fa;
+  --diff-spacer-stripe: #e1e4e8;
+
+  --diff-gutter-bg: #f6f8fa;
+  --diff-gutter-border: #d0d7de;
+
+  --diff-border-color: #d0d7de;
+  --diff-header-bg: #f6f8fa;
+  --diff-header-color: #1f2328;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"],
+.dark {
+  --diff-added-bg: rgba(46, 160, 67, 0.2);
+  --diff-removed-bg: rgba(248, 81, 73, 0.2);
+  --diff-modified-bg: rgba(227, 179, 65, 0.2);
+  --diff-added-text-bg: rgba(46, 160, 67, 0.5);
+  --diff-removed-text-bg: rgba(248, 81, 73, 0.5);
+
+  --diff-breaking-color: #f85149;
+  --diff-non-breaking-color: #3fb950;
+  --diff-annotation-color: #a371f7;
+  --diff-unclassified-color: #768390;
+
+  --diff-selected-bg: rgba(56, 139, 253, 0.2);
+  --diff-selected-border: rgba(56, 139, 253, 0.5);
+
+  --diff-spacer-bg: #161b22;
+  --diff-spacer-stripe: #30363d;
+
+  --diff-gutter-bg: #161b22;
+  --diff-gutter-border: #30363d;
+
+  --diff-border-color: #30363d;
+  --diff-header-bg: #161b22;
+  --diff-header-color: #e6edf3;
+}
+
+/* =============================================================================
+   Side-by-Side Layout
+   ============================================================================= */
+
+.cm-diff-side-by-side {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--diff-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--diff-header-bg);
+}
+
+.cm-diff-side-by-side-header {
+  display: flex;
+  border-bottom: 1px solid var(--diff-border-color);
+  background: var(--diff-header-bg);
+  flex-shrink: 0;
+}
+
+.cm-diff-side-by-side-header-before,
+.cm-diff-side-by-side-header-after {
+  flex: 1;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--diff-header-color);
+}
+
+.cm-diff-side-by-side-header-after {
+  border-left: 1px solid var(--diff-border-color);
+}
+
+.cm-diff-side-by-side-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.cm-diff-side-by-side-before,
+.cm-diff-side-by-side-after {
+  flex: 1;
+  overflow: auto;
+  min-width: 0;
+}
+
+.cm-diff-side-by-side-before .cm-editor,
+.cm-diff-side-by-side-after .cm-editor {
+  height: 100%;
+}
+
+.cm-diff-side-by-side-divider {
+  width: 1px;
+  background: var(--diff-border-color);
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   Inline Layout
+   ============================================================================= */
+
+.cm-diff-inline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--diff-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--diff-header-bg);
+}
+
+.cm-diff-inline-header {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--diff-header-color);
+  background: var(--diff-header-bg);
+  border-bottom: 1px solid var(--diff-border-color);
+  flex-shrink: 0;
+}
+
+.cm-diff-inline-content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.cm-diff-inline-content .cm-editor {
+  height: 100%;
+}
+
+/* =============================================================================
+   Line Decorations
+   ============================================================================= */
+
+.cm-diff-added {
+  background-color: var(--diff-added-bg);
+}
+
+.cm-diff-removed {
+  background-color: var(--diff-removed-bg);
+}
+
+.cm-diff-modified {
+  background-color: var(--diff-modified-bg);
+}
+
+.cm-diff-unchanged {
+  background-color: transparent;
+}
+
+/* =============================================================================
+   Text Decorations (Word-level diff)
+   ============================================================================= */
+
+.cm-diff-added-text {
+  background-color: var(--diff-added-text-bg);
+  border-radius: 2px;
+}
+
+.cm-diff-removed-text {
+  background-color: var(--diff-removed-text-bg);
+  border-radius: 2px;
+  text-decoration: line-through;
+}
+
+/* =============================================================================
+   Breaking Change Indicator
+   ============================================================================= */
+
+.cm-diff-breaking-line {
+  border-left: 3px solid var(--diff-breaking-color);
+}
+
+/* =============================================================================
+   Selected Block
+   ============================================================================= */
+
+.cm-diff-selected {
+  background-color: var(--diff-selected-bg);
+  outline: 1px solid var(--diff-selected-border);
+}
+
+/* =============================================================================
+   Spacer Lines (Visual Alignment)
+   ============================================================================= */
+
+.cm-diff-spacer {
+  background-color: var(--diff-spacer-bg);
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--diff-spacer-stripe) 0,
+    var(--diff-spacer-stripe) 1px,
+    transparent 0,
+    transparent 50%
+  );
+  background-size: 8px 8px;
+}
+
+/* Spacer line styling for aligned content */
+.cm-diff-spacer-line {
+  background-color: var(--diff-spacer-bg) !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--diff-spacer-stripe) 0,
+    var(--diff-spacer-stripe) 1px,
+    transparent 1px,
+    transparent 6px
+  ) !important;
+}
+
+.cm-diff-spacer-line .cm-line {
+  color: transparent !important;
+  user-select: none;
+}
+
+/* Hide line numbers for spacer lines */
+.cm-diff-spacer-line + .cm-lineNumbers .cm-gutterElement {
+  color: transparent;
+}
+
+/* =============================================================================
+   Gutter Styles
+   ============================================================================= */
+
+.cm-diff-gutter {
+  width: 24px;
+  background-color: var(--diff-gutter-bg);
+  border-right: 1px solid var(--diff-gutter-border);
+}
+
+.cm-diff-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.cm-diff-marker-breaking {
+  color: var(--diff-breaking-color);
+}
+
+.cm-diff-marker-non-breaking {
+  color: var(--diff-non-breaking-color);
+}
+
+.cm-diff-marker-annotation {
+  color: var(--diff-annotation-color);
+}
+
+.cm-diff-marker-unclassified {
+  color: var(--diff-unclassified-color);
+}
+
+.cm-diff-marker-added {
+  background-color: rgba(46, 160, 67, 0.2);
+}
+
+.cm-diff-marker-removed {
+  background-color: rgba(248, 81, 73, 0.2);
+}
+
+.cm-diff-marker-modified {
+  background-color: rgba(227, 179, 65, 0.2);
+}
+
+/* =============================================================================
+   CodeMirror Base Overrides
+   ============================================================================= */
+
+.cm-diff-side-by-side .cm-editor,
+.cm-diff-inline .cm-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cm-diff-side-by-side .cm-scroller,
+.cm-diff-inline .cm-scroller {
+  overflow: auto;
+}
+
+.cm-diff-side-by-side .cm-content,
+.cm-diff-inline .cm-content {
+  padding: 0;
+}
+
+/* Focus styles */
+.cm-diff-side-by-side .cm-editor.cm-focused,
+.cm-diff-inline .cm-editor.cm-focused {
+  outline: none;
+}
+
+/* Selection colors */
+.cm-diff-side-by-side .cm-selectionBackground,
+.cm-diff-inline .cm-selectionBackground {
+  background-color: rgba(56, 139, 253, 0.2) !important;
+}
+
+/* Active line */
+.cm-diff-side-by-side .cm-activeLine,
+.cm-diff-inline .cm-activeLine {
+  background-color: rgba(234, 238, 242, 0.5);
+}
+
+[data-theme="dark"] .cm-diff-side-by-side .cm-activeLine,
+[data-theme="dark"] .cm-diff-inline .cm-activeLine,
+.dark .cm-diff-side-by-side .cm-activeLine,
+.dark .cm-diff-inline .cm-activeLine {
+  background-color: rgba(56, 139, 253, 0.1);
+}

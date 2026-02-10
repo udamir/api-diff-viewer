@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Diff Viewer — Vanilla Example</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+      background: #f6f8fa;
+    }
+    h1 { font-size: 20px; margin-bottom: 12px; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .toolbar button, .toolbar select {
+      padding: 6px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toolbar button:hover { background: #f3f4f6; }
+    #diff-container {
+      height: calc(100vh - 120px);
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      overflow: hidden;
+      background: white;
+    }
+    #status { font-size: 12px; color: #656d76; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>API Diff Viewer</h1>
+  <div class="toolbar">
+    <button id="toggle-mode">Toggle Mode</button>
+    <select id="format-select">
+      <option value="yaml">YAML</option>
+      <option value="json">JSON</option>
+    </select>
+    <button id="toggle-dark">Toggle Dark</button>
+    <button id="next-change">Next Change</button>
+    <button id="prev-change">Prev Change</button>
+    <button id="destroy-btn">Destroy</button>
+  </div>
+  <div id="status">Loading...</div>
+  <div id="diff-container"></div>
+
+  <script type="module">
+    import { createDiffViewer } from '../../src/index.ts'
+    import '../../src/styles.css'
+
+    // Sample OpenAPI specs
+    const before = {
+      openapi: '3.0.1',
+      info: { title: 'Pet Store', version: '1.0.0', description: 'A sample pet store API' },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List all pets',
+            operationId: 'listPets',
+            parameters: [
+              { name: 'limit', in: 'query', required: false, schema: { type: 'integer', format: 'int32' } }
+            ],
+            responses: {
+              '200': { description: 'A list of pets' },
+              '500': { description: 'Server error' }
+            }
+          },
+          post: {
+            summary: 'Create a pet',
+            operationId: 'createPet',
+            responses: {
+              '201': { description: 'Pet created' }
+            }
+          }
+        },
+        '/pets/{petId}': {
+          get: {
+            summary: 'Get a pet by ID',
+            operationId: 'getPet',
+            parameters: [
+              { name: 'petId', in: 'path', required: true, schema: { type: 'string' } }
+            ],
+            responses: {
+              '200': { description: 'A pet' },
+              '404': { description: 'Pet not found' }
+            }
+          }
+        }
+      }
+    }
+
+    const after = {
+      openapi: '3.0.1',
+      info: { title: 'Pet Store API', version: '2.0.0', description: 'An improved pet store API with enhanced features' },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List all pets',
+            operationId: 'listPets',
+            parameters: [
+              { name: 'limit', in: 'query', required: false, schema: { type: 'integer', format: 'int32' } },
+              { name: 'offset', in: 'query', required: false, schema: { type: 'integer', format: 'int32' } }
+            ],
+            responses: {
+              '200': { description: 'A paginated list of pets' },
+              '500': { description: 'Internal server error' }
+            }
+          },
+          post: {
+            summary: 'Create a new pet',
+            operationId: 'createPet',
+            requestBody: {
+              required: true,
+              content: { 'application/json': { schema: { type: 'object' } } }
+            },
+            responses: {
+              '201': { description: 'Pet created successfully' },
+              '400': { description: 'Invalid input' }
+            }
+          }
+        },
+        '/pets/{petId}': {
+          get: {
+            summary: 'Get a pet by ID',
+            operationId: 'getPet',
+            parameters: [
+              { name: 'petId', in: 'path', required: true, schema: { type: 'integer' } }
+            ],
+            responses: {
+              '200': { description: 'A pet' },
+              '404': { description: 'Pet not found' }
+            }
+          },
+          delete: {
+            summary: 'Delete a pet',
+            operationId: 'deletePet',
+            parameters: [
+              { name: 'petId', in: 'path', required: true, schema: { type: 'integer' } }
+            ],
+            responses: {
+              '204': { description: 'Pet deleted' },
+              '404': { description: 'Pet not found' }
+            }
+          }
+        }
+      }
+    }
+
+    const container = document.getElementById('diff-container')
+    const statusEl = document.getElementById('status')
+
+    const viewer = createDiffViewer(container, before, after, {
+      format: 'yaml',
+      mode: 'side-by-side',
+      useWorker: false,
+      wordDiffMode: 'word',
+    })
+
+    viewer.on('ready', ({ summary }) => {
+      statusEl.textContent = `Ready — ${summary.total} changes (${summary.breaking} breaking, ${summary.nonBreaking} non-breaking, ${summary.annotation} annotation)`
+    })
+
+    viewer.on('error', ({ message }) => {
+      statusEl.textContent = `Error: ${message}`
+    })
+
+    // Toolbar actions
+    document.getElementById('toggle-mode').onclick = () => {
+      viewer.setMode(viewer.getMode() === 'side-by-side' ? 'inline' : 'side-by-side')
+    }
+
+    document.getElementById('format-select').onchange = (e) => {
+      viewer.setFormat(e.target.value)
+    }
+
+    document.getElementById('toggle-dark').onclick = () => {
+      viewer.setTheme({ dark: !viewer.isDark() })
+      document.body.style.background = viewer.isDark() ? '#0d1117' : '#f6f8fa'
+      document.body.style.color = viewer.isDark() ? '#c9d1d9' : '#1f2328'
+    }
+
+    document.getElementById('next-change').onclick = () => {
+      viewer.navigation.goToNextChange()
+    }
+
+    document.getElementById('prev-change').onclick = () => {
+      viewer.navigation.goToPrevChange()
+    }
+
+    document.getElementById('destroy-btn').onclick = () => {
+      viewer.destroy()
+      statusEl.textContent = 'Destroyed'
+    }
+  </script>
+</body>
+</html>

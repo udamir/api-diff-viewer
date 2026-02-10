@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Diff Viewer — Demo</title>
+  <link rel="stylesheet" href="demo.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>API Diff Viewer</h1>
+    <select id="sample-select" title="Sample"></select>
+    <div class="spacer"></div>
+    <button id="dark-toggle" title="Toggle dark mode">Dark</button>
+  </div>
+
+  <div class="main">
+    <!-- Before editor -->
+    <div class="panel panel-before">
+      <div class="panel-label">Before (JSON / YAML)</div>
+      <div class="editor-container" id="editor-before"></div>
+    </div>
+
+    <div class="resize-handle"></div>
+
+    <!-- After editor -->
+    <div class="panel panel-after">
+      <div class="panel-label">After (JSON / YAML)</div>
+      <div class="editor-container" id="editor-after"></div>
+    </div>
+
+    <div class="resize-handle"></div>
+
+    <!-- Diff viewer + toolbar -->
+    <div class="panel panel-diff">
+      <div class="panel-label">Diff Preview</div>
+      <div id="diff-container"></div>
+
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <label>Mode</label>
+          <div class="btn-toggle" id="mode-toggle">
+            <button data-value="side-by-side">Side-by-side</button>
+            <button class="active" data-value="inline">Inline</button>
+          </div>
+        </div>
+
+        <div class="toolbar-group">
+          <label>Format</label>
+          <div class="btn-toggle" id="format-toggle">
+            <button class="active" data-value="yaml">YAML</button>
+            <button data-value="json">JSON</button>
+          </div>
+        </div>
+
+        <div class="toolbar-group">
+          <label for="word-diff-select">Word diff</label>
+          <select id="word-diff-select">
+            <option value="word">Word</option>
+            <option value="char">Char</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <input type="checkbox" id="folding-check" checked />
+          <label for="folding-check">Folding</label>
+        </div>
+
+        <div class="toolbar-group">
+          <input type="checkbox" id="classification-check" checked />
+          <label for="classification-check">Classification</label>
+        </div>
+
+        <div class="toolbar-group">
+          <input type="checkbox" id="wordwrap-check" checked />
+          <label for="wordwrap-check">Word wrap</label>
+        </div>
+
+        <div class="toolbar-group" id="filter-group">
+          <button class="filter-btn" data-filter="breaking">Breaking <span class="filter-count">0</span></button>
+          <button class="filter-btn" data-filter="non-breaking">Non-breaking <span class="filter-count">0</span></button>
+          <button class="filter-btn" data-filter="annotation">Annotation <span class="filter-count">0</span></button>
+          <button class="filter-btn" data-filter="unclassified">Unclassified <span class="filter-count">0</span></button>
+        </div>
+
+        <div class="toolbar-group">
+          <span id="summary"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="demo.js"></script>
+</body>
+</html>

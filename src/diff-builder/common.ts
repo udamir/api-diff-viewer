@@ -1,6 +1,6 @@
-import { ActionType, DiffMeta, DiffType } from "api-smart-diff"
+import type { ActionType, DiffMeta, DiffType } from "api-smart-diff"
 
-export const metaKey = "$diff" //Symbol("diff") // TODO handle "$diff" key in file
+export const metaKey = "$diff"
 export const diffTypes: DiffType[] = ["breaking", "non-breaking", "annotation", "unclassified"]
 
 export type TokenTag = "before" | "after" | "empty" | "collapsed" | "expanded"
@@ -22,19 +22,19 @@ export class Token {
     this.tags = Array.isArray(tags) ? tags : tags ? [tags] : []
   }
 
-  static Key(value: any, tags?: TokenTag | TokenTag[]) {
+  static Key(value: string, tags?: TokenTag | TokenTag[]) {
     return new Token("key", value, tags)
   }
 
-  static Index(value: any, tags?: TokenTag | TokenTag[]) {
+  static Index(value: string, tags?: TokenTag | TokenTag[]) {
     return new Token("index", value, tags)
   }
 
-  static Value(value: any, tags?: TokenTag | TokenTag[]) {
+  static Value(value: string, tags?: TokenTag | TokenTag[]) {
     return new Token("value", value, tags)
   }
 
-  static Spec(value: any, tags?: TokenTag | TokenTag[]) {
+  static Spec(value: string, tags?: TokenTag | TokenTag[]) {
     return new Token("spec", value, tags)
   }
 
@@ -69,21 +69,18 @@ export class DiffBlockData extends DiffLineData {
   public children: DiffBlockData[]
   public diffs: number[]
 
-  public level: number
-
   public lines: number
 
   public get nextLine() {
     return this.index + this.lines
   }
-  
-  constructor(index: number, indent: number, tokens: Token[], diff?: DiffMeta, level = 0, id = "") {
+
+  constructor(index: number, indent: number, tokens: Token[], diff?: DiffMeta, id = "") {
     super(index, indent, tokens, diff)
     this.id = id
     this.children = []
     this.diffs = [0, 0, 0, 0]
     this.lines = tokens.length ? 1 : 0
-    this.level = level
   }
 
   public addDiff(diff: DiffMeta) {
@@ -94,6 +91,6 @@ export class DiffBlockData extends DiffLineData {
   public addBlock(block: DiffBlockData) {
     this.lines += block.lines
     this.children.push(block)
-    block.diffs.forEach((v, i) => this.diffs[i] += v)
+    block.diffs.forEach((v, i) => { this.diffs[i] += v })
   }
 }
