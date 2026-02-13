@@ -54,6 +54,7 @@ export type { AlignmentResult, UnifiedResult, UnifiedContentOptions } from './sy
 
 export { setupFoldSync } from './sync/fold-sync'
 export { setupHeightSync } from './sync/height-sync'
+export type { HeightSyncHandle } from './sync/height-sync'
 
 // ── Themes ──
 export * from './themes'

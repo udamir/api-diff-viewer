@@ -12,19 +12,19 @@ export const yamlStrategy: FormatStrategy = {
     return [
       Token.Spec("- ".repeat(ctx.level)),
       ...diff?.action === DiffAction.rename
-        ? valueTokens(YAML.stringify, Token.Key, key, diff)
+        ? valueTokens(YAML.stringify, Token.Key, key, diff, ctx.skipWordDiff)
         : [Token.Key(YAML.stringify(key))],
       Token.Spec(": "),
       ...diff?.action === DiffAction.rename
         ? [Token.Value(YAML.stringify(value))]
-        : valueTokens(YAML.stringify, Token.Value, value, diff),
+        : valueTokens(YAML.stringify, Token.Value, value, diff, ctx.skipWordDiff),
     ]
   },
 
   arrLineTokens(value: JsonValue, diff: DiffMeta | undefined, ctx: FormatContext) {
     return [
       Token.Spec("- ".repeat(ctx.level + 1)),
-      ...valueTokens(YAML.stringify, Token.Value, value, diff),
+      ...valueTokens(YAML.stringify, Token.Value, value, diff, ctx.skipWordDiff),
     ]
   },
 
@@ -32,7 +32,7 @@ export const yamlStrategy: FormatStrategy = {
     return [
       Token.Spec("- ".repeat(ctx.level)),
       ...diff?.action === DiffAction.rename
-        ? valueTokens(YAML.stringify, Token.Key, key, diff)
+        ? valueTokens(YAML.stringify, Token.Key, key, diff, ctx.skipWordDiff)
         : [Token.Key(YAML.stringify(key))],
       Token.Spec(":"),
       ...isArray

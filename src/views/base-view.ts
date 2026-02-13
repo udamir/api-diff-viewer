@@ -29,7 +29,7 @@ import {
 } from '../extensions/diff-folding'
 import type { ClassificationCounts } from '../extensions/diff-folding'
 import { changeBadges } from '../extensions/change-badges'
-import { wordDiff } from '../extensions/word-diff'
+import { wordDiff, wordDiffStateField } from '../extensions/word-diff'
 import { inlineWordDiff } from '../extensions/inline-word-diff'
 
 export interface ViewConfig {
@@ -68,6 +68,12 @@ export abstract class BaseView {
 
   abstract setWordWrap(enabled: boolean): void
 
+  abstract setFoldingEnabled(enabled: boolean): void
+
+  abstract setClassificationEnabled(enabled: boolean): void
+
+  abstract setWordDiffMode(mode: 'word' | 'char' | 'none'): void
+
   abstract destroy(): void
 
   /**
@@ -93,7 +99,6 @@ export abstract class BaseView {
     const languageExt = format === 'json' ? json() : yaml()
 
     const extensions: Extension[] = [
-      createSpacerAwareLineNumbers(lineMap, side, this.config.wordDiffMode, this.config.showClassification),
       drawSelection(),
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
@@ -129,19 +134,17 @@ export abstract class BaseView {
       } : {}))
       extensions.push(diffFolding())
     }
-    if (this.config.enableFolding) {
-      extensions.push(foldGutter({
-        openText: '\u2304',
-        closedText: '\u203A',
-      }))
-      extensions.push(keymap.of(diffFoldKeymap))
-    }
 
-    extensions.push(createDiffMarkerGutter(lineMap, side, this.config.wordDiffMode))
+    // Note: The following extensions are NOT added here because they are managed
+    // by compartments in the subclass (SideBySideView) for dynamic reconfiguration:
+    // - createSpacerAwareLineNumbers (lineNumbersCompartment)
+    // - foldGutter + diffFoldKeymap (foldGutterCompartment)
+    // - createDiffMarkerGutter (diffMarkerGutterCompartment)
+    // - changeBadges + createClassificationGutter (classificationCompartment)
+    // - wordDiffPlugin + wordDiffTheme (wordDiffCompartment)
 
-    if (this.config.showClassification) {
-      extensions.push(changeBadges())
-    }
+    // Always add wordDiffStateField so it persists across compartment reconfigurations
+    extensions.push(wordDiffStateField())
 
     return extensions
   }

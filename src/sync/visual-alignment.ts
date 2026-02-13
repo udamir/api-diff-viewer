@@ -24,6 +24,8 @@ export interface AlignmentResult {
   /** Line numbers that are spacers (0-indexed) */
   beforeSpacers: Set<number>
   afterSpacers: Set<number>
+  /** Pre-computed: blockId → {start, end} editor line ranges (1-based) */
+  blockLineRanges: Map<string, { start: number; end: number }>
 }
 
 /** A diff line with change-root metadata */
@@ -81,6 +83,18 @@ function getLineVisibility(line: DiffBlockData): { before: boolean; after: boole
   }
 }
 
+/** Cache for indent strings — avoids re-allocating for common indent levels */
+const indentCache = new Map<number, string>()
+
+function cachedIndent(width: number): string {
+  let cached = indentCache.get(width)
+  if (cached === undefined) {
+    cached = ' '.repeat(width)
+    indentCache.set(width, cached)
+  }
+  return cached
+}
+
 /**
  * Converts tokens to a string for a specific side.
  * Replaces newlines with spaces to ensure one logical line = one document line.
@@ -94,7 +108,7 @@ function getLineVisibility(line: DiffBlockData): { before: boolean; after: boole
  * @param extraIndent - Additional indentation to add (e.g., for JSON wrapper)
  */
 function tokensToString(line: DiffBlockData, side: 'before' | 'after', extraIndent: number = 0): string {
-  const indent = ' '.repeat(Math.max(0, line.indent) + extraIndent)
+  const indent = cachedIndent(Math.max(0, line.indent) + extraIndent)
   const parts: string[] = []
 
   for (const token of line.tokens) {
@@ -116,6 +130,43 @@ function tokensToString(line: DiffBlockData, side: 'before' | 'after', extraInde
   }
 
   return indent + parts.join('')
+}
+
+/**
+ * Batch convert a list of DiffBlockData lines to before/after string arrays.
+ * Uses cached indent strings to reduce allocations.
+ */
+export function tokensToStringBatch(
+  lines: DiffBlockData[],
+  side: 'before' | 'after',
+  extraIndent: number = 0
+): string[] {
+  const result: string[] = new Array(lines.length)
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const indentWidth = Math.max(0, line.indent) + extraIndent
+    const indent = cachedIndent(indentWidth)
+    const parts: string[] = []
+
+    for (const token of line.tokens) {
+      const tags = token.tags || []
+      if (tags.includes('collapsed')) continue
+
+      const isBeforeOnly = tags.includes('before') && !tags.includes('after')
+      const isAfterOnly = tags.includes('after') && !tags.includes('before')
+
+      if (side === 'before' && isAfterOnly) continue
+      if (side === 'after' && isBeforeOnly) continue
+
+      const sanitizedValue = token.value.replace(/[\r\n]+/g, ' ')
+      parts.push(sanitizedValue)
+    }
+
+    result[i] = indent + parts.join('')
+  }
+
+  return result
 }
 
 /**
@@ -148,6 +199,7 @@ export function generateAlignedContentFromDiff(
   const lineMap: LineMapping[] = []
   const beforeSpacers = new Set<number>()
   const afterSpacers = new Set<number>()
+  const blockLineRanges = new Map<string, { start: number; end: number }>()
 
   // For JSON format, add opening brace
   if (format === 'json') {
@@ -166,6 +218,32 @@ export function generateAlignedContentFromDiff(
   const extraIndent = format === 'json' ? 2 : 0
 
   const wordDiffMode = options?.wordDiffMode ?? 'word'
+
+  /** Update blockLineRanges for a given blockId at the current aligned line index */
+  function trackBlockLineRange(blockId: string | undefined, lineIndex: number) {
+    if (!blockId) return
+    const lineNum = lineIndex + 1 // 1-based
+    const existing = blockLineRanges.get(blockId)
+    if (!existing) {
+      blockLineRanges.set(blockId, { start: lineNum, end: lineNum })
+    } else {
+      existing.end = lineNum
+    }
+    // Propagate to ancestors
+    let parentId = blockId
+    while (true) {
+      const slashIdx = parentId.lastIndexOf('/')
+      if (slashIdx <= 0) break
+      parentId = parentId.substring(0, slashIdx)
+      const parentRange = blockLineRanges.get(parentId)
+      if (parentRange) {
+        if (lineNum > parentRange.end) parentRange.end = lineNum
+        if (lineNum < parentRange.start) parentRange.start = lineNum
+      } else {
+        blockLineRanges.set(parentId, { start: lineNum, end: lineNum })
+      }
+    }
+  }
 
   // Process each diff line
   for (const line of diffLines) {
@@ -193,6 +271,7 @@ export function generateAlignedContentFromDiff(
         isChangeRoot: line._isChangeRoot,
         pairId,
       })
+      trackBlockLineRange(line.id, alignedLineIndex)
       alignedLineIndex++
 
       // Emit added line: spacer on before side, content on after side
@@ -208,6 +287,7 @@ export function generateAlignedContentFromDiff(
         isChangeRoot: line._isChangeRoot,
         pairId,
       })
+      trackBlockLineRange(line.id, alignedLineIndex)
       alignedLineIndex++
 
       continue
@@ -264,6 +344,7 @@ export function generateAlignedContentFromDiff(
       isChangeRoot: line._isChangeRoot,
     })
 
+    trackBlockLineRange(line.id, alignedLineIndex)
     alignedLineIndex++
   }
 
@@ -300,6 +381,7 @@ export function generateAlignedContentFromDiff(
     lineMap,
     beforeSpacers,
     afterSpacers,
+    blockLineRanges,
   }
 }
 
@@ -322,6 +404,7 @@ export function generateAlignedContent(
     lineMap: [],
     beforeSpacers: new Set(),
     afterSpacers: new Set(),
+    blockLineRanges: new Map(),
   }
 }
 

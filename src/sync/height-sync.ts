@@ -78,7 +78,7 @@ class HeightPadWidget extends WidgetType {
 // ── State & Decorations ──
 
 /** Effect to replace all height paddings */
-const setHeightPaddingEffect = StateEffect.define<HeightPadding[]>()
+export const setHeightPaddingEffect = StateEffect.define<HeightPadding[]>()
 
 /** Build block widget DecorationSet from a paddings array */
 function buildPadDecorations(
@@ -178,12 +178,19 @@ export function mapToPaddings(
  *
  * @param beforeView - The before (left) editor
  * @param afterView - The after (right) editor
- * @returns Cleanup function to disconnect observers and stop syncing
+ * @returns HeightSyncHandle with reEqualize and destroy methods
  */
+export interface HeightSyncHandle {
+  /** Force immediate re-measurement and equalization */
+  reEqualize(): void
+  /** Cleanup and stop syncing */
+  destroy(): void
+}
+
 export function setupHeightSync(
   beforeView: EditorView,
   afterView: EditorView
-): () => void {
+): HeightSyncHandle {
   let destroyed = false
   let measuring = false
   let rafId: number | null = null
@@ -521,18 +528,24 @@ export function setupHeightSync(
     })
   })
 
-  // Cleanup
-  return () => {
-    destroyed = true
-    generation++
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId)
-      rafId = null
-    }
-    if (resizeTimer !== null) {
-      clearTimeout(resizeTimer)
-      resizeTimer = null
-    }
-    resizeObserver.disconnect()
+  // Return handle with reEqualize and destroy methods
+  return {
+    reEqualize(): void {
+      if (destroyed) return
+      measureAndEqualize()
+    },
+    destroy(): void {
+      destroyed = true
+      generation++
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+        rafId = null
+      }
+      if (resizeTimer !== null) {
+        clearTimeout(resizeTimer)
+        resizeTimer = null
+      }
+      resizeObserver.disconnect()
+    },
   }
 }

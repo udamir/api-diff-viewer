@@ -23,6 +23,7 @@ import {
 import type { DiffType } from 'api-smart-diff'
 import type { DiffBlockData } from '../diff-builder/common'
 import type { DiffData, LineMapping } from '../types'
+import type { BlockTreeIndex } from '../utils/block-index'
 
 /** Badge data for a specific line */
 export interface BadgeData {
@@ -289,6 +290,52 @@ export function buildBadgeData(
   }
 
   processBlocks(diffData.blocks)
+
+  return badges
+}
+
+/**
+ * Index-driven version of buildBadgeData.
+ * Uses the pre-computed BlockTreeIndex for O(C) where C = number of containers,
+ * instead of recursively walking the full block tree.
+ */
+export function buildBadgeDataFromIndex(
+  doc: { line: (n: number) => { from: number; to: number }; readonly lines: number },
+  treeIndex: BlockTreeIndex,
+  blockLineRanges: Map<string, { start: number; end: number }>
+): BadgeData[] {
+  const badges: BadgeData[] = []
+
+  for (const containerId of treeIndex.containerIds) {
+    const entry = treeIndex.byId.get(containerId)
+    if (!entry) continue
+
+    const { counts } = entry
+    const total = counts.breaking + counts.nonBreaking + counts.annotation + counts.unclassified
+    if (total <= 0) continue
+
+    const lineRange = blockLineRanges.get(containerId)
+    if (!lineRange) continue
+
+    const lineNum = lineRange.start
+    if (lineNum < 1 || lineNum > doc.lines) continue
+
+    try {
+      const line = doc.line(lineNum)
+      badges.push({
+        lineNumber: lineNum,
+        position: line.to,
+        breaking: counts.breaking,
+        nonBreaking: counts.nonBreaking,
+        annotation: counts.annotation,
+        unclassified: counts.unclassified,
+        total,
+        blockId: containerId,
+      })
+    } catch {
+      // Line doesn't exist
+    }
+  }
 
   return badges
 }

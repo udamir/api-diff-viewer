@@ -87,12 +87,12 @@ export const SwitchBetweenWordDiffModes: Story = {
       expect(diffs.length).toBe(0)
     })
 
-    // Switch to char: highlights return
+    // Switch to char: highlights return (RAF-based update needs time)
     viewer.setWordDiffMode('char')
     await waitFor(() => {
       const diffs = container.querySelectorAll('.cm-diff-word-added, .cm-diff-word-removed')
       expect(diffs.length).toBeGreaterThan(0)
-    })
+    }, { timeout: 5000 })
   },
 }
 

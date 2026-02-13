@@ -5,17 +5,16 @@
  * with inline word-level diffs showing removed text as widgets.
  */
 
-import { EditorState, Extension, StateEffect } from '@codemirror/state'
+import { EditorState, Extension, StateEffect, Compartment } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
-import type { DiffData, DiffThemeColors } from '../types'
+import type { DiffData, DiffThemeColors, LineMapping } from '../types'
 import {
   setDiffDataEffect,
   setSideEffect,
 } from '../state/diff-state'
 import {
-  setLineMappingsEffect,
-  setEditorSideEffect,
+  lineMappingsField,
   setWordDiffModeEffect,
 } from '../extensions/aligned-decorations'
 import {
@@ -31,6 +30,11 @@ import { BaseView, type ViewConfig } from './base-view'
 
 export class InlineView extends BaseView {
   private editorView: EditorView | null = null
+
+  /** Stored unified data for dynamic reconfiguration */
+  private unifiedLines: string[] = []
+  private unifiedBeforeContentMap: Map<number, string> | null = null
+  private inlineWordDiffCompartment = new Compartment()
 
   constructor(container: HTMLElement, config: ViewConfig) {
     super(container, config)
@@ -48,6 +52,10 @@ export class InlineView extends BaseView {
       { inlineWordDiff: showWordDiff }
     )
 
+    // Store data for dynamic reconfiguration
+    this.unifiedLines = unified.lines
+    this.unifiedBeforeContentMap = unified.beforeContentMap ?? null
+
     const unifiedContent = unified.lines.join('\n')
 
     // Compute inline word diff data for modified lines
@@ -60,16 +68,25 @@ export class InlineView extends BaseView {
           )
         : []
 
-    // Create extensions
+    // Create extensions — inline word diff in compartment for dynamic toggling
     const extensions = [
       ...this.createBaseExtensions(format, 'unified', unified.lineMap),
-      ...this.createInlineWordDiffExtension(),
+      this.inlineWordDiffCompartment.of(
+        showWordDiff ? this.createInlineWordDiffExtension() : []
+      ),
     ]
 
-    // Create editor
+    // Create editor with StateField.init() for initial mappings
     const state = EditorState.create({
       doc: unifiedContent,
-      extensions,
+      extensions: [
+        ...extensions,
+        lineMappingsField.init(() => ({
+          mappings: unified.lineMap,
+          side: 'unified' as const,
+          wordDiffMode: this.config.wordDiffMode,
+        })),
+      ],
     })
 
     this.editorView = new EditorView({
@@ -77,13 +94,11 @@ export class InlineView extends BaseView {
       parent: this.rootEl,
     })
 
-    // Dispatch initial effects
+    // Dispatch remaining effects (diffStateField, inline word diff data)
+    // lineMappingsField is already initialized via StateField.init()
     const effects: StateEffect<unknown>[] = [
       setSideEffect.of('unified'),
       setDiffDataEffect.of(diffData),
-      setEditorSideEffect.of('unified'),
-      setLineMappingsEffect.of(unified.lineMap),
-      setWordDiffModeEffect.of(this.config.wordDiffMode),
     ]
 
     if (showWordDiff && inlineWordDiffData.length > 0) {
@@ -110,6 +125,57 @@ export class InlineView extends BaseView {
   setWordWrap(enabled: boolean): void {
     this.config.wordWrap = enabled
     if (this.editorView) this.reconfigureLineWrapping(this.editorView, enabled)
+  }
+
+  setFoldingEnabled(enabled: boolean): void {
+    this.config.enableFolding = enabled
+    if (this.editorView) this.reconfigureFoldGutter(this.editorView, enabled)
+  }
+
+  setClassificationEnabled(enabled: boolean): void {
+    this.config.showClassification = enabled
+    if (this.editorView) this.reconfigureClassification(this.editorView, 'unified', enabled)
+  }
+
+  setWordDiffMode(mode: 'word' | 'char' | 'none'): void {
+    this.config.wordDiffMode = mode
+    if (!this.editorView) return
+
+    const showWordDiff = mode !== 'none'
+
+    // 1. Reconfigure diff marker gutter and line numbers
+    this.reconfigureDiffMarkerGutter(this.editorView, 'unified')
+    this.reconfigureLineNumbers(this.editorView, 'unified')
+
+    // 2. Dispatch setWordDiffModeEffect to update line decorations
+    this.editorView.dispatch({ effects: setWordDiffModeEffect.of(mode) })
+
+    // 3. Reconfigure inline word diff compartment
+    if (showWordDiff) {
+      this.editorView.dispatch({
+        effects: this.inlineWordDiffCompartment.reconfigure(
+          this.createInlineWordDiffExtension()
+        ),
+      })
+
+      // Recompute and dispatch inline word diff data
+      if (this.unifiedBeforeContentMap) {
+        const inlineWordDiffData = buildInlineWordDiffLines(
+          this.unifiedLines,
+          this.currentLineMap,
+          this.unifiedBeforeContentMap
+        )
+        if (inlineWordDiffData.length > 0) {
+          this.editorView.dispatch({
+            effects: setInlineWordDiffEffect.of(inlineWordDiffData),
+          })
+        }
+      }
+    } else {
+      this.editorView.dispatch({
+        effects: this.inlineWordDiffCompartment.reconfigure([]),
+      })
+    }
   }
 
   destroy(): void {

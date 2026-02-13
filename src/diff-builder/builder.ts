@@ -8,6 +8,8 @@ import type { JsonValue } from "../types"
 export interface FormatContext {
   last: boolean
   level: number
+  /** When true, skip diffWords() in valueTokens for large documents */
+  skipWordDiff?: boolean
 }
 
 /** Strategy interface for format-specific token generation */
@@ -29,15 +31,22 @@ export interface FormatStrategy {
   createArrayContainerBlock?(parent: DiffBlockData, isArrayValue: boolean, diff: DiffMeta | undefined, ctx: FormatContext): { block: DiffBlockData; childLevel: number }
 }
 
-/** Shared helper: generate value tokens with word-level diff support */
+/**
+ * Shared helper: generate value tokens with word-level diff support.
+ *
+ * @param skipWordDiff - When true, emit simple before/after tokens without
+ *   running diffWords(). Used for large documents (>3K lines) where word-level
+ *   diffs are deferred to the viewport-based requestor.
+ */
 export function valueTokens(
   stringify: (v: JsonValue) => string,
   tokenCtor: (value: string, tags?: TokenTag | TokenTag[]) => Token,
   value: JsonValue,
   diff?: DiffMeta,
+  skipWordDiff?: boolean,
 ): Token[] {
   const str = stringify(value)
-  if (diff?.replaced !== undefined && typeof value === "string") {
+  if (diff?.replaced !== undefined && typeof value === "string" && !skipWordDiff) {
     const changes = diffWords(str, stringify(diff.replaced))
     return changes.map<Token>((c) => tokenCtor(c.value).cond("before", !!c.added).cond("after", !!c.removed))
   }
@@ -133,12 +142,12 @@ function buildChildBlock(
 
     block.id = blockId
 
-    buildDiff(value as Record<string, unknown> | unknown[], block, strategy, { last: false, level: childLevel })
+    buildDiff(value as Record<string, unknown> | unknown[], block, strategy, { last: false, level: childLevel, skipWordDiff: ctx.skipWordDiff })
 
     // When arrayMeta is enabled, per-item diffs live on the array's own $diff
     // but the parent object has no entry for this key. Propagate the first
     // child diff to the container so it is marked as changed.
-    if (!block.diff && isArrayValue && metaKey in (value as Record<string, unknown>)) {
+    if (!block.diff && isArrayValue && metaKey in (value as unknown as Record<string, unknown>)) {
       const childWithDiff = block.children.find(c => c.diff)
       if (childWithDiff?.diff) {
         block.diff = childWithDiff.diff

@@ -53,16 +53,6 @@ function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
   }
 
   bar.append(
-    makeBtn('\u2190 Prev', (v) => v.navigation.goToPrevChange(...v.getFilters())),
-    makeBtn('Next \u2192', (v) => v.navigation.goToNextChange(...v.getFilters())),
-  )
-
-  // Separator
-  const sep1 = document.createElement('span')
-  sep1.style.cssText = `width:1px;height:16px;background:${borderColor}`
-  bar.appendChild(sep1)
-
-  bar.append(
     makeBtn('Expand All', (v) => v.expandAll()),
     makeBtn('Collapse All', (v) => v.collapseAll()),
   )

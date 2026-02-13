@@ -1,6 +1,7 @@
 import { diffTypes } from '../diff-builder/common'
 import type { DiffBlockData } from '../diff-builder/common'
 import type { DiffType } from 'api-smart-diff'
+import type { BlockTreeIndex } from './block-index'
 
 /**
  * Returns true if a block (or any of its descendants) contains at least
@@ -46,5 +47,31 @@ export function computeFilterFoldSet(
   }
 
   walk(blocks)
+  return foldSet
+}
+
+/**
+ * Index-driven version of computeFilterFoldSet.
+ * Uses pre-computed containersByMatchingType for O(M) set operations
+ * instead of O(N) tree walk.
+ */
+export function computeFilterFoldSetFromIndex(
+  index: BlockTreeIndex,
+  filters: DiffType[]
+): Set<string> {
+  if (filters.length === 0) return new Set()
+
+  // Start with ALL containers, then remove those that match any filter type
+  const foldSet = new Set(index.containerIds)
+
+  for (const filterType of filters) {
+    const matching = index.containersByMatchingType.get(filterType)
+    if (matching) {
+      for (const id of matching) {
+        foldSet.delete(id)
+      }
+    }
+  }
+
   return foldSet
 }

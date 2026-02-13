@@ -169,8 +169,14 @@ const alignedDecorationsPlugin = ViewPlugin.fromClass(
     }
 
     update(update: ViewUpdate) {
-      // Rebuild decorations on any state change that might affect them
-      if (update.docChanged || update.viewportChanged || update.transactions.length > 0) {
+      // Only rebuild when the line mapping data or document content changes.
+      // Line decorations are positionally stable — scrolling doesn't alter them.
+      const mappingsChanged = update.transactions.some(tr =>
+        tr.effects.some(e =>
+          e.is(setLineMappingsEffect) || e.is(setEditorSideEffect) || e.is(setWordDiffModeEffect)
+        )
+      )
+      if (update.docChanged || mappingsChanged) {
         this.decorations = buildAlignedDecorations(update.view)
       }
     }
@@ -415,11 +421,23 @@ const diffTypePriority: Record<string, number> = {
   unclassified: 3,
 }
 
+/** Get the most severe diff type from a BlockTreeIndex entry's counts */
+function getMostSevereDiffTypeFromCounts(
+  counts: { breaking: number; nonBreaking: number; annotation: number; unclassified: number }
+): string | null {
+  if (counts.breaking > 0) return 'breaking'
+  if (counts.nonBreaking > 0) return 'non-breaking'
+  if (counts.annotation > 0) return 'annotation'
+  if (counts.unclassified > 0) return 'unclassified'
+  return null
+}
+
 /** Build fold-aware diff type markers: overrides fold placeholder lines with the most severe classification */
 function buildFoldAwareDiffTypeMarkers(
   state: EditorState,
   mappings: LineMapping[],
   side: 'before' | 'after' | 'unified',
+  treeIndex?: import('../utils/block-index').BlockTreeIndex | null,
 ): RangeSet<GutterMarker> {
   // Build base markers (per-line)
   const baseMarkers = buildDiffTypeGutterMarkers(state.doc, mappings, side)
@@ -445,6 +463,23 @@ function buildFoldAwareDiffTypeMarkers(
       if (!hasRealContent) return // all-spacer fold — keep spacer marker
     }
 
+    // Index-driven O(1) path: lookup block by fold start line
+    if (treeIndex) {
+      const foldBlockId = mappings[foldLine.number - 1]?.blockId
+      if (foldBlockId) {
+        const entry = treeIndex.byId.get(foldBlockId)
+        if (entry) {
+          const bestType = getMostSevereDiffTypeFromCounts(entry.counts)
+          if (bestType) {
+            const marker = diffTypeMarkerCache[bestType]
+            if (marker) foldOverrides.set(foldLine.from, marker)
+          }
+          return
+        }
+      }
+    }
+
+    // Fallback: scan lines in fold range
     let bestPriority = Infinity
 
     for (let lineNum = foldLine.number; lineNum <= toLine; lineNum++) {
@@ -499,12 +534,41 @@ function buildFoldAwareDiffTypeMarkers(
   return builder.finish()
 }
 
+/** Create classification gutter extensions (colored bar + fold-aware markers) */
+export function createClassificationGutter(
+  mappings: LineMapping[],
+  side: 'before' | 'after' | 'unified',
+): Extension[] {
+  const diffTypeField = StateField.define<RangeSet<GutterMarker>>({
+    create(state) {
+      return buildFoldAwareDiffTypeMarkers(state, mappings, side)
+    },
+    update(markers, tr) {
+      if (tr.docChanged) {
+        return buildFoldAwareDiffTypeMarkers(tr.state, mappings, side)
+      }
+      // Rebuild when fold state changes
+      const hasFoldChange = tr.effects.some(e => e.is(foldEffect) || e.is(unfoldEffect))
+      if (hasFoldChange) {
+        return buildFoldAwareDiffTypeMarkers(tr.state, mappings, side)
+      }
+      return markers
+    },
+  })
+
+  const diffTypeGutter = gutter({
+    class: 'cm-diff-type-gutter',
+    markers: (view) => view.state.field(diffTypeField),
+  })
+
+  return [diffTypeField, diffTypeGutter]
+}
+
 /** Create line numbers extension with spacer awareness - pass mappings and side directly */
 export function createSpacerAwareLineNumbers(
   mappings: LineMapping[],
   side: 'before' | 'after' | 'unified',
   wordDiffMode: 'word' | 'char' | 'none' = 'word',
-  showClassification: boolean = false
 ): Extension {
   // Pre-calculate display numbers and change types for each document line
   const lineInfo = new Map<
@@ -547,33 +611,6 @@ export function createSpacerAwareLineNumbers(
   }
 
   const extensions: Extension[] = []
-
-  // Classification gutter (leftmost) — only when showClassification is enabled
-  if (showClassification) {
-    const diffTypeField = StateField.define<RangeSet<GutterMarker>>({
-      create(state) {
-        return buildFoldAwareDiffTypeMarkers(state, mappings, side)
-      },
-      update(markers, tr) {
-        if (tr.docChanged) {
-          return buildFoldAwareDiffTypeMarkers(tr.state, mappings, side)
-        }
-        // Rebuild when fold state changes
-        const hasFoldChange = tr.effects.some(e => e.is(foldEffect) || e.is(unfoldEffect))
-        if (hasFoldChange) {
-          return buildFoldAwareDiffTypeMarkers(tr.state, mappings, side)
-        }
-        return markers
-      },
-    })
-
-    const diffTypeGutter = gutter({
-      class: 'cm-diff-type-gutter',
-      markers: (view) => view.state.field(diffTypeField),
-    })
-
-    extensions.push(diffTypeField, diffTypeGutter)
-  }
 
   // Use standard lineNumbers with formatNumber for proper virtualized rendering
   // Diff marker gutter will be added separately after fold gutter

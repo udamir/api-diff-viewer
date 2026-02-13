@@ -13,6 +13,8 @@ import type {
 import type { DiffPath } from './utils/path'
 import { resolvePathToBlock } from './utils/path'
 import { NavigationAPIImpl } from './navigation/navigation-api'
+import type { BlockTreeIndex } from './utils/block-index'
+import { setBlockTreeIndexEffect } from './state/block-index-state'
 import {
   setExpandedBlocksEffect,
   toggleBlockExpandedEffect,
@@ -25,17 +27,26 @@ class DiffCoordinatorImpl implements DiffCoordinator {
   private _afterView: EditorView
   private _navigation: NavigationAPIImpl
   private _diffData: DiffData
+  private _treeIndex: BlockTreeIndex | null = null
 
   constructor(
     beforeView: EditorView,
     afterView: EditorView,
     diffData: DiffData,
-    merged?: MergedDocument | null
+    merged?: MergedDocument | null,
+    treeIndex?: BlockTreeIndex | null
   ) {
     this._beforeView = beforeView
     this._afterView = afterView
     this._diffData = diffData
+    this._treeIndex = treeIndex ?? null
     this._navigation = new NavigationAPIImpl(beforeView, afterView, diffData, merged)
+
+    // Dispatch treeIndex to editor state
+    if (this._treeIndex) {
+      this._beforeView.dispatch({ effects: setBlockTreeIndexEffect.of(this._treeIndex) })
+      this._afterView.dispatch({ effects: setBlockTreeIndexEffect.of(this._treeIndex) })
+    }
   }
 
   get beforeView(): EditorView {
@@ -85,16 +96,20 @@ class DiffCoordinatorImpl implements DiffCoordinator {
     })
   }
 
-  updateDiffData(newData: DiffData, merged?: MergedDocument): void {
+  updateDiffData(newData: DiffData, merged?: MergedDocument, treeIndex?: BlockTreeIndex | null): void {
     this._diffData = newData
-    this._navigation.update(this._beforeView, this._afterView, newData, merged)
+    this._treeIndex = treeIndex ?? null
+    this._navigation.update(this._beforeView, this._afterView, newData, merged, this._treeIndex)
 
-    this._beforeView.dispatch({
-      effects: setDiffDataEffect.of(newData),
-    })
-    this._afterView.dispatch({
-      effects: setDiffDataEffect.of(newData),
-    })
+    const effects: import('@codemirror/state').StateEffect<unknown>[] = [
+      setDiffDataEffect.of(newData),
+    ]
+    if (this._treeIndex) {
+      effects.push(setBlockTreeIndexEffect.of(this._treeIndex))
+    }
+
+    this._beforeView.dispatch({ effects })
+    this._afterView.dispatch({ effects })
   }
 
   destroy(): void {
@@ -118,9 +133,10 @@ export function createCoordinator(
   beforeView: EditorView,
   afterView: EditorView,
   diffData: DiffData,
-  merged?: MergedDocument | null
+  merged?: MergedDocument | null,
+  treeIndex?: BlockTreeIndex | null
 ): DiffCoordinator {
-  return new DiffCoordinatorImpl(beforeView, afterView, diffData, merged)
+  return new DiffCoordinatorImpl(beforeView, afterView, diffData, merged, treeIndex)
 }
 
 /** Unfold all folded ranges in a single editor view */

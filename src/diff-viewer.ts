@@ -29,6 +29,7 @@ import { TypedEventEmitter } from './utils/events'
 import { DiffWorkerManager } from './worker/worker-manager'
 import { createCoordinator, foldAllInView, unfoldAllInView } from './coordinator'
 import { createNavigationAPI, NavigationAPIImpl } from './navigation/navigation-api'
+import { buildBlockTreeIndex, type BlockTreeIndex } from './utils/block-index'
 
 import type { BaseView, ViewConfig } from './views/base-view'
 import { SideBySideView } from './views/side-by-side-view'
@@ -115,6 +116,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
   private _diffData: DiffData | null = null
   private _merged: MergedDocument | null = null
   private _changeSummary: ChangeSummary | null = null
+  private _treeIndex: BlockTreeIndex | null = null
 
   private _loading = false
   private _destroyed = false
@@ -163,6 +165,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     this._diffData = null
     this._merged = null
     this._changeSummary = null
+    this._treeIndex = null
   }
 
   // ── Data Updates ──
@@ -259,19 +262,19 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
   setFoldingEnabled(enabled: boolean): void {
     if (this._destroyed || this.options.enableFolding === enabled) return
     this.options.enableFolding = enabled
-    this.rebuildView()
+    this.currentView?.setFoldingEnabled(enabled)
   }
 
   setClassificationEnabled(enabled: boolean): void {
     if (this._destroyed || this.options.showClassification === enabled) return
     this.options.showClassification = enabled
-    this.rebuildView()
+    this.currentView?.setClassificationEnabled(enabled)
   }
 
   setWordDiffMode(mode: 'word' | 'char' | 'none'): void {
     if (this._destroyed || this.options.wordDiffMode === mode) return
     this.options.wordDiffMode = mode
-    this.rebuildView()
+    this.currentView?.setWordDiffMode(mode)
   }
 
   setWordWrap(enabled: boolean): void {
@@ -411,15 +414,43 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     return input
   }
 
+  /** Threshold: skip tree-level word diff for docs exceeding this many keys */
+  private static readonly LARGE_DOC_THRESHOLD = 3000
+
+  private estimateDocSize(obj: unknown, count = { n: 0 }): number {
+    if (count.n > DiffViewer.LARGE_DOC_THRESHOLD) return count.n
+    if (typeof obj !== 'object' || obj === null) return count.n
+    if (Array.isArray(obj)) {
+      for (const item of obj) {
+        count.n++
+        this.estimateDocSize(item, count)
+        if (count.n > DiffViewer.LARGE_DOC_THRESHOLD) return count.n
+      }
+    } else {
+      for (const key of Object.keys(obj)) {
+        count.n++
+        this.estimateDocSize((obj as Record<string, unknown>)[key], count)
+        if (count.n > DiffViewer.LARGE_DOC_THRESHOLD) return count.n
+      }
+    }
+    return count.n
+  }
+
   private buildDiffData(merged: MergedDocument, format: 'json' | 'yaml'): DiffData {
-    const rootBlock = buildDiffBlock(merged, format)
+    const skipWordDiff = this.estimateDocSize(merged) > DiffViewer.LARGE_DOC_THRESHOLD
+    const rootBlock = buildDiffBlock(merged, format, { skipWordDiff })
 
     // Build line map and block map from the diff blocks
     const lineMap: LineMapping[] = []
     const blockMap: BlockMapping[] = []
 
+    const blocks = rootBlock.children.length > 0 ? [rootBlock] : [rootBlock]
+
+    // Build pre-computed tree index
+    this._treeIndex = buildBlockTreeIndex(blocks)
+
     return {
-      blocks: rootBlock.children.length > 0 ? [rootBlock] : [rootBlock],
+      blocks,
       lineMap,
       blockMap,
     }
@@ -457,7 +488,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     const views = this.currentView.getEditorViews()
 
     if (this.options.mode === 'side-by-side' && views.length === 2) {
-      this._coordinator = createCoordinator(views[0], views[1], this._diffData, this._merged)
+      this._coordinator = createCoordinator(views[0], views[1], this._diffData, this._merged, this._treeIndex)
       this._navigation = this._coordinator.navigation as NavigationAPIImpl
     } else if (views.length > 0) {
       this._navigation = new NavigationAPIImpl(null, views[0], this._diffData, this._merged)

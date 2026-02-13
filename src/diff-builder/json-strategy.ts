@@ -10,19 +10,19 @@ export const jsonStrategy: FormatStrategy = {
   propLineTokens(key: string | number, value: JsonValue, diff: DiffMeta | undefined, ctx: FormatContext) {
     return [
       ...diff?.action === DiffAction.rename
-        ? valueTokens(JSON.stringify, Token.Key, key, diff)
+        ? valueTokens(JSON.stringify, Token.Key, key, diff, ctx.skipWordDiff)
         : [Token.Key(JSON.stringify(key))],
       Token.Spec(": "),
       ...diff?.action === DiffAction.rename
         ? [Token.Value(JSON.stringify(value))]
-        : valueTokens(JSON.stringify, Token.Value, value, diff),
+        : valueTokens(JSON.stringify, Token.Value, value, diff, ctx.skipWordDiff),
       ...ctx.last ? [] : [Token.Spec(",")],
     ]
   },
 
   arrLineTokens(value: JsonValue, diff: DiffMeta | undefined, ctx: FormatContext) {
     return [
-      ...valueTokens(JSON.stringify, Token.Value, value, diff),
+      ...valueTokens(JSON.stringify, Token.Value, value, diff, ctx.skipWordDiff),
       ...ctx.last ? [] : [Token.Spec(",")],
     ]
   },
@@ -30,7 +30,7 @@ export const jsonStrategy: FormatStrategy = {
   propBlockTokens(isArray: boolean, key: string | number, diff: DiffMeta | undefined, ctx: FormatContext) {
     return [
       ...diff?.action === DiffAction.rename
-        ? valueTokens(JSON.stringify, Token.Key, key, diff)
+        ? valueTokens(JSON.stringify, Token.Key, key, diff, ctx.skipWordDiff)
         : [Token.Key(JSON.stringify(key))],
       Token.Spec(": "),
       ...isArray

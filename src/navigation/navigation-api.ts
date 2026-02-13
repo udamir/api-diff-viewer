@@ -22,6 +22,7 @@ import {
 } from '../utils/path'
 import { getPathValue, isEmpty } from '../utils/common'
 import { setSelectedBlockEffect, toggleBlockExpandedEffect, diffStateField } from '../state/diff-state'
+import type { BlockTreeIndex } from '../utils/block-index'
 
 /** Implementation of the path-based Navigation API */
 export class NavigationAPIImpl implements NavigationAPI {
@@ -32,6 +33,7 @@ export class NavigationAPIImpl implements NavigationAPI {
   private currentBlockIndex: number = -1
   private currentPath: string | null = null
   private navigateListeners: Set<(path: string | null) => void> = new Set()
+  private treeIndex: BlockTreeIndex | null = null
 
   constructor(
     beforeView: EditorView | null,
@@ -50,13 +52,17 @@ export class NavigationAPIImpl implements NavigationAPI {
     beforeView: EditorView | null,
     afterView: EditorView | null,
     diffData: DiffData,
-    merged?: MergedDocument | null
+    merged?: MergedDocument | null,
+    treeIndex?: BlockTreeIndex | null
   ) {
     this.beforeView = beforeView
     this.afterView = afterView
     this.diffData = diffData
     if (merged !== undefined) {
       this.merged = merged ?? null
+    }
+    if (treeIndex !== undefined) {
+      this.treeIndex = treeIndex ?? null
     }
   }
 
@@ -302,6 +308,11 @@ export class NavigationAPIImpl implements NavigationAPI {
 
   /** Get blocks with changes (have diff metadata) */
   private getChangedBlocks(): DiffBlockData[] {
+    // Use index path when available
+    if (this.treeIndex) {
+      return this.treeIndex.changedBlocks.map(e => e.block)
+    }
+
     const changed: DiffBlockData[] = []
 
     const collectChanged = (blocks: DiffBlockData[]) => {
@@ -319,6 +330,18 @@ export class NavigationAPIImpl implements NavigationAPI {
 
   /** Get blocks by diff type */
   private getBlocksByType(types: DiffType[]): DiffBlockData[] {
+    // Use index path when available
+    if (this.treeIndex) {
+      const result: DiffBlockData[] = []
+      for (const t of types) {
+        const entries = this.treeIndex.changedByType.get(t)
+        if (entries) {
+          for (const e of entries) result.push(e.block)
+        }
+      }
+      return result
+    }
+
     return this.getChangedBlocks().filter((block) => block.diff && types.includes(block.diff.type))
   }
 
@@ -411,11 +434,18 @@ export class NavigationAPIImpl implements NavigationAPI {
    * Resolve a block to its path string.
    * For container blocks this is the block id. For leaf blocks (id = ""),
    * walk up the block tree to find the nearest parent with an id.
+   * Uses the tree index for O(1) parent lookup when available.
    */
   private resolveBlockPath(block: DiffBlockData): string | null {
     if (block.id) return block.id
 
-    // Leaf block — find parent by walking the tree
+    // Index path: O(1) parent lookup
+    if (this.treeIndex && block.id) {
+      const entry = this.treeIndex.byId.get(block.id)
+      if (entry?.parentId) return entry.parentId
+    }
+
+    // Fallback: walk the tree
     const findParentId = (blocks: DiffBlockData[]): string | null => {
       for (const b of blocks) {
         if (b.children.includes(block) && b.id) return b.id

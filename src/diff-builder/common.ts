@@ -34,7 +34,21 @@ export class Token {
     return new Token("value", value, tags)
   }
 
+  /** Token pool for common spec tokens to reduce GC pressure */
+  private static readonly _pool = new Map<string, Token>()
+
   static Spec(value: string, tags?: TokenTag | TokenTag[]) {
+    // Pool untagged common spec tokens
+    if (tags === undefined || (Array.isArray(tags) && tags.length === 0)) {
+      const cached = Token._pool.get(value)
+      if (cached) return cached
+      const token = new Token("spec", value)
+      // Only pool short common tokens
+      if (value.length <= 4) {
+        Token._pool.set(value, token)
+      }
+      return token
+    }
     return new Token("spec", value, tags)
   }
 

@@ -46,9 +46,7 @@
       <option value="json">JSON</option>
     </select>
     <button id="toggle-dark">Toggle Dark</button>
-    <button id="next-change">Next Change</button>
-    <button id="prev-change">Prev Change</button>
-    <button id="destroy-btn">Destroy</button>
+<button id="destroy-btn">Destroy</button>
   </div>
   <div id="status">Loading...</div>
   <div id="diff-container"></div>
@@ -186,14 +184,6 @@
       viewer.setTheme({ dark: !viewer.isDark() })
       document.body.style.background = viewer.isDark() ? '#0d1117' : '#f6f8fa'
       document.body.style.color = viewer.isDark() ? '#c9d1d9' : '#1f2328'
-    }
-
-    document.getElementById('next-change').onclick = () => {
-      viewer.navigation.goToNextChange()
-    }
-
-    document.getElementById('prev-change').onclick = () => {
-      viewer.navigation.goToPrevChange()
     }
 
     document.getElementById('destroy-btn').onclick = () => {

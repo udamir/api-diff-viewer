@@ -9,7 +9,8 @@ import { foldEffect, unfoldEffect, foldable, foldedRanges } from '@codemirror/la
 import type { EditorView } from '@codemirror/view'
 import type { DiffBlockData } from '../diff-builder/common'
 import type { DiffType } from 'api-smart-diff'
-import { computeFilterFoldSet } from '../utils/filter'
+import { computeFilterFoldSet, computeFilterFoldSetFromIndex } from '../utils/filter'
+import type { BlockTreeIndex } from '../utils/block-index'
 import { setFilterFoldsEffect, getDiffState } from '../state/diff-state'
 import { lineMappingsField } from './aligned-decorations'
 
@@ -116,17 +117,24 @@ function findFoldedRangeForBlock(
 /**
  * Apply filter-based folding to an editor view.
  * Folds blocks that don't match the filter; unfolds blocks that do.
+ *
+ * When treeIndex and pre-computed blockLineRanges are provided, uses
+ * O(M) set operations instead of O(N) tree walk and lineMap scan.
  */
 export function applyFilterFolds(
   view: EditorView,
   blocks: DiffBlockData[],
-  filters: DiffType[]
+  filters: DiffType[],
+  precomputedBlockLineRanges?: Map<string, { start: number; end: number }>,
+  treeIndex?: BlockTreeIndex
 ): void {
-  const newFoldSet = computeFilterFoldSet(blocks, filters)
+  const newFoldSet = treeIndex
+    ? computeFilterFoldSetFromIndex(treeIndex, filters)
+    : computeFilterFoldSet(blocks, filters)
   const state = getDiffState(view.state)
   const prevFoldSet = state.filterFoldedBlocks
 
-  const blockRanges = buildBlockEditorLineRanges(view)
+  const blockRanges = precomputedBlockLineRanges || buildBlockEditorLineRanges(view)
   const effects = []
 
   // Blocks to fold: in newFoldSet but not previously folded by filter

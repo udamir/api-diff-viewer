@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "CodeMirror-based component to view the difference between two documents: OpenAPI, AsyncAPI, JSON Schema",
   "author": "Damir Yusipov",
   "license": "MIT",
