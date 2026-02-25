@@ -56,10 +56,10 @@ export class Token {
     return new Token(diffTypes[changeIndex], String(count), tags)
   }
 
-  public cond(value: TokenTag | TokenTag[], cond = true) {
-    if (!cond) { return this }
-    this.tags.push(...Array.isArray(value) ? value : [value])
-    return this
+  public cond(value: TokenTag | TokenTag[], cond = true): Token {
+    if (!cond) return this
+    const newTags = [...this.tags, ...(Array.isArray(value) ? value : [value])]
+    return new Token(this.type, this.value, newTags)
   }
 }
 

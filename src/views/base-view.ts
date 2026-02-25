@@ -5,11 +5,11 @@
  * SideBySideView and InlineView.
  */
 
-import { EditorState, Extension, Compartment } from '@codemirror/state'
+import { Extension, Compartment } from '@codemirror/state'
 import { EditorView, drawSelection } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { keymap } from '@codemirror/view'
-import { foldGutter, foldKeymap, codeFolding } from '@codemirror/language'
+import { foldKeymap, codeFolding } from '@codemirror/language'
 import { json } from '@codemirror/lang-json'
 import { yaml } from '@codemirror/lang-yaml'
 
@@ -20,17 +20,13 @@ import { DiffThemeManager } from '../themes'
 import {
   alignedDecorations,
   alignedDecorationsTheme,
-  createSpacerAwareLineNumbers,
-  createDiffMarkerGutter,
 } from '../extensions/aligned-decorations'
 import {
   diffFolding,
-  diffFoldKeymap,
 } from '../extensions/diff-folding'
-import type { ClassificationCounts } from '../extensions/diff-folding'
-import { changeBadges } from '../extensions/change-badges'
-import { wordDiff, wordDiffStateField } from '../extensions/word-diff'
+import { wordDiffStateField } from '../extensions/word-diff'
 import { inlineWordDiff } from '../extensions/inline-word-diff'
+import { prepareFoldPlaceholder, createFoldPlaceholder } from '../extensions/fold-placeholder'
 
 export interface ViewConfig {
   wordWrap: boolean
@@ -125,13 +121,22 @@ export abstract class BaseView {
 
     // codeFolding is always loaded so that filter-as-folding works regardless
     // of enableFolding. The gutter and keyboard shortcuts are opt-in.
+    // Custom placeholder is ALWAYS registered so spacer-only folds are rendered
+    // invisible. Without it, CodeMirror's default placeholder shows a visible
+    // background/border on spacer lines.
     {
       const capturedSide = side
       const capturedLineMap = lineMap
-      extensions.push(codeFolding(this.config.showClassification ? {
-        preparePlaceholder: (state, range) => this.prepareFoldPlaceholder(state, range, capturedSide, capturedLineMap),
-        placeholderDOM: (_view, onclick, prepared) => this.createFoldPlaceholder(prepared, onclick),
-      } : {}))
+      extensions.push(codeFolding({
+        preparePlaceholder: (state, range) => {
+          const data = prepareFoldPlaceholder(state, range, capturedSide, capturedLineMap)
+          if (!this.config.showClassification && !data.isSpacer) {
+            return { counts: { breaking: 0, nonBreaking: 0, annotation: 0, unclassified: 0 }, isSpacer: false }
+          }
+          return data
+        },
+        placeholderDOM: (_view, onclick, prepared) => createFoldPlaceholder(prepared, onclick),
+      }))
       extensions.push(diffFolding())
     }
 
@@ -150,14 +155,6 @@ export abstract class BaseView {
   }
 
   /**
-   * Add word diff extension (for side-by-side mode).
-   */
-  protected createWordDiffExtension(): Extension[] {
-    if (this.config.wordDiffMode === 'none') return []
-    return [wordDiff()]
-  }
-
-  /**
    * Add inline word diff extension (for unified mode).
    */
   protected createInlineWordDiffExtension(): Extension[] {
@@ -165,109 +162,4 @@ export abstract class BaseView {
     return [inlineWordDiff({ mode: this.config.wordDiffMode })]
   }
 
-  /**
-   * Compute classification counts for a specific folded range.
-   * Called by CodeMirror's `preparePlaceholder` with the exact fold range.
-   * Only counts lines that have real content on this editor's side
-   * (skips spacer lines from the opposite side).
-   */
-  protected prepareFoldPlaceholder(
-    state: EditorState,
-    range: { from: number; to: number },
-    side: 'before' | 'after' | 'unified',
-    lineMap: LineMapping[]
-  ): { counts: ClassificationCounts; isSpacer: boolean } {
-    const doc = state.doc
-    const fromLine = doc.lineAt(range.from).number
-    const toLine = doc.lineAt(range.to).number
-    const counts: ClassificationCounts = {
-      breaking: 0,
-      nonBreaking: 0,
-      annotation: 0,
-      unclassified: 0,
-    }
-
-    // Check if this fold range is entirely spacer lines on this side
-    let hasRealContent = side === 'unified'
-    if (!hasRealContent) {
-      for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
-        const i = lineNum - 1
-        if (i >= lineMap.length) break
-        const mapping = lineMap[i]
-        if (side === 'before' && mapping.beforeLine !== null) { hasRealContent = true; break }
-        if (side === 'after' && mapping.afterLine !== null) { hasRealContent = true; break }
-      }
-    }
-
-    if (!hasRealContent) {
-      return { counts, isSpacer: true }
-    }
-
-    // Scan lineMap entries that fall within this fold range.
-    // Only count change roots — an added/removed block counts as one change,
-    // its nested children do not add to the count.
-    // Count ALL change roots regardless of spacer status so both sides show
-    // identical counters for the same folded block.
-    for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
-      const i = lineNum - 1 // lineMap is 0-indexed
-      if (i >= lineMap.length) break
-      const mapping = lineMap[i]
-      if (!mapping.diffType) continue
-      if (!mapping.isChangeRoot) continue
-
-      switch (mapping.diffType) {
-        case 'breaking': counts.breaking++; break
-        case 'non-breaking': counts.nonBreaking++; break
-        case 'annotation': counts.annotation++; break
-        case 'unclassified': counts.unclassified++; break
-      }
-    }
-
-    return { counts, isSpacer: false }
-  }
-
-  /**
-   * Create a fold placeholder DOM element with classification counter badges.
-   * Receives pre-computed classification counts from `prepareFoldPlaceholder`.
-   */
-  protected createFoldPlaceholder(prepared: { counts: ClassificationCounts; isSpacer: boolean }, onclick?: (event: Event) => void): HTMLElement {
-    const { counts, isSpacer } = prepared
-
-    // Spacer folds: render an invisible placeholder
-    if (isSpacer) {
-      const spacer = document.createElement('span')
-      spacer.className = 'cm-diff-fold-spacer'
-      if (onclick) spacer.onclick = onclick
-      return spacer
-    }
-
-    const wrapper = document.createElement('span')
-    wrapper.className = 'cm-diff-fold-wrapper'
-    wrapper.title = 'Click to expand'
-    if (onclick) {
-      wrapper.onclick = onclick
-    }
-
-    // Ellipsis badge — always shown
-    const ellipsis = document.createElement('span')
-    ellipsis.className = 'cm-diff-fold-badge cm-diff-fold-badge-ellipsis'
-    ellipsis.textContent = '\u2026'
-    wrapper.appendChild(ellipsis)
-
-    // Classification counter badges
-    const addCounter = (type: string, count: number) => {
-      if (count <= 0) return
-      const badge = document.createElement('span')
-      badge.className = `cm-diff-fold-badge cm-diff-fold-badge-${type}`
-      badge.textContent = String(count)
-      badge.title = `${count} ${type.replace('-', ' ')}`
-      wrapper.appendChild(badge)
-    }
-    addCounter('breaking', counts.breaking)
-    addCounter('non-breaking', counts.nonBreaking)
-    addCounter('annotation', counts.annotation)
-    addCounter('unclassified', counts.unclassified)
-
-    return wrapper
-  }
 }

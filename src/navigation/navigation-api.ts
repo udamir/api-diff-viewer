@@ -370,9 +370,8 @@ export class NavigationAPIImpl implements NavigationAPI {
     }
 
     // Update current path and notify
-    const newPath = this.resolveBlockPath(block)
-    this.currentPath = newPath
-    this.notifyNavigate(newPath)
+    this.currentPath = blockPath
+    this.notifyNavigate(blockPath)
   }
 
   /** Expand a block by dispatching toggleBlockExpandedEffect if it is collapsed */
@@ -438,12 +437,6 @@ export class NavigationAPIImpl implements NavigationAPI {
    */
   private resolveBlockPath(block: DiffBlockData): string | null {
     if (block.id) return block.id
-
-    // Index path: O(1) parent lookup
-    if (this.treeIndex && block.id) {
-      const entry = this.treeIndex.byId.get(block.id)
-      if (entry?.parentId) return entry.parentId
-    }
 
     // Fallback: walk the tree
     const findParentId = (blocks: DiffBlockData[]): string | null => {

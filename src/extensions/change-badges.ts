@@ -232,13 +232,60 @@ function countBlockChanges(block: DiffBlockData): {
   return { breaking, nonBreaking, annotation, unclassified }
 }
 
-/** Build badge data from diff data and line mappings */
+/**
+ * Build badge data from diff data and line mappings.
+ *
+ * When a treeIndex and blockLineRanges are provided, uses the pre-computed
+ * index for O(C) where C = number of containers. Otherwise falls back to
+ * recursively walking the block tree.
+ */
 export function buildBadgeData(
-  doc: { line: (n: number) => { from: number; to: number } },
+  doc: { line: (n: number) => { from: number; to: number }; readonly lines: number },
   diffData: DiffData,
   lineMap: LineMapping[],
-  side: 'before' | 'after' | 'unified'
+  side: 'before' | 'after' | 'unified',
+  treeIndex?: BlockTreeIndex,
+  blockLineRanges?: Map<string, { start: number; end: number }>
 ): BadgeData[] {
+  // Index-driven fast path
+  if (treeIndex && blockLineRanges) {
+    const badges: BadgeData[] = []
+
+    for (const containerId of treeIndex.containerIds) {
+      const entry = treeIndex.byId.get(containerId)
+      if (!entry) continue
+
+      const { counts } = entry
+      const total = counts.breaking + counts.nonBreaking + counts.annotation + counts.unclassified
+      if (total <= 0) continue
+
+      const lineRange = blockLineRanges.get(containerId)
+      if (!lineRange) continue
+
+      const lineNum = lineRange.start
+      if (lineNum < 1 || lineNum > doc.lines) continue
+
+      try {
+        const line = doc.line(lineNum)
+        badges.push({
+          lineNumber: lineNum,
+          position: line.to,
+          breaking: counts.breaking,
+          nonBreaking: counts.nonBreaking,
+          annotation: counts.annotation,
+          unclassified: counts.unclassified,
+          total,
+          blockId: containerId,
+        })
+      } catch {
+        // Line doesn't exist
+      }
+    }
+
+    return badges
+  }
+
+  // Tree-walk fallback
   const badges: BadgeData[] = []
   const processedBlocks = new Set<string>()
 
@@ -251,25 +298,22 @@ export function buildBadgeData(
     }
   }
 
-  // Process blocks recursively
-  const processBlocks = (blocks: DiffBlockData[], parentId?: string) => {
+  const processBlocks = (blocks: DiffBlockData[]) => {
     for (const block of blocks) {
-      // Only show badges for container blocks (those with children)
       if (block.children.length > 0 && block.id && !processedBlocks.has(block.id)) {
         processedBlocks.add(block.id)
 
         const counts = countBlockChanges(block)
         const total = counts.breaking + counts.nonBreaking + counts.annotation + counts.unclassified
 
-        // Only add badge if there are changes in children
         if (total > 0) {
           const lineNum = blockFirstLines.get(block.id)
-          if (lineNum && lineNum <= doc.line(1).to) {
+          if (lineNum && lineNum <= doc.lines) {
             try {
               const line = doc.line(lineNum)
               badges.push({
                 lineNumber: lineNum,
-                position: line.to, // End of line
+                position: line.to,
                 breaking: counts.breaking,
                 nonBreaking: counts.nonBreaking,
                 annotation: counts.annotation,
@@ -284,58 +328,11 @@ export function buildBadgeData(
         }
       }
 
-      // Process children
-      processBlocks(block.children, block.id)
+      processBlocks(block.children)
     }
   }
 
   processBlocks(diffData.blocks)
-
-  return badges
-}
-
-/**
- * Index-driven version of buildBadgeData.
- * Uses the pre-computed BlockTreeIndex for O(C) where C = number of containers,
- * instead of recursively walking the full block tree.
- */
-export function buildBadgeDataFromIndex(
-  doc: { line: (n: number) => { from: number; to: number }; readonly lines: number },
-  treeIndex: BlockTreeIndex,
-  blockLineRanges: Map<string, { start: number; end: number }>
-): BadgeData[] {
-  const badges: BadgeData[] = []
-
-  for (const containerId of treeIndex.containerIds) {
-    const entry = treeIndex.byId.get(containerId)
-    if (!entry) continue
-
-    const { counts } = entry
-    const total = counts.breaking + counts.nonBreaking + counts.annotation + counts.unclassified
-    if (total <= 0) continue
-
-    const lineRange = blockLineRanges.get(containerId)
-    if (!lineRange) continue
-
-    const lineNum = lineRange.start
-    if (lineNum < 1 || lineNum > doc.lines) continue
-
-    try {
-      const line = doc.line(lineNum)
-      badges.push({
-        lineNumber: lineNum,
-        position: line.to,
-        breaking: counts.breaking,
-        nonBreaking: counts.nonBreaking,
-        annotation: counts.annotation,
-        unclassified: counts.unclassified,
-        total,
-        blockId: containerId,
-      })
-    } catch {
-      // Line doesn't exist
-    }
-  }
 
   return badges
 }

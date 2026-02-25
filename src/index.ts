@@ -8,9 +8,34 @@
 export * from './diff-viewer'
 
 // ── Core types ──
-export *from './types'
+export {
+  defaultDiffConfig,
+} from './types'
 
-export { defaultDiffConfig } from './types'
+export type {
+  JsonPrimitive,
+  JsonArray,
+  JsonObject,
+  JsonValue,
+  MergedObject,
+  MergedArray,
+  MergedDocument,
+  LineMapping,
+  BlockMapping,
+  DiffData,
+  DiffConfig,
+  NavigationOptions,
+  ChangeSummary,
+  FindPathsOptions,
+  PathSearchResult,
+  ChildKeyInfo,
+  NavigationAPI,
+  DiffDecoration,
+  WordDiff,
+  DiffThemeColors,
+  SyncState,
+  AlignedContent,
+} from './types'
 
 // ── Path utilities ──
 export {
@@ -39,7 +64,6 @@ export {
   setFiltersEffect,
   setDisplayModeEffect,
   setFormatEffect,
-  setSideEffect,
 } from './state/diff-state'
 
 export type { DiffEditorState } from './state/diff-state'
@@ -48,7 +72,12 @@ export type { DiffEditorState } from './state/diff-state'
 export * from './extensions'
 
 // ── Sync utilities ──
-export * from './sync/visual-alignment'
+export {
+  generateAlignedContentFromDiff,
+  generateUnifiedContentFromDiff,
+  tokensToStringBatch,
+  SPACER_LINE,
+} from './sync/visual-alignment'
 
 export type { AlignmentResult, UnifiedResult, UnifiedContentOptions } from './sync/visual-alignment'
 
@@ -57,10 +86,17 @@ export { setupHeightSync } from './sync/height-sync'
 export type { HeightSyncHandle } from './sync/height-sync'
 
 // ── Themes ──
-export * from './themes'
+export {
+  diffTheme,
+  diffThemeLight,
+  diffThemeDark,
+  DiffThemeManager,
+  lightColors,
+  darkColors,
+} from './themes'
 
 // ── Navigation ──
-export { createNavigationAPI, NavigationAPIImpl } from './navigation/navigation-api'
+export { createNavigationAPI } from './navigation/navigation-api'
 
 // ── Diff builder ──
 export { buildDiffBlock } from './diff-builder'
@@ -68,5 +104,13 @@ export { DiffBlockData, DiffLineData, Token } from './diff-builder/common'
 export type { TokenTag, TokenType, LineDiff } from './diff-builder/common'
 export { valueTokens } from './diff-builder/builder'
 export type { FormatStrategy, FormatContext } from './diff-builder/builder'
+
+// ── Fold utilities ──
+export { foldAllInView, unfoldAllInView } from './coordinator'
+
+// ── Fold placeholder ──
+export { prepareFoldPlaceholder, createFoldPlaceholder } from './extensions/fold-placeholder'
+export type { FoldPlaceholderData } from './extensions/fold-placeholder'
+
 // ── Worker manager ──
 export { DiffWorkerManager } from './worker/worker-manager'

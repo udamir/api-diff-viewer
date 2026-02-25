@@ -11,7 +11,7 @@ import { ViewPlugin, type ViewUpdate, type EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import { lineMappingsField } from './aligned-decorations'
 import {
-  buildWordDiffDataForRange,
+  buildWordDiffData,
   extendWordDiffDataEffect,
   wordDiffDataField,
 } from './word-diff'
@@ -81,7 +81,7 @@ export function wordDiffRequestor(
         const compute = () => {
           this.pending = false
 
-          const newData = buildWordDiffDataForRange(
+          const newData = buildWordDiffData(
             mappingsState.mappings,
             beforeLines,
             afterLines,

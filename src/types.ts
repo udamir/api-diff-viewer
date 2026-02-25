@@ -194,25 +194,6 @@ export interface NavigationAPI {
   onNavigate(callback: (path: string | null) => void): () => void
 }
 
-/** Coordinator for dual editor synchronization (internal) */
-export interface DiffCoordinator {
-  goToPath(path: DiffPath, options?: NavigationOptions): void
-  goToNextChange(...types: DiffType[]): string | null
-  goToPrevChange(...types: DiffType[]): string | null
-
-  expandAll(): void
-  collapseAll(): void
-  togglePath(path: DiffPath): void
-
-  updateDiffData(newData: DiffData, merged?: MergedDocument): void
-
-  readonly navigation: NavigationAPI
-  readonly beforeView: EditorView
-  readonly afterView: EditorView
-
-  destroy(): void
-}
-
 /** Diff decoration for visual highlighting */
 export interface DiffDecoration {
   from: number

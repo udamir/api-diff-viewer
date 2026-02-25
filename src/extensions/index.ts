@@ -1,4 +1,6 @@
 export * from "./aligned-decorations"
+export * from "./diff-gutters"
+export * from "./line-numbers"
 export * from "./diff-decorations"
 export * from "./diff-folding"
 export * from "./change-badges"

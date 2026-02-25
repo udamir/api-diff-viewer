@@ -14,7 +14,6 @@ import type { ComapreOptions, DiffType } from 'api-smart-diff'
 import type {
   DiffData,
   DiffThemeColors,
-  DiffCoordinator,
   NavigationAPI,
   ChangeSummary,
   LineMapping,
@@ -22,14 +21,17 @@ import type {
   MergedDocument,
 } from './types'
 import type { DiffPath } from './utils/path'
+import { resolvePathToBlock } from './utils/path'
 import type { DiffBlockData } from './diff-builder/common'
 import { buildDiffBlock } from './diff-builder'
 
 import { TypedEventEmitter } from './utils/events'
 import { DiffWorkerManager } from './worker/worker-manager'
-import { createCoordinator, foldAllInView, unfoldAllInView } from './coordinator'
+import { foldAllInView, unfoldAllInView } from './coordinator'
 import { createNavigationAPI, NavigationAPIImpl } from './navigation/navigation-api'
 import { buildBlockTreeIndex, type BlockTreeIndex } from './utils/block-index'
+import { setBlockTreeIndexEffect } from './state/block-index-state'
+import { toggleBlockExpandedEffect, setDiffDataEffect } from './state/diff-state'
 
 import type { BaseView, ViewConfig } from './views/base-view'
 import { SideBySideView } from './views/side-by-side-view'
@@ -112,13 +114,11 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
   private currentView: BaseView | null = null
   private workerManager: DiffWorkerManager | null = null
   private _navigation: NavigationAPIImpl | null = null
-  private _coordinator: DiffCoordinator | null = null
   private _diffData: DiffData | null = null
   private _merged: MergedDocument | null = null
   private _changeSummary: ChangeSummary | null = null
   private _treeIndex: BlockTreeIndex | null = null
 
-  private _loading = false
   private _destroyed = false
 
   constructor(
@@ -161,7 +161,6 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     this.workerManager = null
     this.removeAllListeners()
     this._navigation = null
-    this._coordinator = null
     this._diffData = null
     this._merged = null
     this._changeSummary = null
@@ -265,16 +264,28 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     this.currentView?.setFoldingEnabled(enabled)
   }
 
+  getFoldingEnabled(): boolean {
+    return this.options.enableFolding
+  }
+
   setClassificationEnabled(enabled: boolean): void {
     if (this._destroyed || this.options.showClassification === enabled) return
     this.options.showClassification = enabled
     this.currentView?.setClassificationEnabled(enabled)
   }
 
+  getClassificationEnabled(): boolean {
+    return this.options.showClassification
+  }
+
   setWordDiffMode(mode: 'word' | 'char' | 'none'): void {
     if (this._destroyed || this.options.wordDiffMode === mode) return
     this.options.wordDiffMode = mode
     this.currentView?.setWordDiffMode(mode)
+  }
+
+  getWordDiffMode(): 'word' | 'char' | 'none' {
+    return this.options.wordDiffMode
   }
 
   setWordWrap(enabled: boolean): void {
@@ -294,28 +305,28 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     if (this.options.filters.length > 0) {
       this.setFilters([])
     }
-    if (this._coordinator) {
-      this._coordinator.expandAll()
-    } else {
-      const views = this.currentView?.getEditorViews() ?? []
-      for (const view of views) unfoldAllInView(view)
-    }
+    const views = this.currentView?.getEditorViews() ?? []
+    for (const view of views) unfoldAllInView(view)
   }
 
   collapseAll(): void {
     if (this.options.filters.length > 0) {
       this.setFilters([])
     }
-    if (this._coordinator) {
-      this._coordinator.collapseAll()
-    } else {
-      const views = this.currentView?.getEditorViews() ?? []
-      for (const view of views) foldAllInView(view)
-    }
+    const views = this.currentView?.getEditorViews() ?? []
+    for (const view of views) foldAllInView(view)
   }
 
   togglePath(path: DiffPath): void {
-    this._coordinator?.togglePath(path)
+    if (!this._diffData) return
+    const block = resolvePathToBlock(path, this._diffData.blocks)
+    if (!block) return
+
+    const blockId = block.id
+    const views = this.currentView?.getEditorViews() ?? []
+    for (const view of views) {
+      view.dispatch({ effects: toggleBlockExpandedEffect.of(blockId) })
+    }
   }
 
   // ── Navigation ──
@@ -361,7 +372,6 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
   private async initAsync(): Promise<void> {
     if (this._destroyed) return
 
-    this._loading = true
     this.emit('loading', undefined)
 
     try {
@@ -380,10 +390,8 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
       this._diffData = this.buildDiffData(merged, this.options.format)
       this.rebuildView()
 
-      this._loading = false
       this.emit('ready', { summary: this._changeSummary! })
     } catch (error) {
-      this._loading = false
       if (!this._destroyed) {
         this.emit('error', { message: String(error), cause: error })
       }
@@ -444,7 +452,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     const lineMap: LineMapping[] = []
     const blockMap: BlockMapping[] = []
 
-    const blocks = rootBlock.children.length > 0 ? [rootBlock] : [rootBlock]
+    const blocks = [rootBlock]
 
     // Build pre-computed tree index
     this._treeIndex = buildBlockTreeIndex(blocks)
@@ -462,7 +470,6 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
     // Destroy current view
     this.currentView?.destroy()
     this.currentView = null
-    this._coordinator = null
     this._navigation = null
 
     const viewConfig: ViewConfig = {
@@ -484,12 +491,23 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 
     this.currentView.render(this._diffData, this.options.format)
 
-    // Set up coordinator and navigation
+    // Set up navigation
     const views = this.currentView.getEditorViews()
 
     if (this.options.mode === 'side-by-side' && views.length === 2) {
-      this._coordinator = createCoordinator(views[0], views[1], this._diffData, this._merged, this._treeIndex)
-      this._navigation = this._coordinator.navigation as NavigationAPIImpl
+      this._navigation = new NavigationAPIImpl(views[0], views[1], this._diffData, this._merged)
+
+      // Dispatch tree index to both editor states
+      if (this._treeIndex) {
+        views[0].dispatch({ effects: [
+          setBlockTreeIndexEffect.of(this._treeIndex),
+          setDiffDataEffect.of(this._diffData),
+        ] })
+        views[1].dispatch({ effects: [
+          setBlockTreeIndexEffect.of(this._treeIndex),
+          setDiffDataEffect.of(this._diffData),
+        ] })
+      }
     } else if (views.length > 0) {
       this._navigation = new NavigationAPIImpl(null, views[0], this._diffData, this._merged)
     }

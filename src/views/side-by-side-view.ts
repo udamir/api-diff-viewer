@@ -18,10 +18,9 @@ import {
   setLineMappingsEffect,
   setEditorSideEffect,
   setWordDiffModeEffect,
-  createSpacerAwareLineNumbers,
-  createDiffMarkerGutter,
-  createClassificationGutter,
 } from '../extensions/aligned-decorations'
+import { createSpacerAwareLineNumbers } from '../extensions/line-numbers'
+import { createDiffMarkerGutter, createClassificationGutter } from '../extensions/diff-gutters'
 import { changeBadges } from '../extensions/change-badges'
 import { diffFoldKeymap } from '../extensions/diff-folding'
 import {
@@ -39,6 +38,33 @@ import {
 import { wordDiffRequestor } from '../extensions/word-diff-requestor'
 
 import { BaseView, type ViewConfig } from './base-view'
+
+/** Per-side editor state grouping view, container, and compartments */
+interface SideEditorState {
+  view: EditorView | null
+  container: HTMLElement | null
+  compartments: {
+    wordDiff: Compartment
+    foldGutter: Compartment
+    classification: Compartment
+    diffMarkerGutter: Compartment
+    lineNumbers: Compartment
+  }
+}
+
+function createSideEditorState(): SideEditorState {
+  return {
+    view: null,
+    container: null,
+    compartments: {
+      wordDiff: new Compartment(),
+      foldGutter: new Compartment(),
+      classification: new Compartment(),
+      diffMarkerGutter: new Compartment(),
+      lineNumbers: new Compartment(),
+    },
+  }
+}
 
 /** Pending parameter updates to be applied in batch */
 interface PendingUpdate {
@@ -62,9 +88,8 @@ interface ComputedUpdate {
   beforeLines?: string[]
   afterLines?: string[]
 
-  // Effects to dispatch
-  beforeEffects: StateEffect<unknown>[]
-  afterEffects: StateEffect<unknown>[]
+  // Effects to dispatch per side
+  sideEffects: [StateEffect<unknown>[], StateEffect<unknown>[]]
 
   // Fold state to restore
   foldedBlockIds: Set<string>
@@ -75,10 +100,8 @@ interface ComputedUpdate {
 }
 
 export class SideBySideView extends BaseView {
-  private beforeView: EditorView | null = null
-  private afterView: EditorView | null = null
-  private beforeContainer: HTMLElement | null = null
-  private afterContainer: HTMLElement | null = null
+  private before: SideEditorState = createSideEditorState()
+  private after: SideEditorState = createSideEditorState()
   private scrollSyncCleanup: (() => void) | null = null
   private foldSyncCleanup: (() => void) | null = null
   private heightSyncHandle: HeightSyncHandle | null = null
@@ -90,20 +113,6 @@ export class SideBySideView extends BaseView {
   /** Stored alignment data for dynamic reconfiguration */
   private alignmentBeforeLines: string[] = []
   private alignmentAfterLines: string[] = []
-  
-  /** Compartments for before editor */
-  private beforeWordDiffCompartment = new Compartment()
-  private beforeFoldGutterCompartment = new Compartment()
-  private beforeClassificationCompartment = new Compartment()
-  private beforeDiffMarkerGutterCompartment = new Compartment()
-  private beforeLineNumbersCompartment = new Compartment()
-  
-  /** Compartments for after editor */
-  private afterWordDiffCompartment = new Compartment()
-  private afterFoldGutterCompartment = new Compartment()
-  private afterClassificationCompartment = new Compartment()
-  private afterDiffMarkerGutterCompartment = new Compartment()
-  private afterLineNumbersCompartment = new Compartment()
 
   /** Stored diff data for incremental updates */
   private currentDiffData: DiffData | null = null
@@ -125,32 +134,27 @@ export class SideBySideView extends BaseView {
     // Create flex container
     this.rootEl.style.display = 'flex'
 
-    this.beforeContainer = document.createElement('div')
-    this.beforeContainer.className = 'cm-diff-side cm-diff-side-before'
-    this.beforeContainer.style.flex = '1'
-    this.beforeContainer.style.minWidth = '0'
-    this.beforeContainer.style.height = '100%'
-    this.beforeContainer.style.overflow = 'hidden'
-    this.beforeContainer.style.borderRight = `1px solid ${this.config.dark ? '#30363d' : '#d0d7de'}`
-    this.rootEl.appendChild(this.beforeContainer)
+    this.before.container = document.createElement('div')
+    this.before.container.className = 'cm-diff-side cm-diff-side-before'
+    this.before.container.style.flex = '1'
+    this.before.container.style.minWidth = '0'
+    this.before.container.style.height = '100%'
+    this.before.container.style.overflow = 'hidden'
+    this.before.container.style.borderRight = `1px solid ${this.config.dark ? '#30363d' : '#d0d7de'}`
+    this.rootEl.appendChild(this.before.container)
 
-    this.afterContainer = document.createElement('div')
-    this.afterContainer.className = 'cm-diff-side cm-diff-side-after'
-    this.afterContainer.style.flex = '1'
-    this.afterContainer.style.minWidth = '0'
-    this.afterContainer.style.height = '100%'
-    this.afterContainer.style.overflow = 'hidden'
-    this.rootEl.appendChild(this.afterContainer)
-
-    // Inject style to hide left scrollbar and theme the right scrollbar
-    this.injectScrollStyles()
+    this.after.container = document.createElement('div')
+    this.after.container.className = 'cm-diff-side cm-diff-side-after'
+    this.after.container.style.flex = '1'
+    this.after.container.style.minWidth = '0'
+    this.after.container.style.height = '100%'
+    this.after.container.style.overflow = 'hidden'
+    this.rootEl.appendChild(this.after.container)
 
     // Generate aligned content
     const alignment: AlignmentResult = generateAlignedContentFromDiff(
       diffData.blocks,
       format,
-      null,
-      null,
       { wordDiffMode: this.config.wordDiffMode }
     )
 
@@ -159,152 +163,81 @@ export class SideBySideView extends BaseView {
     this.alignmentAfterLines = alignment.afterLines
     this.currentBlockLineRanges = alignment.blockLineRanges
 
-    const alignedBeforeContent = alignment.beforeLines.join('\n')
-    const alignedAfterContent = alignment.afterLines.join('\n')
-
     const showWordDiff = this.config.wordDiffMode !== 'none'
-
-    // Pre-compute word diff data
     const diffMode = this.config.wordDiffMode === 'none' ? undefined : this.config.wordDiffMode
-    const wordDiffDataBefore = showWordDiff
-      ? buildWordDiffData(
-          alignment.lineMap,
-          alignment.beforeLines,
-          alignment.afterLines,
-          'before',
-          diffMode
-        )
-      : []
 
-    const wordDiffDataAfter = showWordDiff
-      ? buildWordDiffData(
-          alignment.lineMap,
-          alignment.beforeLines,
-          alignment.afterLines,
-          'after',
-          diffMode
-        )
-      : []
+    // Create both editors
+    for (const side of ['before', 'after'] as const) {
+      const sideState = this[side]
+      const c = sideState.compartments
 
-    // Create before editor with compartments for dynamic reconfiguration
-    // Gutter order: classification → line numbers → fold gutter → diff marker
-    const beforeExtensions = [
-      ...this.createBaseExtensions(format, 'before', alignment.lineMap),
-      this.beforeWordDiffCompartment.of(
-        showWordDiff
-          ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, 'before', diffMode)]
-          : []
-      ),
-      this.beforeClassificationCompartment.of(
-        this.config.showClassification
-          ? [...createClassificationGutter(alignment.lineMap, 'before'), changeBadges()]
-          : []
-      ),
-      this.beforeLineNumbersCompartment.of(
-        createSpacerAwareLineNumbers(alignment.lineMap, 'before', this.config.wordDiffMode)
-      ),
-      this.beforeFoldGutterCompartment.of(
-        this.config.enableFolding
-          ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
-          : []
-      ),
-      this.beforeDiffMarkerGutterCompartment.of(
-        createDiffMarkerGutter(alignment.lineMap, 'before', this.config.wordDiffMode)
-      ),
-    ]
+      const wordDiffData = showWordDiff
+        ? buildWordDiffData(alignment.lineMap, alignment.beforeLines, alignment.afterLines, side, diffMode)
+        : []
 
-    const beforeState = EditorState.create({
-      doc: alignedBeforeContent,
-      extensions: beforeExtensions,
-    })
+      // Gutter order: classification → line numbers → fold gutter → diff marker
+      const extensions = [
+        ...this.createBaseExtensions(format, side, alignment.lineMap),
+        c.wordDiff.of(
+          showWordDiff
+            ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, side, diffMode)]
+            : []
+        ),
+        c.classification.of(
+          this.config.showClassification
+            ? [...createClassificationGutter(alignment.lineMap, side), changeBadges()]
+            : []
+        ),
+        c.lineNumbers.of(
+          createSpacerAwareLineNumbers(alignment.lineMap, side, this.config.wordDiffMode)
+        ),
+        c.foldGutter.of(
+          this.config.enableFolding
+            ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
+            : []
+        ),
+        c.diffMarkerGutter.of(
+          createDiffMarkerGutter(alignment.lineMap, side, this.config.wordDiffMode)
+        ),
+      ]
 
-    this.beforeView = new EditorView({
-      state: beforeState,
-      parent: this.beforeContainer,
-    })
+      const content = side === 'before'
+        ? alignment.beforeLines.join('\n')
+        : alignment.afterLines.join('\n')
 
-    // Dispatch initial effects for before editor
-    const beforeEffects: StateEffect<unknown>[] = [
-      setSideEffect.of('before'),
-      setDiffDataEffect.of(diffData),
-      setEditorSideEffect.of('before'),
-      setLineMappingsEffect.of(alignment.lineMap),
-      setWordDiffModeEffect.of(this.config.wordDiffMode),
-    ]
+      const state = EditorState.create({ doc: content, extensions })
+      sideState.view = new EditorView({ state, parent: sideState.container! })
 
-    if (showWordDiff && wordDiffDataBefore.length > 0) {
-      beforeEffects.push(setWordDiffDataEffect.of(wordDiffDataBefore))
+      // Dispatch initial effects
+      const effects: StateEffect<unknown>[] = [
+        setSideEffect.of(side),
+        setDiffDataEffect.of(diffData),
+        setEditorSideEffect.of(side),
+        setLineMappingsEffect.of(alignment.lineMap),
+        setWordDiffModeEffect.of(this.config.wordDiffMode),
+      ]
+
+      if (showWordDiff && wordDiffData.length > 0) {
+        effects.push(setWordDiffDataEffect.of(wordDiffData))
+      }
+
+      sideState.view.dispatch({ effects })
     }
-
-    this.beforeView.dispatch({ effects: beforeEffects })
-
-    // Create after editor with compartments for dynamic reconfiguration
-    // Gutter order: classification → line numbers → fold gutter → diff marker
-    const afterExtensions = [
-      ...this.createBaseExtensions(format, 'after', alignment.lineMap),
-      this.afterWordDiffCompartment.of(
-        showWordDiff
-          ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, 'after', diffMode)]
-          : []
-      ),
-      this.afterClassificationCompartment.of(
-        this.config.showClassification
-          ? [...createClassificationGutter(alignment.lineMap, 'after'), changeBadges()]
-          : []
-      ),
-      this.afterLineNumbersCompartment.of(
-        createSpacerAwareLineNumbers(alignment.lineMap, 'after', this.config.wordDiffMode)
-      ),
-      this.afterFoldGutterCompartment.of(
-        this.config.enableFolding
-          ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
-          : []
-      ),
-      this.afterDiffMarkerGutterCompartment.of(
-        createDiffMarkerGutter(alignment.lineMap, 'after', this.config.wordDiffMode)
-      ),
-    ]
-
-    const afterState = EditorState.create({
-      doc: alignedAfterContent,
-      extensions: afterExtensions,
-    })
-
-    this.afterView = new EditorView({
-      state: afterState,
-      parent: this.afterContainer,
-    })
-
-    // Dispatch initial effects for after editor
-    const afterEffects: StateEffect<unknown>[] = [
-      setSideEffect.of('after'),
-      setDiffDataEffect.of(diffData),
-      setEditorSideEffect.of('after'),
-      setLineMappingsEffect.of(alignment.lineMap),
-      setWordDiffModeEffect.of(this.config.wordDiffMode),
-    ]
-
-    if (showWordDiff && wordDiffDataAfter.length > 0) {
-      afterEffects.push(setWordDiffDataEffect.of(wordDiffDataAfter))
-    }
-
-    this.afterView.dispatch({ effects: afterEffects })
 
     // Set up scroll sync
-    this.scrollSyncCleanup = this.setupScrollSync(this.beforeView, this.afterView)
+    this.scrollSyncCleanup = this.setupScrollSync(this.before.view!, this.after.view!)
 
     // Set up fold sync if enabled
     if (this.config.enableFolding) {
       this.foldSyncCleanup = setupFoldSync(
-        this.beforeView,
-        this.afterView,
+        this.before.view!,
+        this.after.view!,
         alignment.lineMap
       )
     }
 
     // Set up height sync to equalize line heights across editors
-    this.heightSyncHandle = setupHeightSync(this.beforeView, this.afterView)
-
+    this.heightSyncHandle = setupHeightSync(this.before.view!, this.after.view!)
   }
 
   updateTheme(dark: boolean, colors?: Partial<DiffThemeColors>, baseTheme?: Extension): void {
@@ -313,23 +246,23 @@ export class SideBySideView extends BaseView {
     if (baseTheme !== undefined) this.config.baseTheme = baseTheme
 
     const opts = { dark, colors }
-    if (this.beforeView) {
-      this.themeManager.setDiffTheme(this.beforeView, opts)
+    if (this.before.view) {
+      this.themeManager.setDiffTheme(this.before.view, opts)
     }
-    if (this.afterView) {
-      this.themeManager.setDiffTheme(this.afterView, opts)
+    if (this.after.view) {
+      this.themeManager.setDiffTheme(this.after.view, opts)
     }
 
     // Update divider color
-    if (this.beforeContainer) {
-      this.beforeContainer.style.borderRight = `1px solid ${dark ? '#30363d' : '#d0d7de'}`
+    if (this.before.container) {
+      this.before.container.style.borderRight = `1px solid ${dark ? '#30363d' : '#d0d7de'}`
     }
   }
 
   getEditorViews(): EditorView[] {
     const views: EditorView[] = []
-    if (this.beforeView) views.push(this.beforeView)
-    if (this.afterView) views.push(this.afterView)
+    if (this.before.view) views.push(this.before.view)
+    if (this.after.view) views.push(this.after.view)
     return views
   }
 
@@ -345,11 +278,6 @@ export class SideBySideView extends BaseView {
     this.rootEl.remove()
   }
 
-  private injectScrollStyles(): void {
-    // No-op: scrollbars are visible on both sides so users can scroll either panel.
-    // Scroll positions are kept in sync via setupScrollSync().
-  }
-
   private destroyEditors(): void {
     this.scrollSyncCleanup?.()
     this.scrollSyncCleanup = null
@@ -357,17 +285,17 @@ export class SideBySideView extends BaseView {
     this.foldSyncCleanup = null
     this.heightSyncHandle?.destroy()
     this.heightSyncHandle = null
-    this.beforeView?.destroy()
-    this.beforeView = null
-    this.afterView?.destroy()
-    this.afterView = null
+    this.before.view?.destroy()
+    this.before.view = null
+    this.after.view?.destroy()
+    this.after.view = null
 
     // Clear containers
     while (this.rootEl.firstChild) {
       this.rootEl.removeChild(this.rootEl.firstChild)
     }
-    this.beforeContainer = null
-    this.afterContainer = null
+    this.before.container = null
+    this.after.container = null
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -412,20 +340,19 @@ export class SideBySideView extends BaseView {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // Phase 1: Calculate all changes (pure computation, no DOM)
+  // Compute all changes (pure computation, no DOM)
   // ─────────────────────────────────────────────────────────────────
 
   private computeUpdates(updates: PendingUpdate): ComputedUpdate {
     const result: ComputedUpdate = {
-      beforeEffects: [],
-      afterEffects: [],
+      sideEffects: [[], []],
       foldedBlockIds: new Set(),
     }
 
-    if (!this.beforeView || !this.afterView) return result
+    if (!this.before.view || !this.after.view) return result
 
     // Save fold state BEFORE any changes
-    result.foldedBlockIds = extractFoldedBlockIds(this.beforeView, this.currentLineMap)
+    result.foldedBlockIds = extractFoldedBlockIds(this.before.view, this.currentLineMap)
 
     // Track if we need new alignment (wordDiffMode changes document structure)
     let alignment: AlignmentResult | null = null
@@ -435,8 +362,6 @@ export class SideBySideView extends BaseView {
       alignment = generateAlignedContentFromDiff(
         this.currentDiffData.blocks,
         this.currentFormat,
-        null,
-        null,
         { wordDiffMode: updates.wordDiffMode }
       )
 
@@ -451,81 +376,42 @@ export class SideBySideView extends BaseView {
       const showWordDiff = mode !== 'none'
       const diffMode = mode === 'none' ? undefined : mode
 
-      // Line mappings effect
-      result.beforeEffects.push(setLineMappingsEffect.of(alignment.lineMap))
-      result.afterEffects.push(setLineMappingsEffect.of(alignment.lineMap))
+      const sides = [this.before, this.after] as const
+      const sideNames = ['before', 'after'] as const
 
-      // Word diff mode effect
-      result.beforeEffects.push(setWordDiffModeEffect.of(mode))
-      result.afterEffects.push(setWordDiffModeEffect.of(mode))
+      for (let si = 0; si < 2; si++) {
+        const c = sides[si].compartments
+        const sideName = sideNames[si]
+        const effects = result.sideEffects[si]
 
-      // Diff marker gutter
-      result.beforeEffects.push(
-        this.beforeDiffMarkerGutterCompartment.reconfigure(
-          createDiffMarkerGutter(alignment.lineMap, 'before', mode)
-        )
-      )
-      result.afterEffects.push(
-        this.afterDiffMarkerGutterCompartment.reconfigure(
-          createDiffMarkerGutter(alignment.lineMap, 'after', mode)
-        )
-      )
+        effects.push(setLineMappingsEffect.of(alignment.lineMap))
+        effects.push(setWordDiffModeEffect.of(mode))
+        effects.push(c.diffMarkerGutter.reconfigure(createDiffMarkerGutter(alignment.lineMap, sideName, mode)))
+        effects.push(c.lineNumbers.reconfigure(createSpacerAwareLineNumbers(alignment.lineMap, sideName, mode)))
 
-      // Line numbers
-      result.beforeEffects.push(
-        this.beforeLineNumbersCompartment.reconfigure(
-          createSpacerAwareLineNumbers(alignment.lineMap, 'before', mode)
-        )
-      )
-      result.afterEffects.push(
-        this.afterLineNumbersCompartment.reconfigure(
-          createSpacerAwareLineNumbers(alignment.lineMap, 'after', mode)
-        )
-      )
+        const wordDiffExt = showWordDiff
+          ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, sideName, diffMode)]
+          : []
+        effects.push(c.wordDiff.reconfigure(wordDiffExt))
 
-      // Word diff extensions (plugin only - state field is in base extensions)
-      const wordDiffExtBefore = showWordDiff
-        ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, 'before', diffMode)]
-        : []
-      const wordDiffExtAfter = showWordDiff
-        ? [wordDiffPluginOnly(), wordDiffRequestor(alignment.beforeLines, alignment.afterLines, 'after', diffMode)]
-        : []
-
-      result.beforeEffects.push(this.beforeWordDiffCompartment.reconfigure(wordDiffExtBefore))
-      result.afterEffects.push(this.afterWordDiffCompartment.reconfigure(wordDiffExtAfter))
-
-      // Word diff data
-      if (showWordDiff) {
-        const wordDiffDataBefore = buildWordDiffData(
-          alignment.lineMap, alignment.beforeLines, alignment.afterLines,
-          'before', diffMode
-        )
-        const wordDiffDataAfter = buildWordDiffData(
-          alignment.lineMap, alignment.beforeLines, alignment.afterLines,
-          'after', diffMode
-        )
-
-        if (wordDiffDataBefore.length > 0) {
-          result.beforeEffects.push(setWordDiffDataEffect.of(wordDiffDataBefore))
-        }
-        if (wordDiffDataAfter.length > 0) {
-          result.afterEffects.push(setWordDiffDataEffect.of(wordDiffDataAfter))
+        if (showWordDiff) {
+          const wordDiffData = buildWordDiffData(
+            alignment.lineMap, alignment.beforeLines, alignment.afterLines,
+            sideName, diffMode
+          )
+          if (wordDiffData.length > 0) {
+            effects.push(setWordDiffDataEffect.of(wordDiffData))
+          }
         }
       }
     }
 
     // ── Process wordWrap ──
     if (updates.wordWrap !== undefined) {
-      result.beforeEffects.push(
-        this.lineWrappingCompartment.reconfigure(
-          updates.wordWrap ? EditorView.lineWrapping : []
-        )
-      )
-      result.afterEffects.push(
-        this.lineWrappingCompartment.reconfigure(
-          updates.wordWrap ? EditorView.lineWrapping : []
-        )
-      )
+      const ext = updates.wordWrap ? EditorView.lineWrapping : []
+      for (let si = 0; si < 2; si++) {
+        result.sideEffects[si].push(this.lineWrappingCompartment.reconfigure(ext))
+      }
     }
 
     // ── Process enableFolding ──
@@ -533,8 +419,8 @@ export class SideBySideView extends BaseView {
       const foldExt = updates.enableFolding
         ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
         : []
-      result.beforeEffects.push(this.beforeFoldGutterCompartment.reconfigure(foldExt))
-      result.afterEffects.push(this.afterFoldGutterCompartment.reconfigure(foldExt))
+      result.sideEffects[0].push(this.before.compartments.foldGutter.reconfigure(foldExt))
+      result.sideEffects[1].push(this.after.compartments.foldGutter.reconfigure(foldExt))
 
       // Track fold sync lifecycle changes
       if (updates.enableFolding && !this.foldSyncCleanup) {
@@ -547,33 +433,34 @@ export class SideBySideView extends BaseView {
     // ── Process showClassification ──
     if (updates.showClassification !== undefined) {
       const lineMap = result.lineMap || this.currentLineMap
-      const classExtBefore = updates.showClassification
-        ? [...createClassificationGutter(lineMap, 'before'), changeBadges()]
-        : []
-      const classExtAfter = updates.showClassification
-        ? [...createClassificationGutter(lineMap, 'after'), changeBadges()]
-        : []
-      result.beforeEffects.push(this.beforeClassificationCompartment.reconfigure(classExtBefore))
-      result.afterEffects.push(this.afterClassificationCompartment.reconfigure(classExtAfter))
+      const sides = [this.before, this.after] as const
+      const sideNames = ['before', 'after'] as const
+
+      for (let si = 0; si < 2; si++) {
+        const classExt = updates.showClassification
+          ? [...createClassificationGutter(lineMap, sideNames[si]), changeBadges()]
+          : []
+        result.sideEffects[si].push(sides[si].compartments.classification.reconfigure(classExt))
+      }
     }
 
     return result
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // Phase 2: Apply all changes (DOM mutations) with Hidden Measurement
+  // Apply all changes (DOM mutations) with Hidden Measurement
   // ─────────────────────────────────────────────────────────────────
 
   private applyPendingUpdates(): void {
     const updates = this.pendingUpdate
-    if (!updates || !this.beforeView || !this.afterView) {
+    if (!updates || !this.before.view || !this.after.view) {
       this.pendingUpdate = null
       return
     }
     this.pendingUpdate = null
 
-    const beforeDom = this.beforeView.dom
-    const afterDom = this.afterView.dom
+    const beforeDom = this.before.view.dom
+    const afterDom = this.after.view.dom
 
     // Compute all changes
     const computed = this.computeUpdates(updates)
@@ -606,46 +493,41 @@ export class SideBySideView extends BaseView {
         this.alignmentAfterLines = computed.afterLines
       }
 
-      // Build effects - only clear padding if document structure is changing
-      const beforeEffectsToDispatch = documentChanging
-        ? [...computed.beforeEffects, setHeightPaddingEffect.of([])]
-        : computed.beforeEffects
-      const afterEffectsToDispatch = documentChanging
-        ? [...computed.afterEffects, setHeightPaddingEffect.of([])]
-        : computed.afterEffects
+      // Dispatch to both views
+      const views = [this.before.view, this.after.view]
+      const contents = [computed.beforeContent, computed.afterContent]
 
-      // Dispatch main changes
-      this.beforeView.dispatch({
-        changes: computed.beforeContent !== undefined
-          ? { from: 0, to: this.beforeView.state.doc.length, insert: computed.beforeContent }
-          : undefined,
-        effects: beforeEffectsToDispatch,
-      })
+      for (let si = 0; si < 2; si++) {
+        const view = views[si]
+        const effects = documentChanging
+          ? [...computed.sideEffects[si], setHeightPaddingEffect.of([])]
+          : computed.sideEffects[si]
 
-      this.afterView.dispatch({
-        changes: computed.afterContent !== undefined
-          ? { from: 0, to: this.afterView.state.doc.length, insert: computed.afterContent }
-          : undefined,
-        effects: afterEffectsToDispatch,
-      })
+        view.dispatch({
+          changes: contents[si] !== undefined
+            ? { from: 0, to: view.state.doc.length, insert: contents[si] }
+            : undefined,
+          effects,
+        })
+      }
 
       // Handle fold sync lifecycle
       if (computed.teardownFoldSync && this.foldSyncCleanup) {
         this.foldSyncCleanup()
         this.foldSyncCleanup = null
       }
-      if (computed.setupFoldSync && this.beforeView && this.afterView) {
+      if (computed.setupFoldSync && this.before.view && this.after.view) {
         this.foldSyncCleanup = setupFoldSync(
-          this.beforeView,
-          this.afterView,
+          this.before.view,
+          this.after.view,
           this.currentLineMap
         )
       }
 
       // Restore folds if document structure changed
-      if (computed.blockLineRanges && this.beforeView && this.afterView) {
-        restoreFoldsFromBlockIds(this.beforeView, computed.foldedBlockIds, computed.blockLineRanges)
-        restoreFoldsFromBlockIds(this.afterView, computed.foldedBlockIds, computed.blockLineRanges)
+      if (computed.blockLineRanges && this.before.view && this.after.view) {
+        restoreFoldsFromBlockIds(this.before.view, computed.foldedBlockIds, computed.blockLineRanges)
+        restoreFoldsFromBlockIds(this.after.view, computed.foldedBlockIds, computed.blockLineRanges)
       }
 
       // Force layout and measure heights

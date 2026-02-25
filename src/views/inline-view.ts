@@ -6,7 +6,8 @@
  */
 
 import { EditorState, Extension, StateEffect, Compartment } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { EditorView, keymap } from '@codemirror/view'
+import { foldGutter } from '@codemirror/language'
 
 import type { DiffData, DiffThemeColors, LineMapping } from '../types'
 import {
@@ -17,6 +18,10 @@ import {
   lineMappingsField,
   setWordDiffModeEffect,
 } from '../extensions/aligned-decorations'
+import { createSpacerAwareLineNumbers } from '../extensions/line-numbers'
+import { createDiffMarkerGutter, createClassificationGutter } from '../extensions/diff-gutters'
+import { changeBadges } from '../extensions/change-badges'
+import { diffFoldKeymap } from '../extensions/diff-folding'
 import {
   generateUnifiedContentFromDiff,
   type UnifiedResult,
@@ -35,6 +40,10 @@ export class InlineView extends BaseView {
   private unifiedLines: string[] = []
   private unifiedBeforeContentMap: Map<number, string> | null = null
   private inlineWordDiffCompartment = new Compartment()
+  private foldGutterCompartment = new Compartment()
+  private classificationCompartment = new Compartment()
+  private diffMarkerGutterCompartment = new Compartment()
+  private lineNumbersCompartment = new Compartment()
 
   constructor(container: HTMLElement, config: ViewConfig) {
     super(container, config)
@@ -68,11 +77,27 @@ export class InlineView extends BaseView {
           )
         : []
 
-    // Create extensions — inline word diff in compartment for dynamic toggling
+    // Create extensions — use compartments for dynamic reconfiguration
     const extensions = [
       ...this.createBaseExtensions(format, 'unified', unified.lineMap),
       this.inlineWordDiffCompartment.of(
         showWordDiff ? this.createInlineWordDiffExtension() : []
+      ),
+      this.classificationCompartment.of(
+        this.config.showClassification
+          ? [...createClassificationGutter(unified.lineMap, 'unified'), changeBadges()]
+          : []
+      ),
+      this.lineNumbersCompartment.of(
+        createSpacerAwareLineNumbers(unified.lineMap, 'unified', this.config.wordDiffMode)
+      ),
+      this.foldGutterCompartment.of(
+        this.config.enableFolding
+          ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
+          : []
+      ),
+      this.diffMarkerGutterCompartment.of(
+        createDiffMarkerGutter(unified.lineMap, 'unified', this.config.wordDiffMode)
       ),
     ]
 
@@ -129,12 +154,24 @@ export class InlineView extends BaseView {
 
   setFoldingEnabled(enabled: boolean): void {
     this.config.enableFolding = enabled
-    if (this.editorView) this.reconfigureFoldGutter(this.editorView, enabled)
+    if (!this.editorView) return
+    const foldExt = enabled
+      ? [foldGutter({ openText: '\u2304', closedText: '\u203A' }), keymap.of(diffFoldKeymap)]
+      : []
+    this.editorView.dispatch({
+      effects: this.foldGutterCompartment.reconfigure(foldExt),
+    })
   }
 
   setClassificationEnabled(enabled: boolean): void {
     this.config.showClassification = enabled
-    if (this.editorView) this.reconfigureClassification(this.editorView, 'unified', enabled)
+    if (!this.editorView) return
+    const classExt = enabled
+      ? [...createClassificationGutter(this.currentLineMap, 'unified'), changeBadges()]
+      : []
+    this.editorView.dispatch({
+      effects: this.classificationCompartment.reconfigure(classExt),
+    })
   }
 
   setWordDiffMode(mode: 'word' | 'char' | 'none'): void {
@@ -144,8 +181,16 @@ export class InlineView extends BaseView {
     const showWordDiff = mode !== 'none'
 
     // 1. Reconfigure diff marker gutter and line numbers
-    this.reconfigureDiffMarkerGutter(this.editorView, 'unified')
-    this.reconfigureLineNumbers(this.editorView, 'unified')
+    this.editorView.dispatch({
+      effects: [
+        this.diffMarkerGutterCompartment.reconfigure(
+          createDiffMarkerGutter(this.currentLineMap, 'unified', mode)
+        ),
+        this.lineNumbersCompartment.reconfigure(
+          createSpacerAwareLineNumbers(this.currentLineMap, 'unified', mode)
+        ),
+      ],
+    })
 
     // 2. Dispatch setWordDiffModeEffect to update line decorations
     this.editorView.dispatch({ effects: setWordDiffModeEffect.of(mode) })

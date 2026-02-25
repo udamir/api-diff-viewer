@@ -4,9 +4,6 @@ import { HighlightStyle, syntaxHighlighting, defaultHighlightStyle } from '@code
 import { tags as t } from '@lezer/highlight'
 import type { DiffThemeColors } from './types'
 
-/** Compartment for dynamic theme switching */
-export const themeCompartment = new Compartment()
-
 /** Default light theme colors */
 const lightColors: Required<DiffThemeColors> = {
   addedBg: 'rgba(46, 160, 67, 0.15)',
@@ -217,21 +214,6 @@ export function diffTheme(options?: {
     },
     { dark }
   )]
-}
-
-/** Detect if the current view is using dark mode */
-export function detectDarkMode(view: EditorView): boolean {
-  const root = view.dom.closest('[data-theme]')
-  if (root) {
-    return root.getAttribute('data-theme') === 'dark'
-  }
-
-  // Check prefers-color-scheme
-  if (typeof window !== 'undefined') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
-
-  return false
 }
 
 /** Theme manager for runtime theme switching */

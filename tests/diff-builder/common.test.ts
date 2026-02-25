@@ -88,10 +88,12 @@ describe('Token', () => {
       expect(t.tags).toContain('after')
     })
 
-    it('returns the same token for chaining', () => {
+    it('returns a new token with appended tags (immutable)', () => {
       const t = Token.Value('x')
       const result = t.cond('before')
-      expect(result).toBe(t)
+      expect(result).not.toBe(t)
+      expect(result.tags).toContain('before')
+      expect(t.tags).not.toContain('before') // original unchanged
     })
 
     it('returns the same token when condition is false', () => {

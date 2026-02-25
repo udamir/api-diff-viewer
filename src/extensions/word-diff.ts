@@ -194,18 +194,25 @@ export function computeWordDiff(
  * 1. Lines with type 'modified' (both sides on the same row)
  * 2. Paired remove+add lines linked by pairId (split rows for height alignment)
  *
+ * When fromLine/toLine are provided, only processes lines within that range
+ * (for lazy/viewport-based loading).
+ *
  * @param lineMap - Line mappings with before/after correspondence
  * @param beforeLines - Content of before lines
  * @param afterLines - Content of after lines
  * @param side - Which side to generate data for
  * @param mode - Diff mode ('word' or 'char')
+ * @param fromLine - Start line number (1-indexed, inclusive). Default: 1
+ * @param toLine - End line number (1-indexed, inclusive). Default: all lines
  */
 export function buildWordDiffData(
   lineMap: LineMapping[],
   beforeLines: string[],
   afterLines: string[],
   side: 'before' | 'after',
-  mode: 'word' | 'char' = 'word'
+  mode: 'word' | 'char' = 'word',
+  fromLine?: number,
+  toLine?: number
 ): WordDiffData[] {
   const result: WordDiffData[] = []
 
@@ -220,7 +227,10 @@ export function buildWordDiffData(
     pairMap.set(m.pairId, entry)
   }
 
-  for (let i = 0; i < lineMap.length; i++) {
+  const startIdx = fromLine !== undefined ? Math.max(0, fromLine - 1) : 0
+  const endIdx = toLine !== undefined ? Math.min(lineMap.length, toLine) : lineMap.length
+
+  for (let i = startIdx; i < endIdx; i++) {
     const mapping = lineMap[i]
 
     // Case 1: Same-row modified lines (inline mode)
@@ -289,98 +299,6 @@ export function buildWordDiffDataFromContent(
   const afterLines = afterContent.split('\n')
 
   return buildWordDiffData(lineMap, beforeLines, afterLines, side, mode)
-}
-
-/**
- * Build word diff data for a specific line range (for lazy loading).
- * Only processes lines within the specified range.
- *
- * @param lineMap - Line mappings
- * @param beforeLines - Content of before lines
- * @param afterLines - Content of after lines
- * @param side - Which side to generate data for
- * @param mode - Diff mode ('word' or 'char')
- * @param fromLine - Start line number (1-indexed)
- * @param toLine - End line number (1-indexed, inclusive)
- */
-export function buildWordDiffDataForRange(
-  lineMap: LineMapping[],
-  beforeLines: string[],
-  afterLines: string[],
-  side: 'before' | 'after',
-  mode: 'word' | 'char' = 'word',
-  fromLine: number = 1,
-  toLine: number = lineMap.length
-): WordDiffData[] {
-  const result: WordDiffData[] = []
-
-  // Build pairId index: pairId → { removedIdx, addedIdx }
-  const pairMap = new Map<string, { removedIdx: number; addedIdx: number }>()
-  for (let i = 0; i < lineMap.length; i++) {
-    const m = lineMap[i]
-    if (!m.pairId) continue
-    const entry = pairMap.get(m.pairId) || { removedIdx: -1, addedIdx: -1 }
-    if (m.type === 'removed') entry.removedIdx = i
-    else if (m.type === 'added') entry.addedIdx = i
-    pairMap.set(m.pairId, entry)
-  }
-
-  // Only process lines in the specified range
-  const startIdx = Math.max(0, fromLine - 1)
-  const endIdx = Math.min(lineMap.length, toLine)
-
-  for (let i = startIdx; i < endIdx; i++) {
-    const mapping = lineMap[i]
-
-    // Case 1: Same-row modified lines (inline mode)
-    if (mapping.type === 'modified') {
-      const beforeLine = beforeLines[i] || ''
-      const afterLine = afterLines[i] || ''
-
-      if (!beforeLine || !afterLine || beforeLine === afterLine) continue
-
-      const { beforeRanges, afterRanges } = computeWordDiff(beforeLine, afterLine, mode)
-
-      const ranges = side === 'before' ? beforeRanges : afterRanges
-      if (ranges.length > 0) {
-        result.push({ lineNumber: i + 1, ranges })
-      }
-      continue
-    }
-
-    // Case 2: Paired remove+add lines (split rows for height alignment)
-    if (!mapping.pairId) continue
-    const pair = pairMap.get(mapping.pairId)
-    if (!pair || pair.removedIdx < 0 || pair.addedIdx < 0) continue
-
-    // Before side: highlight removed words on the "removed" row
-    if (side === 'before' && mapping.type === 'removed') {
-      const beforeLine = beforeLines[pair.removedIdx] || ''
-      const afterLine = afterLines[pair.addedIdx] || ''
-
-      if (!beforeLine || !afterLine || beforeLine === afterLine) continue
-
-      const { beforeRanges } = computeWordDiff(beforeLine, afterLine, mode)
-      if (beforeRanges.length > 0) {
-        result.push({ lineNumber: i + 1, ranges: beforeRanges })
-      }
-    }
-
-    // After side: highlight added words on the "added" row
-    if (side === 'after' && mapping.type === 'added') {
-      const beforeLine = beforeLines[pair.removedIdx] || ''
-      const afterLine = afterLines[pair.addedIdx] || ''
-
-      if (!beforeLine || !afterLine || beforeLine === afterLine) continue
-
-      const { afterRanges } = computeWordDiff(beforeLine, afterLine, mode)
-      if (afterRanges.length > 0) {
-        result.push({ lineNumber: i + 1, ranges: afterRanges })
-      }
-    }
-  }
-
-  return result
 }
 
 /**
@@ -461,16 +379,7 @@ export const wordDiffTheme = EditorView.baseTheme({
   },
 })
 
-/** Create the word diff extension (includes state field, plugin, and theme) */
-export function wordDiff(): Extension {
-  return [
-    wordDiffDataField,
-    wordDiffPlugin,
-    wordDiffTheme,
-  ]
-}
-
-/** 
+/**
  * Create just the word diff state field (for base extensions).
  * Use this when the state field needs to persist across compartment reconfigurations.
  */

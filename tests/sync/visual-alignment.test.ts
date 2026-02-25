@@ -73,26 +73,26 @@ function createBlockWithAction(action: string): DiffBlockData[] {
 describe('generateAlignedContentFromDiff', () => {
   it('returns arrays of equal length for before and after', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     expect(result.beforeLines.length).toBe(result.afterLines.length)
     expect(result.lineMap.length).toBe(result.beforeLines.length)
   })
 
   it('inserts spacers for added lines on the before side', () => {
     const blocks = createBlockWithAction('add')
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     expect(result.beforeSpacers.size).toBeGreaterThan(0)
   })
 
   it('inserts spacers for removed lines on the after side', () => {
     const blocks = createBlockWithAction('remove')
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     expect(result.afterSpacers.size).toBeGreaterThan(0)
   })
 
   it('wraps JSON content in braces', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'json', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'json')
     expect(result.beforeLines[0]).toBe('{')
     expect(result.beforeLines[result.beforeLines.length - 1]).toBe('}')
     expect(result.afterLines[0]).toBe('{')
@@ -101,13 +101,13 @@ describe('generateAlignedContentFromDiff', () => {
 
   it('does not wrap YAML content in braces', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     expect(result.beforeLines[0]).not.toBe('{')
   })
 
   it('splits replace into remove+add when wordDiffMode is none', () => {
     const blocks = createBlockWithAction('replace')
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null, {
+    const result = generateAlignedContentFromDiff(blocks, 'yaml', {
       wordDiffMode: 'none',
     })
     const hasRemoved = result.lineMap.some(m => m.type === 'removed')
@@ -118,7 +118,7 @@ describe('generateAlignedContentFromDiff', () => {
 
   it('keeps replace as modified when wordDiffMode is word', () => {
     const blocks = createBlockWithAction('replace')
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null, {
+    const result = generateAlignedContentFromDiff(blocks, 'yaml', {
       wordDiffMode: 'word',
     })
     const hasModified = result.lineMap.some(m => m.type === 'modified')
@@ -127,7 +127,7 @@ describe('generateAlignedContentFromDiff', () => {
 
   it('produces no embedded newlines in any line', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     for (const line of result.beforeLines) {
       expect(line).not.toContain('\n')
     }
@@ -138,12 +138,12 @@ describe('generateAlignedContentFromDiff', () => {
 
   it('produces at least one line for non-empty blocks', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
     expect(result.beforeLines.length).toBeGreaterThan(0)
   })
 
   it('handles empty blocks array', () => {
-    const result = generateAlignedContentFromDiff([], 'yaml', null, null)
+    const result = generateAlignedContentFromDiff([], 'yaml')
     expect(result.beforeLines.length).toBe(0)
     expect(result.afterLines.length).toBe(0)
     expect(result.lineMap.length).toBe(0)
@@ -151,7 +151,7 @@ describe('generateAlignedContentFromDiff', () => {
 
   it('marks correct line types in lineMap', () => {
     const blocks = createTestBlocks()
-    const result = generateAlignedContentFromDiff(blocks, 'yaml', null, null)
+    const result = generateAlignedContentFromDiff(blocks, 'yaml')
 
     const types = result.lineMap.map(m => m.type)
     expect(types).toContain('unchanged')
