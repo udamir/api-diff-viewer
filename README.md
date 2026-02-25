@@ -30,7 +30,6 @@ npm install api-diff-viewer
 
 ```typescript
 import { createDiffViewer } from 'api-diff-viewer'
-import 'api-diff-viewer/style.css'
 
 const viewer = createDiffViewer(
   document.getElementById('diff')!,
@@ -184,7 +183,7 @@ Returned by `ready` event and `getChangeSummary()`:
 
 ```typescript
 interface ChangeSummary {
-  total: number
+  total: 
   breaking: number
   nonBreaking: number
   annotation: number
@@ -246,7 +245,6 @@ The `mergeOptions` field accepts `api-smart-diff` options. Available parameters:
 
 ```typescript
 import { createDiffViewer } from 'api-diff-viewer'
-import 'api-diff-viewer/style.css'
 
 const viewer = createDiffViewer(
   document.getElementById('diff')!,
@@ -293,7 +291,6 @@ const viewer = createDiffViewer(container, before, after, {
 import { createDiffViewer } from 'api-diff-viewer'
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { highlightActiveLine, keymap } from '@codemirror/view'
-import 'api-diff-viewer/style.css'
 
 const viewer = createDiffViewer(container, before, after, {
   extensions: [
