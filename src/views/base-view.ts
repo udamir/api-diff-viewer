@@ -36,6 +36,7 @@ export interface ViewConfig {
   dark: boolean
   colors?: Partial<DiffThemeColors>
   baseTheme?: Extension
+  extensions?: Extension[]
 }
 
 export abstract class BaseView {
@@ -150,6 +151,11 @@ export abstract class BaseView {
 
     // Always add wordDiffStateField so it persists across compartment reconfigurations
     extensions.push(wordDiffStateField())
+
+    // Append consumer-provided extensions last (lower precedence than library internals)
+    if (this.config.extensions?.length) {
+      extensions.push(...this.config.extensions)
+    }
 
     return extensions
   }

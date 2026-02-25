@@ -38,6 +38,110 @@ describe('yamlStrategy', () => {
     it('returns empty string as quoted', () => {
       expect(yamlStrategy.stringify('')).toBe('""')
     })
+
+    describe('does not quote strings with special chars at non-first position', () => {
+      it.each([
+        ['/pets/{petId}', '/pets/{petId}'],
+        ['${asdf}', '${asdf}'],
+        ['Bearer {token}', 'Bearer {token}'],
+        ['item[0]', 'item[0]'],
+        ['text/html, app/json', 'text/html, app/json'],
+        ["it's fine", "it's fine"],
+        ['-custom', '-custom'],
+        ['<html>', '<html>'],
+        ['=value', '=value'],
+        ['foo&bar', 'foo&bar'],
+        ['foo*bar', 'foo*bar'],
+        ['foo#bar', 'foo#bar'],
+      ])('stringify(%j) → %j (unquoted)', (input, expected) => {
+        expect(yamlStrategy.stringify(input)).toBe(expected)
+      })
+    })
+
+    describe('quotes strings with c-indicators at position 0', () => {
+      it.each([
+        ['{petId}', "'{petId}'"],
+        ['#comment', "'#comment'"],
+        ['*alias', "'*alias'"],
+        ['&anchor', "'&anchor'"],
+        ['!tag', "'!tag'"],
+        ['|literal', "'|literal'"],
+        ['>folded', "'>folded'"],
+        ['%directive', "'%directive'"],
+        ['@reserved', "'@reserved'"],
+        ['`backtick', "'`backtick'"],
+        [',comma', "',comma'"],
+        ['[array', "'[array'"],
+        [']bracket', "']bracket'"],
+        ['{brace', "'{brace'"],
+        ['}brace', "'}brace'"],
+      ])('stringify(%j) → %j (quoted)', (input, expected) => {
+        expect(yamlStrategy.stringify(input)).toBe(expected)
+      })
+    })
+
+    describe('quotes conditional indicators at position 0 followed by space', () => {
+      it.each([
+        ['- item', "'- item'"],
+        ['? question', "'? question'"],
+        [': value', "': value'"],
+      ])('stringify(%j) → %j (quoted)', (input, expected) => {
+        expect(yamlStrategy.stringify(input)).toBe(expected)
+      })
+
+      it.each([
+        ['-custom', '-custom'],
+        ['?query', '?query'],
+        [':port', ':port'],
+      ])('stringify(%j) → %j (unquoted, non-space follows)', (input, expected) => {
+        expect(yamlStrategy.stringify(input)).toBe(expected)
+      })
+    })
+
+    describe('quotes strings with plain scalar breaks', () => {
+      it.each([
+        ['key: value', "'key: value'"],
+        ['text #note', "'text #note'"],
+        ['trailing:', "'trailing:'"],
+      ])('stringify(%j) → %j (quoted)', (input, expected) => {
+        expect(yamlStrategy.stringify(input)).toBe(expected)
+      })
+    })
+
+    describe('quotes double-quote at position 0', () => {
+      it('quotes string starting with "', () => {
+        expect(yamlStrategy.stringify('"hello')).toBe("'\"hello'")
+      })
+    })
+
+    describe('edge cases', () => {
+      it('quotes single-character conditional indicators', () => {
+        expect(yamlStrategy.stringify('-')).toContain("'")
+        expect(yamlStrategy.stringify('?')).toContain("'")
+        expect(yamlStrategy.stringify(':')).toContain("'")
+      })
+
+      it('quotes strings with leading whitespace', () => {
+        expect(yamlStrategy.stringify(' leading')).toContain("'")
+      })
+
+      it('quotes strings with trailing whitespace', () => {
+        expect(yamlStrategy.stringify('trailing ')).toContain("'")
+      })
+
+      it('quotes YAML keyword variants', () => {
+        expect(yamlStrategy.stringify('True')).toContain("'")
+        expect(yamlStrategy.stringify('FALSE')).toContain("'")
+        expect(yamlStrategy.stringify('Null')).toContain("'")
+        expect(yamlStrategy.stringify('~')).toContain("'")
+      })
+
+      it('quotes numeric-like strings', () => {
+        expect(yamlStrategy.stringify('0.5')).toContain("'")
+        expect(yamlStrategy.stringify('1e10')).toContain("'")
+        expect(yamlStrategy.stringify('0777')).toContain("'")
+      })
+    })
   })
 
   describe('propLineTokens', () => {

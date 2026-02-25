@@ -74,6 +74,7 @@ Creates and returns a `DiffViewer` instance.
 | `showClassification`        | `boolean`                    | `false`          | Show classification gutter bars and fold badges          |
 | `wordDiffMode`              | `'word' \| 'char' \| 'none'` | `'word'`         | Word-level diff granularity                              |
 | `wordWrap`                  | `boolean`                    | `true`           | Enable word wrapping (false adds synced horizontal scroll) |
+| `extensions`                | `Extension[]`                | `[]`             | Additional CodeMirror extensions (search, active line, etc.) |
 | `useWorker`                 | `boolean`                    | `true`           | Use WebWorker for merging (non-blocking)                 |
 | `workerUrl`                 | `string`                     | `''`             | Custom worker URL (default: inline blob)                 |
 | `mergeOptions`              | `CompareOptions`             | `{}`             | Override options passed to `api-smart-diff`              |
@@ -285,6 +286,28 @@ const viewer = createDiffViewer(container, before, after, {
   showClassification: true,
 })
 ```
+
+### CodeMirror Extensions
+
+```typescript
+import { createDiffViewer } from 'api-diff-viewer'
+import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search'
+import { highlightActiveLine, keymap } from '@codemirror/view'
+import 'api-diff-viewer/style.css'
+
+const viewer = createDiffViewer(container, before, after, {
+  extensions: [
+    search(),
+    keymap.of(searchKeymap),
+    highlightActiveLine(),
+    highlightSelectionMatches(),
+  ],
+})
+// Ctrl+F / Cmd+F opens search in each panel
+```
+
+> **Note:** The library does not bundle `@codemirror/search` — install it separately:
+> `npm install @codemirror/search`
 
 ### Synchronous Mode (No Worker)
 

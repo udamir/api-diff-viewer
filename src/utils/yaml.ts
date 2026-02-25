@@ -59,7 +59,31 @@ export class YAML {
   }
   
   static requiresSingleQuoting(value: string) {
-    return PATTERN_SINGLE_QUOTING.test(value)
+    if (value.length === 0) return false
+
+    const first = value[0]
+
+    // First character: c-indicator that always needs quoting
+    if (C_INDICATORS_ALWAYS.has(first)) {
+      return true
+    }
+
+    // -, ?, : at start: only need quoting when followed by space or single char
+    if (C_INDICATORS_CONDITIONAL.has(first) && (value.length === 1 || /\s/.test(value[1]))) {
+      return true
+    }
+
+    // Leading or trailing whitespace
+    if (/^\s|\s$/.test(value)) {
+      return true
+    }
+
+    // ": " (colon-space) or " #" (space-hash) anywhere, or ":" at end
+    if (PATTERN_PLAIN_SCALAR_BREAKS.test(value)) {
+      return true
+    }
+
+    return false
   }
   
   static escapeWithSingleQuotes(value: string) {
@@ -80,4 +104,15 @@ const MAPPING_ESCAPEES_TO_ESCAPED = (() => {
 
 const PATTERN_MAPPING_ESCAPEES = new RegExp(LIST_ESCAPEES.join('|').split('\\').join('\\\\'));
 const PATTERN_CHARACTERS_TO_ESCAPE = new RegExp('[\\x00-\\x1f]|\xc2\x85|\xc2\xa0|\xe2\x80\xa8|\xe2\x80\xa9');
-const PATTERN_SINGLE_QUOTING = new RegExp('[\'{}[\\],&*#]|^[-?|<>=!%@`]|: |:\\s*$| #');
+// Characters that are c-indicators and ALWAYS need quoting at position 0
+// (excludes -, ?, : which are conditional on following character)
+const C_INDICATORS_ALWAYS = new Set([
+  ',', '[', ']', '{', '}', '#', '&', '*',
+  '!', '|', '>', "'", '"', '%', '@', '`',
+])
+
+// Characters that need quoting at position 0 ONLY when followed by space or at end
+const C_INDICATORS_CONDITIONAL = new Set(['-', '?', ':'])
+
+// Patterns that break plain scalars anywhere in the string
+const PATTERN_PLAIN_SCALAR_BREAKS = /: | #|:\s*$/;

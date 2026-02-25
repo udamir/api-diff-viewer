@@ -62,6 +62,32 @@ export interface DiffViewerOptions {
   wordDiffMode?: 'word' | 'char' | 'none'
   /** Enable word wrapping. Default: true */
   wordWrap?: boolean
+  /**
+   * Additional CodeMirror extensions to include in editor views.
+   *
+   * Consumer extensions are appended after all library-internal extensions,
+   * so library invariants (e.g. read-only mode) cannot be overridden.
+   * In side-by-side mode, extensions are applied to both panels independently.
+   *
+   * Extensions are applied at construction time; changes require rebuilding
+   * the view (call `destroy()` and create a new instance).
+   *
+   * @example
+   * ```ts
+   * import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search'
+   * import { highlightActiveLine, keymap } from '@codemirror/view'
+   *
+   * createDiffViewer(container, before, after, {
+   *   extensions: [
+   *     search(),
+   *     keymap.of(searchKeymap),
+   *     highlightActiveLine(),
+   *     highlightSelectionMatches(),
+   *   ],
+   * })
+   * ```
+   */
+  extensions?: Extension[]
   /** Use WebWorker for merging. Default: true */
   useWorker?: boolean
   /** Custom worker URL. Default: inline blob */
@@ -95,6 +121,7 @@ function resolveOptions(opts?: DiffViewerOptions): Required<DiffViewerOptions> {
     showClassification: opts?.showClassification ?? false,
     wordDiffMode: opts?.wordDiffMode ?? 'word',
     wordWrap: opts?.wordWrap ?? true,
+    extensions: opts?.extensions ?? [],
     useWorker: opts?.useWorker ?? true,
     workerUrl: opts?.workerUrl ?? '',
     mergeOptions: {
@@ -480,6 +507,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
       dark: this.options.dark,
       colors: this.options.colors,
       baseTheme: this.options.theme,
+      extensions: this.options.extensions,
     }
 
     // Create appropriate view
