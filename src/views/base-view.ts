@@ -5,167 +5,153 @@
  * SideBySideView and InlineView.
  */
 
-import { Extension, Compartment } from '@codemirror/state'
-import { EditorView, drawSelection } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { keymap } from '@codemirror/view'
-import { foldKeymap, codeFolding } from '@codemirror/language'
-import { json } from '@codemirror/lang-json'
-import { yaml } from '@codemirror/lang-yaml'
-
-import type { DiffData, DiffThemeColors, LineMapping } from '../types'
-import { diffStateField } from '../state/diff-state'
-import { diffDecorationsTheme } from '../extensions/diff-decorations'
-import { DiffThemeManager } from '../themes'
-import {
-  alignedDecorations,
-  alignedDecorationsTheme,
-} from '../extensions/aligned-decorations'
-import {
-  diffFolding,
-} from '../extensions/diff-folding'
-import { wordDiffStateField } from '../extensions/word-diff'
-import { inlineWordDiff } from '../extensions/inline-word-diff'
-import { prepareFoldPlaceholder, createFoldPlaceholder } from '../extensions/fold-placeholder'
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { json } from "@codemirror/lang-json";
+import { yaml } from "@codemirror/lang-yaml";
+import { codeFolding, foldKeymap } from "@codemirror/language";
+import { Compartment, type Extension } from "@codemirror/state";
+import { drawSelection, EditorView, keymap } from "@codemirror/view";
+import { alignedDecorations, alignedDecorationsTheme } from "../extensions/aligned-decorations";
+import { diffDecorationsTheme } from "../extensions/diff-decorations";
+import { diffFolding } from "../extensions/diff-folding";
+import { createFoldPlaceholder, prepareFoldPlaceholder } from "../extensions/fold-placeholder";
+import { inlineWordDiff } from "../extensions/inline-word-diff";
+import { wordDiffStateField } from "../extensions/word-diff";
+import { diffStateField } from "../state/diff-state";
+import { DiffThemeManager } from "../themes";
+import type { DiffData, DiffThemeColors, LineMapping } from "../types";
 
 export interface ViewConfig {
-  wordWrap: boolean
-  enableFolding: boolean
-  showClassification: boolean
-  wordDiffMode: 'word' | 'char' | 'none'
-  dark: boolean
-  colors?: Partial<DiffThemeColors>
-  baseTheme?: Extension
-  extensions?: Extension[]
+	wordWrap: boolean;
+	enableFolding: boolean;
+	showClassification: boolean;
+	wordDiffMode: "word" | "char" | "none";
+	dark: boolean;
+	colors?: Partial<DiffThemeColors>;
+	baseTheme?: Extension;
+	extensions?: Extension[];
 }
 
 export abstract class BaseView {
-  protected container: HTMLElement
-  protected rootEl: HTMLElement
-  protected config: ViewConfig
-  protected themeManager: DiffThemeManager
-  protected currentLineMap: LineMapping[] = []
-  protected lineWrappingCompartment = new Compartment()
+	protected container: HTMLElement;
+	protected rootEl: HTMLElement;
+	protected config: ViewConfig;
+	protected themeManager: DiffThemeManager;
+	protected currentLineMap: LineMapping[] = [];
+	protected lineWrappingCompartment = new Compartment();
 
-  constructor(container: HTMLElement, config: ViewConfig) {
-    this.container = container
-    this.config = config
-    this.themeManager = new DiffThemeManager()
-    this.rootEl = document.createElement('div')
-    this.rootEl.style.height = '100%'
-    this.rootEl.style.overflow = 'hidden'
-    container.appendChild(this.rootEl)
-  }
+	constructor(container: HTMLElement, config: ViewConfig) {
+		this.container = container;
+		this.config = config;
+		this.themeManager = new DiffThemeManager();
+		this.rootEl = document.createElement("div");
+		this.rootEl.style.height = "100%";
+		this.rootEl.style.overflow = "hidden";
+		container.appendChild(this.rootEl);
+	}
 
-  abstract render(diffData: DiffData, format: 'json' | 'yaml'): void
+	abstract render(diffData: DiffData, format: "json" | "yaml"): void;
 
-  abstract updateTheme(dark: boolean, colors?: Partial<DiffThemeColors>, baseTheme?: Extension): void
+	abstract updateTheme(dark: boolean, colors?: Partial<DiffThemeColors>, baseTheme?: Extension): void;
 
-  abstract getEditorViews(): EditorView[]
+	abstract getEditorViews(): EditorView[];
 
-  abstract setWordWrap(enabled: boolean): void
+	abstract setWordWrap(enabled: boolean): void;
 
-  abstract setFoldingEnabled(enabled: boolean): void
+	abstract setFoldingEnabled(enabled: boolean): void;
 
-  abstract setClassificationEnabled(enabled: boolean): void
+	abstract setClassificationEnabled(enabled: boolean): void;
 
-  abstract setWordDiffMode(mode: 'word' | 'char' | 'none'): void
+	abstract setWordDiffMode(mode: "word" | "char" | "none"): void;
 
-  abstract destroy(): void
+	abstract destroy(): void;
 
-  /**
-   * Reconfigure line wrapping on a live editor view.
-   */
-  protected reconfigureLineWrapping(view: EditorView, enabled: boolean): void {
-    view.dispatch({
-      effects: this.lineWrappingCompartment.reconfigure(
-        enabled ? EditorView.lineWrapping : []
-      ),
-    })
-  }
+	/**
+	 * Reconfigure line wrapping on a live editor view.
+	 */
+	protected reconfigureLineWrapping(view: EditorView, enabled: boolean): void {
+		view.dispatch({
+			effects: this.lineWrappingCompartment.reconfigure(enabled ? EditorView.lineWrapping : []),
+		});
+	}
 
-  /**
-   * Build common extension array for any editor side.
-   */
-  protected createBaseExtensions(
-    format: 'json' | 'yaml',
-    side: 'before' | 'after' | 'unified',
-    lineMap: LineMapping[]
-  ): Extension[] {
-    this.currentLineMap = lineMap
-    const languageExt = format === 'json' ? json() : yaml()
+	/**
+	 * Build common extension array for any editor side.
+	 */
+	protected createBaseExtensions(
+		format: "json" | "yaml",
+		side: "before" | "after" | "unified",
+		lineMap: LineMapping[]
+	): Extension[] {
+		this.currentLineMap = lineMap;
+		const languageExt = format === "json" ? json() : yaml();
 
-    const extensions: Extension[] = [
-      drawSelection(),
-      history(),
-      keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
-      languageExt,
-      diffStateField,
-      diffDecorationsTheme,
-      alignedDecorations(),
-      alignedDecorationsTheme,
-      ...this.themeManager.getExtensions(
-        this.config.baseTheme,
-        this.config.colors,
-        this.config.dark
-      ),
-      EditorView.editable.of(false),
-      this.lineWrappingCompartment.of(
-        this.config.wordWrap ? EditorView.lineWrapping : []
-      ),
-      // Constrain editor to parent height so CodeMirror uses its own virtual scrolling
-      EditorView.theme({
-        '&': { height: '100%' },
-        '.cm-scroller': { overflow: 'auto' },
-      }),
-    ]
+		const extensions: Extension[] = [
+			drawSelection(),
+			history(),
+			keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
+			languageExt,
+			diffStateField,
+			diffDecorationsTheme,
+			alignedDecorations(),
+			alignedDecorationsTheme,
+			...this.themeManager.getExtensions(this.config.baseTheme, this.config.colors, this.config.dark),
+			EditorView.editable.of(false),
+			this.lineWrappingCompartment.of(this.config.wordWrap ? EditorView.lineWrapping : []),
+			// Constrain editor to parent height so CodeMirror uses its own virtual scrolling
+			EditorView.theme({
+				"&": { height: "100%" },
+				".cm-scroller": { overflow: "auto" },
+			}),
+		];
 
-    // codeFolding is always loaded so that filter-as-folding works regardless
-    // of enableFolding. The gutter and keyboard shortcuts are opt-in.
-    // Custom placeholder is ALWAYS registered so spacer-only folds are rendered
-    // invisible. Without it, CodeMirror's default placeholder shows a visible
-    // background/border on spacer lines.
-    {
-      const capturedSide = side
-      const capturedLineMap = lineMap
-      extensions.push(codeFolding({
-        preparePlaceholder: (state, range) => {
-          const data = prepareFoldPlaceholder(state, range, capturedSide, capturedLineMap)
-          if (!this.config.showClassification && !data.isSpacer) {
-            return { counts: { breaking: 0, nonBreaking: 0, annotation: 0, unclassified: 0 }, isSpacer: false }
-          }
-          return data
-        },
-        placeholderDOM: (_view, onclick, prepared) => createFoldPlaceholder(prepared, onclick),
-      }))
-      extensions.push(diffFolding())
-    }
+		// codeFolding is always loaded so that filter-as-folding works regardless
+		// of enableFolding. The gutter and keyboard shortcuts are opt-in.
+		// Custom placeholder is ALWAYS registered so spacer-only folds are rendered
+		// invisible. Without it, CodeMirror's default placeholder shows a visible
+		// background/border on spacer lines.
+		{
+			const capturedSide = side;
+			const capturedLineMap = lineMap;
+			extensions.push(
+				codeFolding({
+					preparePlaceholder: (state, range) => {
+						const data = prepareFoldPlaceholder(state, range, capturedSide, capturedLineMap);
+						if (!this.config.showClassification && !data.isSpacer) {
+							return { counts: { breaking: 0, nonBreaking: 0, annotation: 0, unclassified: 0 }, isSpacer: false };
+						}
+						return data;
+					},
+					placeholderDOM: (_view, onclick, prepared) => createFoldPlaceholder(prepared, onclick),
+				})
+			);
+			extensions.push(diffFolding());
+		}
 
-    // Note: The following extensions are NOT added here because they are managed
-    // by compartments in the subclass (SideBySideView) for dynamic reconfiguration:
-    // - createSpacerAwareLineNumbers (lineNumbersCompartment)
-    // - foldGutter + diffFoldKeymap (foldGutterCompartment)
-    // - createDiffMarkerGutter (diffMarkerGutterCompartment)
-    // - changeBadges + createClassificationGutter (classificationCompartment)
-    // - wordDiffPlugin + wordDiffTheme (wordDiffCompartment)
+		// Note: The following extensions are NOT added here because they are managed
+		// by compartments in the subclass (SideBySideView) for dynamic reconfiguration:
+		// - createSpacerAwareLineNumbers (lineNumbersCompartment)
+		// - foldGutter + diffFoldKeymap (foldGutterCompartment)
+		// - createDiffMarkerGutter (diffMarkerGutterCompartment)
+		// - changeBadges + createClassificationGutter (classificationCompartment)
+		// - wordDiffPlugin + wordDiffTheme (wordDiffCompartment)
 
-    // Always add wordDiffStateField so it persists across compartment reconfigurations
-    extensions.push(wordDiffStateField())
+		// Always add wordDiffStateField so it persists across compartment reconfigurations
+		extensions.push(wordDiffStateField());
 
-    // Append consumer-provided extensions last (lower precedence than library internals)
-    if (this.config.extensions?.length) {
-      extensions.push(...this.config.extensions)
-    }
+		// Append consumer-provided extensions last (lower precedence than library internals)
+		if (this.config.extensions?.length) {
+			extensions.push(...this.config.extensions);
+		}
 
-    return extensions
-  }
+		return extensions;
+	}
 
-  /**
-   * Add inline word diff extension (for unified mode).
-   */
-  protected createInlineWordDiffExtension(): Extension[] {
-    if (this.config.wordDiffMode === 'none') return []
-    return [inlineWordDiff({ mode: this.config.wordDiffMode })]
-  }
-
+	/**
+	 * Add inline word diff extension (for unified mode).
+	 */
+	protected createInlineWordDiffExtension(): Extension[] {
+		if (this.config.wordDiffMode === "none") return [];
+		return [inlineWordDiff({ mode: this.config.wordDiffMode })];
+	}
 }

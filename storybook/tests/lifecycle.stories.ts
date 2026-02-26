@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite'
+import type { Meta, StoryFn, StoryObj } from '@storybook/html-vite'
 import { expect, waitFor } from 'storybook/test'
 import { renderDiffViewer, waitForViewer, openApiBefore, openApiAfter } from '../helpers/test-utils'
 import { createDiffViewer } from '../../src/index'
@@ -11,7 +11,7 @@ interface Args extends DiffViewerOptions {
 
 const meta: Meta<Args> = {
   title: 'Tests/Lifecycle',
-  render: renderDiffViewer as any,
+  render: renderDiffViewer as StoryFn<Args>,
   args: {
     before: openApiBefore,
     after: openApiAfter,

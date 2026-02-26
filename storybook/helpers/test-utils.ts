@@ -8,12 +8,15 @@ import openApiAfter from '../samples/openApi.after'
 
 export { openApiBefore, openApiAfter }
 
+/** Store viewer instances keyed by their container element */
+export const viewerStore = new WeakMap<HTMLElement, DiffViewer>()
+
 /**
  * Shared render function for test stories.
  * Creates a container, attaches a DiffViewer in requestAnimationFrame,
- * and stores the viewer instance on the container element.
+ * and stores the viewer instance via viewerStore.
  */
-export function renderDiffViewer(args: { before: object; after: object } & DiffViewerOptions): HTMLElement {
+export function renderDiffViewer(args: { before: object | string; after: object | string } & DiffViewerOptions): HTMLElement {
   const wrapper = document.createElement('div')
   wrapper.style.height = '600px'
   wrapper.style.border = '1px solid #d0d7de'
@@ -24,7 +27,7 @@ export function renderDiffViewer(args: { before: object; after: object } & DiffV
   const { before, after, ...options } = args
 
   requestAnimationFrame(() => {
-    const prev = (wrapper as any).__viewer as DiffViewer | undefined
+    const prev = viewerStore.get(wrapper)
     if (prev) {
       try { prev.destroy() } catch { /* noop */ }
     }
@@ -35,7 +38,7 @@ export function renderDiffViewer(args: { before: object; after: object } & DiffV
         useWorker: false,
       })
 
-      ;(wrapper as any).__viewer = viewer
+      viewerStore.set(wrapper, viewer)
     } catch (e) {
       console.error('[DiffViewer] Failed to create:', e)
       wrapper.textContent = `Error: ${e}`
@@ -63,7 +66,7 @@ export async function waitForViewer(canvasElement: HTMLElement): Promise<{
     const editors = container.querySelectorAll('.cm-editor')
     expect(editors.length).toBeGreaterThan(0)
 
-    viewer = (container as any).__viewer as DiffViewer
+    viewer = viewerStore.get(container)!
     expect(viewer).toBeDefined()
   }, { timeout: 5000 })
 

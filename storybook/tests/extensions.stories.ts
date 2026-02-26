@@ -18,6 +18,8 @@ interface ExtensionsStoryArgs extends DiffViewerOptions {
   after: object
 }
 
+const viewerStore = new WeakMap<HTMLElement, DiffViewer>()
+
 function renderWithExtensions(extensions: Extension[]) {
   return (args: ExtensionsStoryArgs): HTMLElement => {
     const dark = args.dark ?? false
@@ -43,7 +45,7 @@ function renderWithExtensions(extensions: Extension[]) {
     const { before, after, ...options } = args
 
     requestAnimationFrame(() => {
-      const prev = (wrapper as any).__viewer as DiffViewer | undefined
+      const prev = viewerStore.get(wrapper)
       if (prev) {
         try { prev.destroy() } catch { /* noop */ }
       }
@@ -65,7 +67,7 @@ function renderWithExtensions(extensions: Extension[]) {
           console.error('[Extensions Story] Error:', message)
         })
 
-        ;(wrapper as any).__viewer = viewer
+        viewerStore.set(wrapper, viewer)
       } catch (e) {
         console.error('[Extensions Story] Failed to create:', e)
         wrapper.textContent = `Error: ${e}`

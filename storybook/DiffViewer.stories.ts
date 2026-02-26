@@ -1,4 +1,5 @@
 import type { Meta, StoryFn } from '@storybook/html-vite'
+import type { DiffType } from 'api-smart-diff'
 import { createDiffViewer, type DiffViewerOptions, type DiffViewer } from '../src/index'
 import openApiBefore from './samples/openApi.before'
 import openApiAfter from './samples/openApi.after'
@@ -15,7 +16,7 @@ interface DiffViewerStoryArgs extends DiffViewerOptions {
 }
 
 interface ClassificationDef {
-  key: string
+  key: DiffType
   label: string
   color: [light: string, dark: string]
   bg: [light: string, dark: string]
@@ -27,6 +28,9 @@ const CLASSIFICATIONS: ClassificationDef[] = [
   { key: 'annotation',    label: 'Annotation',   color: ['#8250df', '#a371f7'], bg: ['#f0e6ff', '#2a1a4e'] },
   { key: 'unclassified',  label: 'Unclassified', color: ['#656d76', '#768390'], bg: ['#eaeef2', '#21262d'] },
 ]
+
+const viewerStore = new WeakMap<HTMLElement, DiffViewer>()
+const badgeStore = new WeakMap<HTMLElement, Map<string, HTMLElement>>()
 
 function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
   const bar = document.createElement('div')
@@ -46,7 +50,7 @@ function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
       `padding:4px 12px;border:1px solid ${borderColor};border-radius:4px;` +
       `background:${bg};color:${color};cursor:pointer;font-size:12px;font-family:inherit`
     btn.addEventListener('click', () => {
-      const viewer = (wrapper as any).__viewer as DiffViewer | undefined
+      const viewer = viewerStore.get(wrapper)
       if (viewer) fn(viewer)
     })
     return btn
@@ -81,7 +85,7 @@ function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
     badges.set(cls.key, badge)
 
     badge.addEventListener('click', () => {
-      const viewer = (wrapper as any).__viewer as DiffViewer | undefined
+      const viewer = viewerStore.get(wrapper)
       if (!viewer) return
 
       const filters = viewer.getFilters()
@@ -93,7 +97,7 @@ function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
 
       // Update visual state for all badges
       for (const [key, el] of badges) {
-        const active = filters.includes(key)
+        const active = filters.includes(key as DiffType)
         const c = CLASSIFICATIONS.find(c => c.key === key)!
         if (filters.length === 0) {
           el.style.background = bg
@@ -112,14 +116,14 @@ function createActionBar(wrapper: HTMLElement, dark: boolean): HTMLElement {
         el.style.opacity = (filters.length === 0 || active) ? '1' : '0.4'
       }
 
-      viewer.setFilters([...filters] as any[])
+      viewer.setFilters([...filters])
     })
 
     bar.appendChild(badge)
   }
 
   // Store badges ref so renderDiffViewer can update counts
-  ;(bar as any).__badges = badges
+  badgeStore.set(bar, badges)
 
   return bar
 }
@@ -148,7 +152,7 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
   // before creating the viewer (CodeMirror needs a mounted parent)
   requestAnimationFrame(() => {
     // Destroy any previous viewer stored on this element
-    const prev = (wrapper as any).__viewer as DiffViewer | undefined
+    const prev = viewerStore.get(wrapper)
     if (prev) {
       try { prev.destroy() } catch { /* noop */ }
     }
@@ -166,7 +170,7 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
         )
 
         // Update classification badges
-        const badges = (actionBar as any).__badges as Map<string, HTMLElement> | undefined
+        const badges = badgeStore.get(actionBar)
         if (badges) {
           const counts: Record<string, number> = {
             breaking: summary.breaking,
@@ -190,7 +194,7 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
         console.error('[DiffViewer] Error:', message)
       })
 
-      ;(wrapper as any).__viewer = viewer
+      viewerStore.set(wrapper, viewer)
     } catch (e) {
       console.error('[DiffViewer] Failed to create:', e)
       wrapper.textContent = `Error: ${e}`

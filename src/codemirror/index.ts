@@ -5,174 +5,154 @@
  * for rendering API diff visualizations.
  */
 
-// Core types
-export type {
-  DiffData,
-  DiffConfig,
-  DiffCoordinator,
-  DiffPairResult,
-  NavigationAPI,
-  NavigationOptions,
-  ChangeSummary,
-  LineMapping,
-  BlockMapping,
-  DiffDecoration,
-  WordDiff,
-  DiffThemeColors,
-  SyncState,
-  SyncManagerOptions,
-  AlignedContent,
-  CoordinatorOptions,
-} from './types'
-
-export { defaultDiffConfig } from './types'
-
-// State management
+// Coordinator
+export { createCoordinator, DiffCoordinatorImpl } from "./coordinator";
 export {
-  diffStateField,
-  diffConfigFacet,
-  getDiffState,
-  getDiffConfig,
-  setDiffDataEffect,
-  setSelectedBlockEffect,
-  toggleBlockExpandedEffect,
-  setExpandedBlocksEffect,
-  setFiltersEffect,
-  setDisplayModeEffect,
-  setFormatEffect,
-  setSideEffect,
-} from './state/diff-state'
-
-export type { DiffEditorState } from './state/diff-state'
+	alignedDecorations,
+	alignedDecorationsTheme,
+	createSpacerAwareLineNumbers,
+	LINE_HEIGHT_PX,
+	lineMappingsField,
+	setEditorSideEffect,
+	setLineMappingsEffect,
+} from "./extensions/aligned-decorations";
+export type { BadgeData } from "./extensions/change-badges";
+// Change badges extension
+export {
+	badgeDataField,
+	buildBadgeData,
+	ChangeBadgeWidget,
+	changeBadges,
+	changeBadgesTheme,
+	setBadgeDataEffect,
+} from "./extensions/change-badges";
 
 // Extensions
 export {
-  diffDecorations,
-  diffDecorationsTheme,
-  diffDecorationsPlugin,
-  buildDecorations,
-} from './extensions/diff-decorations'
-
-export {
-  diffGutter,
-  diffGutterTheme,
-  DiffGutterMarker,
-  buildGutterMarkers,
-} from './extensions/diff-gutter'
-
-export {
-  spacerDecorations,
-  spacerDecorationsTheme,
-  setSpacerLinesEffect,
-  spacerLinesField,
-} from './extensions/spacer-decorations'
-
-export {
-  alignedDecorations,
-  alignedDecorationsTheme,
-  setLineMappingsEffect,
-  setEditorSideEffect,
-  lineMappingsField,
-  createSpacerAwareLineNumbers,
-  LINE_HEIGHT_PX,
-} from './extensions/aligned-decorations'
-
+	buildDecorations,
+	diffDecorations,
+	diffDecorationsPlugin,
+	diffDecorationsTheme,
+} from "./extensions/diff-decorations";
+export type { FoldableRange } from "./extensions/diff-folding";
 // Folding extension
 export {
-  diffFolding,
-  diffFoldingTheme,
-  diffFoldKeymap,
-  foldableRangesField,
-  setFoldableRangesEffect,
-  toggleFoldEffect,
-  expandAllEffect,
-  collapseAllEffect,
-  autoExpandChangesEffect,
-  buildFoldableRanges,
-  toggleFoldAtRange,
-  FoldWidget,
-  FoldGutterMarker,
-} from './extensions/diff-folding'
-
-export type { FoldableRange } from './extensions/diff-folding'
-
-// Change badges extension
+	autoExpandChangesEffect,
+	buildFoldableRanges,
+	collapseAllEffect,
+	diffFolding,
+	diffFoldingTheme,
+	diffFoldKeymap,
+	expandAllEffect,
+	FoldGutterMarker,
+	FoldWidget,
+	foldableRangesField,
+	setFoldableRangesEffect,
+	toggleFoldAtRange,
+	toggleFoldEffect,
+} from "./extensions/diff-folding";
 export {
-  changeBadges,
-  changeBadgesTheme,
-  badgeDataField,
-  setBadgeDataEffect,
-  buildBadgeData,
-  ChangeBadgeWidget,
-} from './extensions/change-badges'
-
-export type { BadgeData } from './extensions/change-badges'
+	buildGutterMarkers,
+	DiffGutterMarker,
+	diffGutter,
+	diffGutterTheme,
+} from "./extensions/diff-gutter";
+export type { InlineWordDiffConfig, InlineWordDiffLine } from "./extensions/inline-word-diff";
+// Inline word diff extension (for unified view)
+export {
+	buildInlineWordDiffLines,
+	inlineWordDiff,
+	inlineWordDiffConfigField,
+	inlineWordDiffField,
+	inlineWordDiffTheme,
+	RemovedTextWidget,
+	setInlineWordDiffConfigEffect,
+	setInlineWordDiffEffect,
+} from "./extensions/inline-word-diff";
+export {
+	setSpacerLinesEffect,
+	spacerDecorations,
+	spacerDecorationsTheme,
+	spacerLinesField,
+} from "./extensions/spacer-decorations";
+export type { WordDiffData, WordDiffRange } from "./extensions/word-diff";
 
 // Word-level diff extension
 export {
-  wordDiff,
-  wordDiffTheme,
-  wordDiffDataField,
-  setWordDiffDataEffect,
-  computeWordDiff,
-  buildWordDiffData,
-  buildWordDiffDataFromContent,
-  buildInlineWordDiffData,
-} from './extensions/word-diff'
-
-export type { WordDiffData, WordDiffRange } from './extensions/word-diff'
-
-// Inline word diff extension (for unified view)
+	buildInlineWordDiffData,
+	buildWordDiffData,
+	buildWordDiffDataFromContent,
+	computeWordDiff,
+	setWordDiffDataEffect,
+	wordDiff,
+	wordDiffDataField,
+	wordDiffTheme,
+} from "./extensions/word-diff";
+// Factory functions
+export { createDiffPair, createUnifiedDiff, diff } from "./factory";
+// Navigation
+export { createNavigationAPI, NavigationAPIImpl } from "./navigation/navigation-api";
+export type { DiffEditorState } from "./state/diff-state";
+// State management
 export {
-  inlineWordDiff,
-  inlineWordDiffTheme,
-  inlineWordDiffField,
-  setInlineWordDiffEffect,
-  inlineWordDiffConfigField,
-  setInlineWordDiffConfigEffect,
-  buildInlineWordDiffLines,
-  RemovedTextWidget,
-} from './extensions/inline-word-diff'
-
-export type { InlineWordDiffLine, InlineWordDiffConfig } from './extensions/inline-word-diff'
-
-// Sync utilities
-export {
-  generateAlignedContent,
-  generateAlignedContentFromDiff,
-  generateUnifiedContentFromDiff,
-  alignmentToContent,
-  SPACER_LINE,
-} from './sync/visual-alignment'
-
-export type { AlignmentResult, UnifiedResult, UnifiedContentOptions } from './sync/visual-alignment'
+	diffConfigFacet,
+	diffStateField,
+	getDiffConfig,
+	getDiffState,
+	setDiffDataEffect,
+	setDisplayModeEffect,
+	setExpandedBlocksEffect,
+	setFiltersEffect,
+	setFormatEffect,
+	setSelectedBlockEffect,
+	setSideEffect,
+	toggleBlockExpandedEffect,
+} from "./state/diff-state";
+export type { FoldSyncOptions } from "./sync/fold-sync";
 
 // Fold sync
 export {
-  foldSync,
-  setupFoldSync,
-  disableFoldSyncEffect,
-} from './sync/fold-sync'
-
-export type { FoldSyncOptions } from './sync/fold-sync'
-
+	disableFoldSyncEffect,
+	foldSync,
+	setupFoldSync,
+} from "./sync/fold-sync";
+export type { AlignmentResult, UnifiedContentOptions, UnifiedResult } from "./sync/visual-alignment";
+// Sync utilities
+export {
+	alignmentToContent,
+	generateAlignedContent,
+	generateAlignedContentFromDiff,
+	generateUnifiedContentFromDiff,
+	SPACER_LINE,
+} from "./sync/visual-alignment";
 // Themes
 export {
-  diffTheme,
-  diffThemeLight,
-  diffThemeDark,
-  detectDarkMode,
-  DiffThemeManager,
-  themeCompartment,
-  lightColors,
-  darkColors,
-} from './themes/diff-theme'
-
-// Navigation
-export { createNavigationAPI, NavigationAPIImpl } from './navigation/navigation-api'
-
-// Coordinator
-export { createCoordinator, DiffCoordinatorImpl } from './coordinator'
-
-// Factory functions
-export { diff, createDiffPair, createUnifiedDiff } from './factory'
+	DiffThemeManager,
+	darkColors,
+	detectDarkMode,
+	diffTheme,
+	diffThemeDark,
+	diffThemeLight,
+	lightColors,
+	themeCompartment,
+} from "./themes/diff-theme";
+// Core types
+export type {
+	AlignedContent,
+	BlockMapping,
+	ChangeSummary,
+	CoordinatorOptions,
+	DiffConfig,
+	DiffCoordinator,
+	DiffData,
+	DiffDecoration,
+	DiffPairResult,
+	DiffThemeColors,
+	LineMapping,
+	NavigationAPI,
+	NavigationOptions,
+	SyncManagerOptions,
+	SyncState,
+	WordDiff,
+} from "./types";
+export { defaultDiffConfig } from "./types";

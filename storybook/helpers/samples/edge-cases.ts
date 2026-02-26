@@ -29,7 +29,7 @@ export const deeplyNestedBefore = generateDeeplyNested(10)
 export const deeplyNestedAfter = {
   ...generateDeeplyNested(10),
   nested: {
-    ...(generateDeeplyNested(9) as any),
+    ...generateDeeplyNested(9),
     addedField: 'new',
   },
 }

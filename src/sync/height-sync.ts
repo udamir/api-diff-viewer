@@ -23,38 +23,38 @@
  * - Container resize (word wrap changes) — full reset
  */
 
-import { StateEffect } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
-import { foldEffect, unfoldEffect } from '@codemirror/language'
+import { foldEffect, unfoldEffect } from "@codemirror/language";
+import { StateEffect } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
 import {
-  HEIGHT_THRESHOLD,
-  type HeightPadding,
-  setHeightPaddingEffect,
-  heightPaddingField,
-  heightPadTheme,
-  paddingsEqual,
-  mapToPaddings,
-} from './height-padding'
+	HEIGHT_THRESHOLD,
+	type HeightPadding,
+	heightPaddingField,
+	heightPadTheme,
+	mapToPaddings,
+	paddingsEqual,
+	setHeightPaddingEffect,
+} from "./height-padding";
 
+export type { HeightPadding } from "./height-padding";
 // Re-export padding-related symbols so existing consumers don't break
 export {
-  setHeightPaddingEffect,
-  paddingsEqual,
-  mapToPaddings,
-  heightPaddingField,
-  heightPadTheme,
-  HEIGHT_THRESHOLD,
-} from './height-padding'
-export type { HeightPadding } from './height-padding'
+	HEIGHT_THRESHOLD,
+	heightPaddingField,
+	heightPadTheme,
+	mapToPaddings,
+	paddingsEqual,
+	setHeightPaddingEffect,
+} from "./height-padding";
 
 // ── Constants ──
 
 /** Number of lines to measure beyond the visible viewport on each side */
-const VIEWPORT_BUFFER = 30
+const VIEWPORT_BUFFER = 30;
 
 /** Debounce delay (ms) for container resize before triggering full reset */
-const RESIZE_DEBOUNCE_MS = 150
+const RESIZE_DEBOUNCE_MS = 150;
 
 // ── Main entry point ──
 
@@ -75,371 +75,354 @@ const RESIZE_DEBOUNCE_MS = 150
  * @returns HeightSyncHandle with reEqualize and destroy methods
  */
 export interface HeightSyncHandle {
-  /** Force immediate re-measurement and equalization */
-  reEqualize(): void
-  /** Cleanup and stop syncing */
-  destroy(): void
+	/** Force immediate re-measurement and equalization */
+	reEqualize(): void;
+	/** Cleanup and stop syncing */
+	destroy(): void;
 }
 
-export function setupHeightSync(
-  beforeView: EditorView,
-  afterView: EditorView
-): HeightSyncHandle {
-  let destroyed = false
-  let measuring = false
-  let rafId: number | null = null
-  let resizeTimer: ReturnType<typeof setTimeout> | null = null
+export function setupHeightSync(beforeView: EditorView, afterView: EditorView): HeightSyncHandle {
+	let destroyed = false;
+	let measuring = false;
+	let rafId: number | null = null;
+	let resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Flag set during our own dispatches to suppress re-triggering.
-   * When we dispatch padding effects, CodeMirror fires update listeners
-   * with geometryChanged=true. Without this guard, that would schedule
-   * another measurement, creating an infinite loop.
-   */
-  let dispatching = false
+	/**
+	 * Flag set during our own dispatches to suppress re-triggering.
+	 * When we dispatch padding effects, CodeMirror fires update listeners
+	 * with geometryChanged=true. Without this guard, that would schedule
+	 * another measurement, creating an infinite loop.
+	 */
+	let dispatching = false;
 
-  /** Generation counter — incremented on full reset to invalidate stale callbacks */
-  let generation = 0
+	/** Generation counter — incremented on full reset to invalidate stale callbacks */
+	let generation = 0;
 
-  /** Persistent padding maps: lineNumber → padding height in pixels */
-  let beforePadMap = new Map<number, number>()
-  let afterPadMap = new Map<number, number>()
+	/** Persistent padding maps: lineNumber → padding height in pixels */
+	let beforePadMap = new Map<number, number>();
+	let afterPadMap = new Map<number, number>();
 
-  /** Last dispatched padding arrays (for change detection) */
-  let currentBeforePads: HeightPadding[] = []
-  let currentAfterPads: HeightPadding[] = []
+	/** Last dispatched padding arrays (for change detection) */
+	let currentBeforePads: HeightPadding[] = [];
+	let currentAfterPads: HeightPadding[] = [];
 
-  // Install extensions on both editors.
-  // heightPaddingField provides block decorations via StateField.provide()
-  // (block decorations cannot come from ViewPlugins in CodeMirror 6).
-  beforeView.dispatch({
-    effects: StateEffect.appendConfig.of([
-      heightPaddingField,
-      heightPadTheme,
-    ]),
-  })
-  afterView.dispatch({
-    effects: StateEffect.appendConfig.of([
-      heightPaddingField,
-      heightPadTheme,
-    ]),
-  })
+	// Install extensions on both editors.
+	// heightPaddingField provides block decorations via StateField.provide()
+	// (block decorations cannot come from ViewPlugins in CodeMirror 6).
+	beforeView.dispatch({
+		effects: StateEffect.appendConfig.of([heightPaddingField, heightPadTheme]),
+	});
+	afterView.dispatch({
+		effects: StateEffect.appendConfig.of([heightPaddingField, heightPadTheme]),
+	});
 
-  /**
-   * Measure line heights in both editors for the visible viewport
-   * and update the persistent padding maps.
-   *
-   * Subtracts known padding contributions from lineBlockAt results
-   * so that measurements reflect intrinsic line heights regardless
-   * of whether padding widgets are currently applied.
-   *
-   * @returns true if any paddings changed (dispatch occurred)
-   */
-  function measureAndEqualize(): boolean {
-    if (destroyed || measuring) return false
-    measuring = true
+	/**
+	 * Measure line heights in both editors for the visible viewport
+	 * and update the persistent padding maps.
+	 *
+	 * Subtracts known padding contributions from lineBlockAt results
+	 * so that measurements reflect intrinsic line heights regardless
+	 * of whether padding widgets are currently applied.
+	 *
+	 * @returns true if any paddings changed (dispatch occurred)
+	 */
+	function measureAndEqualize(): boolean {
+		if (destroyed || measuring) return false;
+		measuring = true;
 
-    try {
-      const beforeDoc = beforeView.state.doc
-      const afterDoc = afterView.state.doc
-      const numLines = Math.min(beforeDoc.lines, afterDoc.lines)
-      if (numLines === 0) return false
+		try {
+			const beforeDoc = beforeView.state.doc;
+			const afterDoc = afterView.state.doc;
+			const numLines = Math.min(beforeDoc.lines, afterDoc.lines);
+			if (numLines === 0) return false;
 
-      // Skip measurement if editors have zero dimensions (hidden container)
-      if (beforeView.dom.clientHeight === 0 || afterView.dom.clientHeight === 0) {
-        return false
-      }
+			// Skip measurement if editors have zero dimensions (hidden container)
+			if (beforeView.dom.clientHeight === 0 || afterView.dom.clientHeight === 0) {
+				return false;
+			}
 
-      // Determine measurement range: visible viewport + buffer
-      const beforeVp = beforeView.viewport
-      const afterVp = afterView.viewport
+			// Determine measurement range: visible viewport + buffer
+			const beforeVp = beforeView.viewport;
+			const afterVp = afterView.viewport;
 
-      const vpFromLine = Math.min(
-        beforeDoc.lineAt(beforeVp.from).number,
-        afterDoc.lineAt(afterVp.from).number
-      )
-      const vpToLine = Math.max(
-        beforeDoc.lineAt(beforeVp.to).number,
-        afterDoc.lineAt(afterVp.to).number
-      )
+			const vpFromLine = Math.min(beforeDoc.lineAt(beforeVp.from).number, afterDoc.lineAt(afterVp.from).number);
+			const vpToLine = Math.max(beforeDoc.lineAt(beforeVp.to).number, afterDoc.lineAt(afterVp.to).number);
 
-      const fromLine = Math.max(1, vpFromLine - VIEWPORT_BUFFER)
-      const toLine = Math.min(numLines, vpToLine + VIEWPORT_BUFFER)
+			const fromLine = Math.max(1, vpFromLine - VIEWPORT_BUFFER);
+			const toLine = Math.min(numLines, vpToLine + VIEWPORT_BUFFER);
 
-      // Measure visible lines and update the persistent maps.
-      // Subtract any existing padding we've added to get the intrinsic
-      // line height. This prevents feedback loops where lineBlockAt
-      // includes the widget height, causing us to think heights are equal,
-      // remove the padding, and then re-add it next cycle.
-      //
-      // Fold handling: when a range is folded, lineBlockAt returns the
-      // same visual block for every document line in the fold. We track
-      // block identity to skip continuation lines and clear their stale
-      // padding entries. The fold header line is measured without padding
-      // subtraction since its padding widget is hidden inside the fold.
-      let prevBBlockFrom = -1
-      let prevABlockFrom = -1
+			// Measure visible lines and update the persistent maps.
+			// Subtract any existing padding we've added to get the intrinsic
+			// line height. This prevents feedback loops where lineBlockAt
+			// includes the widget height, causing us to think heights are equal,
+			// remove the padding, and then re-add it next cycle.
+			//
+			// Fold handling: when a range is folded, lineBlockAt returns the
+			// same visual block for every document line in the fold. We track
+			// block identity to skip continuation lines and clear their stale
+			// padding entries. The fold header line is measured without padding
+			// subtraction since its padding widget is hidden inside the fold.
+			let prevBBlockFrom = -1;
+			let prevABlockFrom = -1;
 
-      for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
-        const bLine = beforeDoc.line(lineNum)
-        const aLine = afterDoc.line(lineNum)
+			for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
+				const bLine = beforeDoc.line(lineNum);
+				const aLine = afterDoc.line(lineNum);
 
-        const bBlock = beforeView.lineBlockAt(bLine.from)
-        const aBlock = afterView.lineBlockAt(aLine.from)
+				const bBlock = beforeView.lineBlockAt(bLine.from);
+				const aBlock = afterView.lineBlockAt(aLine.from);
 
-        // Skip lines inside a previously measured fold block.
-        // All document lines in a fold share one visual block —
-        // only the first line needs measurement.
-        if (bBlock.from === prevBBlockFrom && aBlock.from === prevABlockFrom) {
-          beforePadMap.delete(lineNum)
-          afterPadMap.delete(lineNum)
-          continue
-        }
-        prevBBlockFrom = bBlock.from
-        prevABlockFrom = aBlock.from
+				// Skip lines inside a previously measured fold block.
+				// All document lines in a fold share one visual block —
+				// only the first line needs measurement.
+				if (bBlock.from === prevBBlockFrom && aBlock.from === prevABlockFrom) {
+					beforePadMap.delete(lineNum);
+					afterPadMap.delete(lineNum);
+					continue;
+				}
+				prevBBlockFrom = bBlock.from;
+				prevABlockFrom = aBlock.from;
 
-        let bHeight = bBlock.height
-        let aHeight = aBlock.height
+				let bHeight = bBlock.height;
+				let aHeight = aBlock.height;
 
-        // Detect fold blocks (a visual block spanning multiple document lines).
-        // Padding widgets inside a fold are hidden, so stale map entries must
-        // be cleared and heights measured without subtraction.
-        // Normal lines have bBlock.to === bLine.to + 1 (the newline); fold
-        // blocks extend well past that.
-        const bIsFold = bBlock.from !== bLine.from || bBlock.to > bLine.to + 1
-        const aIsFold = aBlock.from !== aLine.from || aBlock.to > aLine.to + 1
+				// Detect fold blocks (a visual block spanning multiple document lines).
+				// Padding widgets inside a fold are hidden, so stale map entries must
+				// be cleared and heights measured without subtraction.
+				// Normal lines have bBlock.to === bLine.to + 1 (the newline); fold
+				// blocks extend well past that.
+				const bIsFold = bBlock.from !== bLine.from || bBlock.to > bLine.to + 1;
+				const aIsFold = aBlock.from !== aLine.from || aBlock.to > aLine.to + 1;
 
-        if (bIsFold || aIsFold) {
-          beforePadMap.delete(lineNum)
-          afterPadMap.delete(lineNum)
+				if (bIsFold || aIsFold) {
+					beforePadMap.delete(lineNum);
+					afterPadMap.delete(lineNum);
 
-          const diff = bHeight - aHeight
-          if (diff > HEIGHT_THRESHOLD) {
-            afterPadMap.set(lineNum, diff)
-          } else if (diff < -HEIGHT_THRESHOLD) {
-            beforePadMap.set(lineNum, -diff)
-          }
-          continue
-        }
+					const diff = bHeight - aHeight;
+					if (diff > HEIGHT_THRESHOLD) {
+						afterPadMap.set(lineNum, diff);
+					} else if (diff < -HEIGHT_THRESHOLD) {
+						beforePadMap.set(lineNum, -diff);
+					}
+					continue;
+				}
 
-        // Normal (non-folded) lines: subtract our own padding to get intrinsic height
-        bHeight -= (beforePadMap.get(lineNum) || 0)
-        aHeight -= (afterPadMap.get(lineNum) || 0)
+				// Normal (non-folded) lines: subtract our own padding to get intrinsic height
+				bHeight -= beforePadMap.get(lineNum) || 0;
+				aHeight -= afterPadMap.get(lineNum) || 0;
 
-        const diff = bHeight - aHeight
+				const diff = bHeight - aHeight;
 
-        if (diff > HEIGHT_THRESHOLD) {
-          // Before is taller → pad after side
-          afterPadMap.set(lineNum, diff)
-          beforePadMap.delete(lineNum)
-        } else if (diff < -HEIGHT_THRESHOLD) {
-          // After is taller → pad before side
-          beforePadMap.set(lineNum, -diff)
-          afterPadMap.delete(lineNum)
-        } else {
-          // Heights are equal — remove any existing padding for this line
-          beforePadMap.delete(lineNum)
-          afterPadMap.delete(lineNum)
-        }
-      }
+				if (diff > HEIGHT_THRESHOLD) {
+					// Before is taller → pad after side
+					afterPadMap.set(lineNum, diff);
+					beforePadMap.delete(lineNum);
+				} else if (diff < -HEIGHT_THRESHOLD) {
+					// After is taller → pad before side
+					beforePadMap.set(lineNum, -diff);
+					afterPadMap.delete(lineNum);
+				} else {
+					// Heights are equal — remove any existing padding for this line
+					beforePadMap.delete(lineNum);
+					afterPadMap.delete(lineNum);
+				}
+			}
 
-      // Convert maps to sorted arrays
-      const beforePads = mapToPaddings(beforePadMap, beforeDoc)
-      const afterPads = mapToPaddings(afterPadMap, afterDoc)
+			// Convert maps to sorted arrays
+			const beforePads = mapToPaddings(beforePadMap, beforeDoc);
+			const afterPads = mapToPaddings(afterPadMap, afterDoc);
 
-      // Only dispatch if paddings actually changed
-      const bChanged = !paddingsEqual(currentBeforePads, beforePads)
-      const aChanged = !paddingsEqual(currentAfterPads, afterPads)
+			// Only dispatch if paddings actually changed
+			const bChanged = !paddingsEqual(currentBeforePads, beforePads);
+			const aChanged = !paddingsEqual(currentAfterPads, afterPads);
 
-      // Set dispatching flag to suppress update listener re-triggers
-      dispatching = true
-      try {
-        if (bChanged) {
-          currentBeforePads = beforePads
-          beforeView.dispatch({
-            effects: setHeightPaddingEffect.of(beforePads),
-          })
-        }
-        if (aChanged) {
-          currentAfterPads = afterPads
-          afterView.dispatch({
-            effects: setHeightPaddingEffect.of(afterPads),
-          })
-        }
-      } finally {
-        dispatching = false
-      }
+			// Set dispatching flag to suppress update listener re-triggers
+			dispatching = true;
+			try {
+				if (bChanged) {
+					currentBeforePads = beforePads;
+					beforeView.dispatch({
+						effects: setHeightPaddingEffect.of(beforePads),
+					});
+				}
+				if (aChanged) {
+					currentAfterPads = afterPads;
+					afterView.dispatch({
+						effects: setHeightPaddingEffect.of(afterPads),
+					});
+				}
+			} finally {
+				dispatching = false;
+			}
 
-      return bChanged || aChanged
-    } finally {
-      measuring = false
-    }
-  }
+			return bChanged || aChanged;
+		} finally {
+			measuring = false;
+		}
+	}
 
-  /**
-   * Schedule equalization on the next animation frame (debounced).
-   */
-  function scheduleEqualize(): void {
-    if (destroyed) return
-    if (rafId !== null) return
-    rafId = requestAnimationFrame(() => {
-      rafId = null
-      measureAndEqualize()
-    })
-  }
+	/**
+	 * Schedule equalization on the next animation frame (debounced).
+	 */
+	function scheduleEqualize(): void {
+		if (destroyed) return;
+		if (rafId !== null) return;
+		rafId = requestAnimationFrame(() => {
+			rafId = null;
+			measureAndEqualize();
+		});
+	}
 
-  /**
-   * Full reset: clears all paddings and re-measures from scratch.
-   * Used after container resize since word-wrap changes invalidate
-   * all previously measured heights.
-   */
-  function fullReset(): void {
-    if (destroyed) return
+	/**
+	 * Full reset: clears all paddings and re-measures from scratch.
+	 * Used after container resize since word-wrap changes invalidate
+	 * all previously measured heights.
+	 */
+	function fullReset(): void {
+		if (destroyed) return;
 
-    const gen = ++generation
+		const gen = ++generation;
 
-    // Keep existing paddings visible during layout recalculation to
-    // avoid a visible blink (clear → empty frames → re-apply). Instead,
-    // wait for word-wrap to settle, then clear maps and re-measure in
-    // the same frame so paddings transition atomically.
-    requestAnimationFrame(() => {
-      if (destroyed || gen !== generation) return
-      requestAnimationFrame(() => {
-        if (destroyed || gen !== generation) return
-        requestAnimationFrame(() => {
-          if (destroyed || gen !== generation) return
+		// Keep existing paddings visible during layout recalculation to
+		// avoid a visible blink (clear → empty frames → re-apply). Instead,
+		// wait for word-wrap to settle, then clear maps and re-measure in
+		// the same frame so paddings transition atomically.
+		requestAnimationFrame(() => {
+			if (destroyed || gen !== generation) return;
+			requestAnimationFrame(() => {
+				if (destroyed || gen !== generation) return;
+				requestAnimationFrame(() => {
+					if (destroyed || gen !== generation) return;
 
-          // Clear persistent maps now that layout has settled
-          beforePadMap = new Map()
-          afterPadMap = new Map()
-          currentBeforePads = []
-          currentAfterPads = []
+					// Clear persistent maps now that layout has settled
+					beforePadMap = new Map();
+					afterPadMap = new Map();
+					currentBeforePads = [];
+					currentAfterPads = [];
 
-          // Clear decorations and immediately re-measure in the same frame
-          dispatching = true
-          beforeView.dispatch({
-            effects: setHeightPaddingEffect.of([]),
-          })
-          afterView.dispatch({
-            effects: setHeightPaddingEffect.of([]),
-          })
-          dispatching = false
+					// Clear decorations and immediately re-measure in the same frame
+					dispatching = true;
+					beforeView.dispatch({
+						effects: setHeightPaddingEffect.of([]),
+					});
+					afterView.dispatch({
+						effects: setHeightPaddingEffect.of([]),
+					});
+					dispatching = false;
 
-          measureAndEqualize()
-        })
-      })
-    })
-  }
+					measureAndEqualize();
+				});
+			});
+		});
+	}
 
-  /**
-   * Fold reset: clears all paddings and re-measures from scratch.
-   * Fold/unfold invalidates the persistent padding maps because padding
-   * widgets inside a fold are hidden and no longer contribute to visual
-   * height, making stale map entries incorrect.
-   */
-  function foldReset(): void {
-    if (destroyed) return
+	/**
+	 * Fold reset: clears all paddings and re-measures from scratch.
+	 * Fold/unfold invalidates the persistent padding maps because padding
+	 * widgets inside a fold are hidden and no longer contribute to visual
+	 * height, making stale map entries incorrect.
+	 */
+	function foldReset(): void {
+		if (destroyed) return;
 
-    beforePadMap = new Map()
-    afterPadMap = new Map()
-    currentBeforePads = []
-    currentAfterPads = []
+		beforePadMap = new Map();
+		afterPadMap = new Map();
+		currentBeforePads = [];
+		currentAfterPads = [];
 
-    dispatching = true
-    beforeView.dispatch({ effects: setHeightPaddingEffect.of([]) })
-    afterView.dispatch({ effects: setHeightPaddingEffect.of([]) })
-    dispatching = false
+		dispatching = true;
+		beforeView.dispatch({ effects: setHeightPaddingEffect.of([]) });
+		afterView.dispatch({ effects: setHeightPaddingEffect.of([]) });
+		dispatching = false;
 
-    scheduleEqualize()
-  }
+		scheduleEqualize();
+	}
 
-  /** Check whether an editor update contains fold/unfold effects */
-  function hasFoldEffects(update: { transactions: readonly { effects: readonly StateEffect<unknown>[] }[] }): boolean {
-    return update.transactions.some(tr =>
-      tr.effects.some(e => e.is(foldEffect) || e.is(unfoldEffect))
-    )
-  }
+	/** Check whether an editor update contains fold/unfold effects */
+	function hasFoldEffects(update: { transactions: readonly { effects: readonly StateEffect<unknown>[] }[] }): boolean {
+		return update.transactions.some((tr) => tr.effects.some((e) => e.is(foldEffect) || e.is(unfoldEffect)));
+	}
 
-  // Listen for geometry/viewport changes on both editors.
-  // The `dispatching` flag prevents re-triggering when the geometry
-  // change was caused by our own padding dispatch.
-  // Fold/unfold events trigger a full padding reset because stale
-  // entries for folded lines would corrupt measurements.
-  const beforeListener = EditorView.updateListener.of((update) => {
-    if (dispatching) return
-    if (hasFoldEffects(update)) {
-      foldReset()
-    } else if (update.geometryChanged || update.viewportChanged) {
-      scheduleEqualize()
-    }
-  })
+	// Listen for geometry/viewport changes on both editors.
+	// The `dispatching` flag prevents re-triggering when the geometry
+	// change was caused by our own padding dispatch.
+	// Fold/unfold events trigger a full padding reset because stale
+	// entries for folded lines would corrupt measurements.
+	const beforeListener = EditorView.updateListener.of((update) => {
+		if (dispatching) return;
+		if (hasFoldEffects(update)) {
+			foldReset();
+		} else if (update.geometryChanged || update.viewportChanged) {
+			scheduleEqualize();
+		}
+	});
 
-  const afterListener = EditorView.updateListener.of((update) => {
-    if (dispatching) return
-    if (hasFoldEffects(update)) {
-      foldReset()
-    } else if (update.geometryChanged || update.viewportChanged) {
-      scheduleEqualize()
-    }
-  })
+	const afterListener = EditorView.updateListener.of((update) => {
+		if (dispatching) return;
+		if (hasFoldEffects(update)) {
+			foldReset();
+		} else if (update.geometryChanged || update.viewportChanged) {
+			scheduleEqualize();
+		}
+	});
 
-  beforeView.dispatch({
-    effects: StateEffect.appendConfig.of(beforeListener),
-  })
-  afterView.dispatch({
-    effects: StateEffect.appendConfig.of(afterListener),
-  })
+	beforeView.dispatch({
+		effects: StateEffect.appendConfig.of(beforeListener),
+	});
+	afterView.dispatch({
+		effects: StateEffect.appendConfig.of(afterListener),
+	});
 
-  // ResizeObserver: full reset when containers resize (word wrap changes).
-  // Debounced to avoid rapid-fire measurements during drag-resize.
-  const resizeObserver = new ResizeObserver(() => {
-    if (destroyed) return
+	// ResizeObserver: full reset when containers resize (word wrap changes).
+	// Debounced to avoid rapid-fire measurements during drag-resize.
+	const resizeObserver = new ResizeObserver(() => {
+		if (destroyed) return;
 
-    if (resizeTimer !== null) {
-      clearTimeout(resizeTimer)
-    }
-    resizeTimer = setTimeout(() => {
-      resizeTimer = null
-      fullReset()
-    }, RESIZE_DEBOUNCE_MS)
-  })
+		if (resizeTimer !== null) {
+			clearTimeout(resizeTimer);
+		}
+		resizeTimer = setTimeout(() => {
+			resizeTimer = null;
+			fullReset();
+		}, RESIZE_DEBOUNCE_MS);
+	});
 
-  const beforeParent = beforeView.dom.parentElement
-  const afterParent = afterView.dom.parentElement
-  if (beforeParent) resizeObserver.observe(beforeParent)
-  if (afterParent) resizeObserver.observe(afterParent)
+	const beforeParent = beforeView.dom.parentElement;
+	const afterParent = afterView.dom.parentElement;
+	if (beforeParent) resizeObserver.observe(beforeParent);
+	if (afterParent) resizeObserver.observe(afterParent);
 
-  // Initial equalization: 3x RAF to wait for CodeMirror's first layout
-  // (fonts loaded, CSS applied, word-wrap calculated)
-  requestAnimationFrame(() => {
-    if (destroyed) return
-    requestAnimationFrame(() => {
-      if (destroyed) return
-      requestAnimationFrame(() => {
-        if (destroyed) return
-        measureAndEqualize()
-      })
-    })
-  })
+	// Initial equalization: 3x RAF to wait for CodeMirror's first layout
+	// (fonts loaded, CSS applied, word-wrap calculated)
+	requestAnimationFrame(() => {
+		if (destroyed) return;
+		requestAnimationFrame(() => {
+			if (destroyed) return;
+			requestAnimationFrame(() => {
+				if (destroyed) return;
+				measureAndEqualize();
+			});
+		});
+	});
 
-  // Return handle with reEqualize and destroy methods
-  return {
-    reEqualize(): void {
-      if (destroyed) return
-      measureAndEqualize()
-    },
-    destroy(): void {
-      destroyed = true
-      generation++
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId)
-        rafId = null
-      }
-      if (resizeTimer !== null) {
-        clearTimeout(resizeTimer)
-        resizeTimer = null
-      }
-      resizeObserver.disconnect()
-    },
-  }
+	// Return handle with reEqualize and destroy methods
+	return {
+		reEqualize(): void {
+			if (destroyed) return;
+			measureAndEqualize();
+		},
+		destroy(): void {
+			destroyed = true;
+			generation++;
+			if (rafId !== null) {
+				cancelAnimationFrame(rafId);
+				rafId = null;
+			}
+			if (resizeTimer !== null) {
+				clearTimeout(resizeTimer);
+				resizeTimer = null;
+			}
+			resizeObserver.disconnect();
+		},
+	};
 }

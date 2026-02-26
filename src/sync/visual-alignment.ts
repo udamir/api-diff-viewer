@@ -5,26 +5,23 @@
  * imports from './sync/visual-alignment' continue to work unchanged.
  */
 
+export type {
+	AlignmentResult,
+	UnifiedContentOptions,
+	UnifiedResult,
+} from "./alignment-types";
 // Types, constants, and shared helpers
 export {
-  SPACER_LINE,
-  cachedIndent,
-  tokensToStringBatch,
-} from './alignment-types'
-
-export type {
-  AlignmentResult,
-  UnifiedResult,
-  UnifiedContentOptions,
-} from './alignment-types'
+	cachedIndent,
+	SPACER_LINE,
+	tokensToStringBatch,
+} from "./alignment-types";
 
 // Side-by-side alignment
 export {
-  generateAlignedContentFromDiff,
-  alignmentToContent,
-} from './side-by-side-alignment'
+	alignmentToContent,
+	generateAlignedContentFromDiff,
+} from "./side-by-side-alignment";
 
 // Unified/inline alignment
-export {
-  generateUnifiedContentFromDiff,
-} from './unified-alignment'
+export { generateUnifiedContentFromDiff } from "./unified-alignment";
