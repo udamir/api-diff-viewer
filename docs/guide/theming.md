@@ -55,7 +55,6 @@ viewer.setTheme({ colors: { addedBg: "rgba(46, 160, 67, 0.25)" } });
 | `unclassifiedColor` | `--diff-unclassified-color` | `#656d76` | `#768390` | Unclassified changes |
 | `spacerBg` | `--diff-spacer-bg` | `#f6f8fa` | `#161b22` | Spacer lines (alignment) |
 | `spacerStripe` | `--diff-spacer-stripe` | `#e1e4e8` | `#30363d` | Stripes of the spacer lines |
-| `correspondingHighlight` | `--diff-corresponding-highlight` | `rgba(56, 139, 253, 0.15)` | `rgba(56, 139, 253, 0.2)` | Declared for highlighting the corresponding line in the other editor; no decoration reads it in 2.0 |
 
 The defaults are exported as `lightColors` and `darkColors`.
 

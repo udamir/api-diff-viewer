@@ -219,7 +219,6 @@ export interface DiffThemeColors {
 	removedTextBg?: string;
 	spacerBg?: string;
 	spacerStripe?: string;
-	correspondingHighlight?: string;
 }
 
 /** Synchronization state shared between editors */

@@ -19,7 +19,6 @@ const lightColors: Required<DiffThemeColors> = {
 	removedTextBg: "rgba(248, 81, 73, 0.4)",
 	spacerBg: "#f6f8fa",
 	spacerStripe: "#e1e4e8",
-	correspondingHighlight: "rgba(56, 139, 253, 0.15)",
 };
 
 /** Default dark theme colors */
@@ -37,7 +36,6 @@ const darkColors: Required<DiffThemeColors> = {
 	removedTextBg: "rgba(248, 81, 73, 0.5)",
 	spacerBg: "#161b22",
 	spacerStripe: "#30363d",
-	correspondingHighlight: "rgba(56, 139, 253, 0.2)",
 };
 
 /** Create CSS variable declarations from theme colors */
@@ -56,7 +54,6 @@ function createCssVars(colors: Required<DiffThemeColors>): Record<string, string
 		"--diff-removed-text-bg": colors.removedTextBg,
 		"--diff-spacer-bg": colors.spacerBg,
 		"--diff-spacer-stripe": colors.spacerStripe,
-		"--diff-corresponding-highlight": colors.correspondingHighlight,
 	};
 }
 

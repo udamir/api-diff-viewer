@@ -16,6 +16,7 @@ api-diff-viewer 2.0 compares documents with api-smart-diff 2.x. The API of the v
 - `ChildKeyInfo.changeCounts` (from `navigation.getChildKeys()`) is a `ClassificationCounts` object (`{ breaking, risky, nonBreaking, deprecated, annotation, unclassified }`) instead of a tuple of four numbers.
 - `DiffBlockData.diffs` has six entries in the order of `diffTypes` (`breaking`, `risky`, `non-breaking`, `deprecated`, `annotation`, `unclassified`): `annotation` moved from index 2 to 4 and `unclassified` from 3 to 5.
 - `BadgeData` and `ClassificationCounts` gained `risky` and `deprecated`, and `ChangeBadgeWidget` takes `(counts, blockId)`.
+- `DiffThemeColors`, `lightColors` and `darkColors` no longer have `correspondingHighlight` (and the theme no longer sets `--diff-corresponding-highlight`): no decoration ever read it. The blocks selected by navigation are highlighted in both editors with `--diff-selected-bg` and `--diff-selected-border` (see [Theming](/guide/theming#css-variables)).
 - `mergeOptions` is the api-smart-diff 2.x `CompareOptions` type (the misspelled `ComapreOptions` type no longer exists; `annotateHook` is `(diff, ctx) => string`).
 
 ## Events
