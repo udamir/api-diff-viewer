@@ -9,6 +9,7 @@
 import { foldable, foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
 import type { Extension, StateEffect } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { type FoldRange, foldRangeEffects } from "../utils/fold-ranges";
 
 /** Classification counts for a foldable range */
 export type { ClassificationCounts } from "../diff-types";
@@ -154,14 +155,12 @@ export const diffFoldKeymap = [
 		mac: "Cmd-Ctrl-[",
 		run: (view: EditorView) => {
 			// Fold all foldable lines using language service
-			const effects: StateEffect<{ from: number; to: number }>[] = [];
+			const ranges: (FoldRange | null)[] = [];
 			for (let i = 1; i <= view.state.doc.lines; i++) {
 				const line = view.state.doc.line(i);
-				const range = foldable(view.state, line.from, line.to);
-				if (range) {
-					effects.push(foldEffect.of(range));
-				}
+				ranges.push(foldable(view.state, line.from, line.to));
 			}
+			const effects = foldRangeEffects(view.state, ranges);
 			if (effects.length > 0) {
 				view.dispatch({ effects });
 				return true;

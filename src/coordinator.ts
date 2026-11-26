@@ -2,9 +2,10 @@
  * Fold utilities for CodeMirror editor views.
  */
 
-import { foldable, foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
+import { foldable, foldedRanges, unfoldEffect } from "@codemirror/language";
 import type { StateEffect } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
+import { type FoldRange, foldRangeEffects } from "./utils/fold-ranges";
 
 /** Unfold all folded ranges in a single editor view */
 export function unfoldAllInView(view: EditorView): void {
@@ -20,14 +21,12 @@ export function unfoldAllInView(view: EditorView): void {
 
 /** Fold all foldable ranges in a single editor view */
 export function foldAllInView(view: EditorView): void {
-	const effects: StateEffect<{ from: number; to: number }>[] = [];
+	const ranges: (FoldRange | null)[] = [];
 	for (let i = 1; i <= view.state.doc.lines; i++) {
 		const line = view.state.doc.line(i);
-		const range = foldable(view.state, line.from, line.to);
-		if (range) {
-			effects.push(foldEffect.of(range));
-		}
+		ranges.push(foldable(view.state, line.from, line.to));
 	}
+	const effects = foldRangeEffects(view.state, ranges);
 	if (effects.length > 0) {
 		view.dispatch({ effects });
 	}
