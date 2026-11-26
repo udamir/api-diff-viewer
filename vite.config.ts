@@ -84,6 +84,9 @@ export default defineConfig({
 			".storybook/**",
 			"storybook/**",
 			"demo/**",
+			// the documentation portal: the VitePress cache and build (its config and theme sources are checked)
+			"docs/.vitepress/cache/**",
+			"docs/.vitepress/dist/**",
 		],
 		options: {
 			typeAware: true,
@@ -105,6 +108,8 @@ export default defineConfig({
 			"storybook-static/**",
 			"coverage/**",
 			"temp/**",
+			"docs/.vitepress/cache/**",
+			"docs/.vitepress/dist/**",
 			"pnpm-lock.yaml",
 			"*.md",
 			// the Biome scope of 1.x: TypeScript in src/, tests/ and examples/ (plus the root configs); the Storybook

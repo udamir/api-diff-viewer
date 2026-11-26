@@ -33,7 +33,10 @@
     "check:fix": "vp check --fix",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "repository": {
     "type": "git",
@@ -78,7 +81,9 @@
     "storybook": "^10.6.9",
     "typescript": "^7.0.2",
     "vite-plus": "^1.8.0",
-    "vitest": "5.1.1"
+    "vitepress": "2.0.0-alpha.21",
+    "vitest": "5.1.1",
+    "vue": "^3.5.46"
   },
   "engines": {
     "node": ">=22"

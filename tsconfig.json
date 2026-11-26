@@ -4,6 +4,7 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "module": "preserve",
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "types": ["node", "vite-plus/client"],
     "strict": true,
     "isolatedModules": true,
@@ -11,7 +12,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "tests", "vite.config.ts"],
+  "include": ["src", "tests", "vite.config.ts", "docs/.vitepress/**/*.ts"],
   // the worker entry runs in a DedicatedWorkerGlobalScope and declares its own libs
-  "exclude": ["src/worker/diff-worker.ts"]
+  "exclude": ["src/worker/diff-worker.ts", "docs/.vitepress/cache", "docs/.vitepress/dist"]
 }
