@@ -25,6 +25,7 @@ pnpm run typecheck            # TypeScript 7 (tsc --noEmit)
 pnpm run storybook            # Storybook on port 6006
 pnpm run docs:dev             # this documentation portal with live reload
 pnpm run docs:build           # portal build to docs/.vitepress/dist (fails on dead links)
+pnpm run docs:storybook       # static Storybook into docs/.vitepress/dist/storybook (after docs:build)
 pnpm run docs:preview         # serve the built portal
 ```
 

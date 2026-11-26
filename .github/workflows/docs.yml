@@ -1,5 +1,5 @@
-# Builds the documentation portal (docs/, VitePress) and deploys it to
-# GitHub Pages (https://udamir.github.io/api-diff-viewer/).
+# Builds the documentation portal (docs/, VitePress) with the static Storybook under /storybook/ and deploys both to
+# GitHub Pages (https://udamir.github.io/api-diff-viewer/) as one artifact.
 # Requires Settings > Pages > Source: GitHub Actions.
 name: Docs
 
@@ -41,6 +41,9 @@ jobs:
       # the portal first: `vitepress build` empties docs/.vitepress/dist
       - name: Build the portal
         run: pnpm run docs:build
+
+      - name: Build the Storybook into the portal (docs/.vitepress/dist/storybook)
+        run: pnpm run docs:storybook
 
       - uses: actions/upload-pages-artifact@v5.0.0
         with:

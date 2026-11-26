@@ -36,6 +36,7 @@
     "build-storybook": "storybook build",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
+    "docs:storybook": "storybook build --disable-telemetry --quiet -o docs/.vitepress/dist/storybook",
     "docs:preview": "vitepress preview docs"
   },
   "repository": {

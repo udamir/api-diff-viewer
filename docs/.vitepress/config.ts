@@ -57,6 +57,9 @@ export default defineConfig({
 			{ text: "Guide", link: "/guide/", activeMatch: "/guide/(?!api)" },
 			{ text: "API", link: "/guide/api" },
 			{ text: "Demo", link: "/demo" },
+			// the static Storybook is published next to the portal (not a VitePress page): the explicit target makes the
+			// browser load it instead of the client-side router
+			{ text: "Storybook", link: "/storybook/", target: "_self" },
 			{
 				text: `v${pkg.version}`,
 				items: [
