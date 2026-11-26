@@ -5,13 +5,15 @@
  * are folded (collapsed), while blocks that match remain expanded.
  */
 
-import { foldable, foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
+import { foldable, foldedRanges, unfoldEffect } from "@codemirror/language";
+import type { StateEffect } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import type { DiffType } from "api-smart-diff";
 import type { DiffBlockData } from "../diff-builder/common";
 import { getDiffState, setFilterFoldsEffect } from "../state/diff-state";
 import type { BlockTreeIndex } from "../utils/block-index";
 import { computeFilterFoldSet, computeFilterFoldSetFromIndex } from "../utils/filter";
+import { type FoldRange, foldRangeEffects } from "../utils/fold-ranges";
 import { lineMappingsField } from "./aligned-decorations";
 
 /**
@@ -132,20 +134,20 @@ export function applyFilterFolds(
 	const prevFoldSet = state.filterFoldedBlocks;
 
 	const blockRanges = precomputedBlockLineRanges || buildBlockEditorLineRanges(view);
-	const effects = [];
+	const effects: StateEffect<unknown>[] = [];
 
-	// Blocks to fold: in newFoldSet but not previously folded by filter
+	// Blocks to fold: in newFoldSet but not previously folded by filter (the set is not in document order, the
+	// effects are sorted by foldRangeEffects)
+	const foldRanges: (FoldRange | null)[] = [];
 	for (const blockId of newFoldSet) {
 		if (!prevFoldSet.has(blockId)) {
 			const lineRange = blockRanges.get(blockId);
 			if (lineRange) {
-				const range = findFoldRangeForBlock(view, lineRange.start, lineRange.end);
-				if (range) {
-					effects.push(foldEffect.of(range));
-				}
+				foldRanges.push(findFoldRangeForBlock(view, lineRange.start, lineRange.end));
 			}
 		}
 	}
+	effects.push(...foldRangeEffects(view.state, foldRanges));
 
 	// Blocks to unfold: in prevFoldSet but not in newFoldSet
 	for (const blockId of prevFoldSet) {

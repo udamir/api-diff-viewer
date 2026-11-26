@@ -1,0 +1,60 @@
+# Builds the documentation portal (docs/, VitePress) with the static Storybook under /storybook/ and deploys both to
+# GitHub Pages (https://udamir.github.io/api-diff-viewer/) as one artifact.
+# Requires Settings > Pages > Source: GitHub Actions.
+name: Docs
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0 # lastUpdated timestamps
+
+      # the pnpm version comes from the `packageManager` field in package.json
+      - uses: pnpm/action-setup@v6.1.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: actions/configure-pages@v6.0.0
+
+      # the portal first: `vitepress build` empties docs/.vitepress/dist
+      - name: Build the portal
+        run: pnpm run docs:build
+
+      - name: Build the Storybook into the portal (docs/.vitepress/dist/storybook)
+        run: pnpm run docs:storybook
+
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

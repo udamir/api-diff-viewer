@@ -1,7 +1,8 @@
 import { EditorView } from "@codemirror/view";
-import type { DiffMeta, DiffType } from "api-smart-diff";
+import type { DiffMeta, DiffType, MergeMeta } from "api-smart-diff";
 import type { DiffBlockData } from "../diff-builder/common";
 import { metaKey } from "../diff-builder/common";
+import { countsFromArray, emptyClassificationCounts, incrementCount } from "../diff-types";
 import { diffStateField, setSelectedBlockEffect, toggleBlockExpandedEffect } from "../state/diff-state";
 import type {
 	ChangeSummary,
@@ -18,6 +19,11 @@ import type { BlockTreeIndex } from "../utils/block-index";
 import { getPathValue, isEmpty } from "../utils/common";
 import type { DiffPath } from "../utils/path";
 import { formatPath, getAncestorBlockIds, parsePath, resolvePathToBlock } from "../utils/path";
+
+/** The DiffMeta of a merge meta entry, or undefined for an { array: {...} } wrapper */
+function asDiffMeta(meta: MergeMeta | undefined): DiffMeta | undefined {
+	return meta && "action" in meta ? meta : undefined;
+}
 
 /** Implementation of the path-based Navigation API */
 export class NavigationAPIImpl implements NavigationAPI {
@@ -182,31 +188,51 @@ export class NavigationAPIImpl implements NavigationAPI {
 		if (!node || typeof node !== "object" || node instanceof Date) return [];
 
 		if (Array.isArray(node)) {
+			// Item metadata: on the array itself (arrayMeta) or on the parent as { array: {...} }
+			const parentNode =
+				segments.length > 1
+					? getPathValue(this.merged as Record<string, unknown>, segments.slice(0, -1))
+					: segments.length === 1
+						? this.merged
+						: undefined;
+			const parentEntry =
+				parentNode && typeof parentNode === "object"
+					? (parentNode as Record<string, Record<string, unknown> | undefined>)[metaKey]?.[
+							segments[segments.length - 1]
+						]
+					: undefined;
+			const itemMeta = ((node as unknown as Record<string, unknown>)[metaKey] ??
+				(parentEntry as { array?: unknown } | undefined)?.array) as Record<string, MergeMeta> | undefined;
+
 			return node.map((item, i) => {
 				const childSegments = [...segments, String(i)];
 				const childPath = formatPath(childSegments);
 				const childBlock = resolvePathToBlock(childPath, this.diffData.blocks);
 				const hasChildren = typeof item === "object" && item !== null && !(item instanceof Date) && !isEmpty(item);
+				const diff = asDiffMeta(itemMeta?.[i]);
 
 				return {
 					key: String(i),
 					path: childPath,
-					hasDirectChange: false,
+					hasDirectChange: !!diff,
+					diffType: diff?.type,
+					action: diff?.action,
 					hasChildren,
-					changeCounts: (childBlock?.diffs ?? [0, 0, 0, 0]) as [number, number, number, number],
+					changeCounts: childBlock ? countsFromArray(childBlock.diffs) : emptyClassificationCounts(),
 				};
 			});
 		}
 
 		const obj = node as MergedObject;
-		const diffMeta = obj[metaKey] as Record<string, DiffMeta> | undefined;
+		const diffMeta = obj[metaKey] as Record<string, MergeMeta> | undefined;
 		const keys = Object.keys(obj).filter((k) => k !== metaKey);
 
 		return keys.map((key) => {
 			const childSegments = [...segments, key];
 			const childPath = formatPath(childSegments);
 			const childBlock = resolvePathToBlock(childPath, this.diffData.blocks);
-			const diff = diffMeta?.[key];
+			// An { array: {...} } entry holds the item metadata of an array, not a change of the key itself
+			const diff = asDiffMeta(diffMeta?.[key]);
 			const value = obj[key];
 			const hasChildren = typeof value === "object" && value !== null && !(value instanceof Date) && !isEmpty(value);
 
@@ -217,7 +243,7 @@ export class NavigationAPIImpl implements NavigationAPI {
 				diffType: diff?.type,
 				action: diff?.action,
 				hasChildren,
-				changeCounts: (childBlock?.diffs ?? [0, 0, 0, 0]) as [number, number, number, number],
+				changeCounts: childBlock ? countsFromArray(childBlock.diffs) : emptyClassificationCounts(),
 			};
 		});
 	}
@@ -225,11 +251,8 @@ export class NavigationAPIImpl implements NavigationAPI {
 	/** Get summary of changes */
 	getChangeSummary(): ChangeSummary {
 		const summary: ChangeSummary = {
+			...emptyClassificationCounts(),
 			total: 0,
-			breaking: 0,
-			nonBreaking: 0,
-			annotation: 0,
-			unclassified: 0,
 			byPath: new Map(),
 		};
 
@@ -237,20 +260,7 @@ export class NavigationAPIImpl implements NavigationAPI {
 			for (const block of blocks) {
 				if (block.diff && !parentSubsumes) {
 					summary.total++;
-					switch (block.diff.type) {
-						case "breaking":
-							summary.breaking++;
-							break;
-						case "non-breaking":
-							summary.nonBreaking++;
-							break;
-						case "annotation":
-							summary.annotation++;
-							break;
-						case "unclassified":
-							summary.unclassified++;
-							break;
-					}
+					incrementCount(summary, block.diff.type);
 
 					if (block.id) {
 						const pathCounts = summary.byPath.get(block.id) || [];

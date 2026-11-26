@@ -10,14 +10,15 @@ const lightColors: Required<DiffThemeColors> = {
 	removedBg: "rgba(248, 81, 73, 0.15)",
 	modifiedBg: "rgba(227, 179, 65, 0.15)",
 	breakingColor: "#cf222e",
+	riskyColor: "#bc4c00",
 	nonBreakingColor: "#1a7f37",
+	deprecatedColor: "#9a6700",
 	annotationColor: "#8250df",
 	unclassifiedColor: "#656d76",
 	addedTextBg: "rgba(46, 160, 67, 0.4)",
 	removedTextBg: "rgba(248, 81, 73, 0.4)",
 	spacerBg: "#f6f8fa",
 	spacerStripe: "#e1e4e8",
-	correspondingHighlight: "rgba(56, 139, 253, 0.15)",
 };
 
 /** Default dark theme colors */
@@ -26,14 +27,15 @@ const darkColors: Required<DiffThemeColors> = {
 	removedBg: "rgba(248, 81, 73, 0.2)",
 	modifiedBg: "rgba(227, 179, 65, 0.2)",
 	breakingColor: "#f85149",
+	riskyColor: "#f0883e",
 	nonBreakingColor: "#3fb950",
+	deprecatedColor: "#d29922",
 	annotationColor: "#a371f7",
 	unclassifiedColor: "#768390",
 	addedTextBg: "rgba(46, 160, 67, 0.5)",
 	removedTextBg: "rgba(248, 81, 73, 0.5)",
 	spacerBg: "#161b22",
 	spacerStripe: "#30363d",
-	correspondingHighlight: "rgba(56, 139, 253, 0.2)",
 };
 
 /** Create CSS variable declarations from theme colors */
@@ -43,14 +45,15 @@ function createCssVars(colors: Required<DiffThemeColors>): Record<string, string
 		"--diff-removed-bg": colors.removedBg,
 		"--diff-modified-bg": colors.modifiedBg,
 		"--diff-breaking-color": colors.breakingColor,
+		"--diff-risky-color": colors.riskyColor,
 		"--diff-non-breaking-color": colors.nonBreakingColor,
+		"--diff-deprecated-color": colors.deprecatedColor,
 		"--diff-annotation-color": colors.annotationColor,
 		"--diff-unclassified-color": colors.unclassifiedColor,
 		"--diff-added-text-bg": colors.addedTextBg,
 		"--diff-removed-text-bg": colors.removedTextBg,
 		"--diff-spacer-bg": colors.spacerBg,
 		"--diff-spacer-stripe": colors.spacerStripe,
-		"--diff-corresponding-highlight": colors.correspondingHighlight,
 	};
 }
 

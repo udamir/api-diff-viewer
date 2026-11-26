@@ -1,4 +1,5 @@
 import type { Meta, StoryFn, StoryObj } from '@storybook/html-vite'
+import { foldedRanges } from '@codemirror/language'
 import { expect, waitFor } from 'storybook/test'
 import { renderDiffViewer, waitForViewer, openApiBefore, openApiAfter } from '../helpers/test-utils'
 import type { DiffViewerOptions } from '../../src/index'
@@ -102,5 +103,60 @@ export const FoldingWithClassification: Story = {
       const typeGutter = container.querySelectorAll('.cm-diff-type-gutter')
       expect(typeGutter.length).toBeGreaterThan(0)
     })
+  },
+}
+
+/** Collects the messages CodeMirror logs through console.error (exceptions thrown inside update listeners) */
+function captureConsoleErrors(): { messages: string[]; restore: () => void } {
+  const messages: string[] = []
+  const original = console.error
+  console.error = (...args: unknown[]) => {
+    messages.push(args.map((a) => (a instanceof Error ? `${a.name}: ${a.message}` : String(a))).join(' '))
+    original.apply(console, args)
+  }
+  return { messages, restore: () => { console.error = original } }
+}
+
+/** Waits for the deferred fold sync (re-enabled in requestAnimationFrame) */
+const nextFrames = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+
+export const CollapseAllSideBySideNoErrors: Story = {
+  name: 'collapseAll() in side-by-side mode logs no errors and folds both editors alike',
+  play: async ({ canvasElement }) => {
+    const { viewer } = await waitForViewer(canvasElement)
+    await nextFrames()
+    const { messages, restore } = captureConsoleErrors()
+    try {
+      viewer.collapseAll()
+      await nextFrames()
+      viewer.expandAll()
+      await nextFrames()
+      viewer.collapseAll()
+      await nextFrames()
+    } finally {
+      restore()
+    }
+    expect(messages).toEqual([])
+    const { before, after } = viewer.getEditorViews()
+    expect(foldedRanges(before!.state).size).toBeGreaterThan(0)
+    expect(foldedRanges(after!.state).size).toBeGreaterThan(0)
+  },
+}
+
+export const FilterSideBySideNoErrors: Story = {
+  name: 'setFilters() in side-by-side mode logs no errors',
+  play: async ({ canvasElement }) => {
+    const { viewer } = await waitForViewer(canvasElement)
+    await nextFrames()
+    const { messages, restore } = captureConsoleErrors()
+    try {
+      for (const filters of [['breaking'], ['non-breaking'], ['annotation', 'breaking'], [], ['deprecated'], []] as const) {
+        viewer.setFilters([...filters])
+        await nextFrames()
+      }
+    } finally {
+      restore()
+    }
+    expect(messages).toEqual([])
   },
 }

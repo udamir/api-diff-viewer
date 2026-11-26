@@ -2,8 +2,7 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-import { apiMerge } from "api-smart-diff";
-import type { MergedDocument } from "../types";
+import { compareDocuments } from "./compare";
 import type { WorkerRequest, WorkerResponse } from "./types";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -12,11 +11,13 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 	const msg = event.data;
 	if (msg.type === "merge") {
 		try {
-			const result = apiMerge(msg.payload.before, msg.payload.after, msg.payload.options) as MergedDocument;
+			const result = compareDocuments(msg.payload.before, msg.payload.after, msg.payload.options);
 			const response: WorkerResponse = { id: msg.id, type: "result", payload: result };
 			self.postMessage(response);
 		} catch (error) {
-			const response: WorkerResponse = { id: msg.id, type: "error", payload: { message: String(error) } };
+			const name = error instanceof Error ? error.name : undefined;
+			const message = error instanceof Error ? error.message : String(error);
+			const response: WorkerResponse = { id: msg.id, type: "error", payload: { message, name } };
 			self.postMessage(response);
 		}
 	}

@@ -17,6 +17,7 @@ const diffClasses = {
 		removed: "cm-diff-removed-text",
 	},
 	breaking: "cm-diff-breaking-line",
+	risky: "cm-diff-risky-line",
 	selected: "cm-diff-selected",
 	spacer: "cm-diff-spacer",
 };
@@ -27,6 +28,7 @@ const lineDecorations = {
 	removed: Decoration.line({ class: diffClasses.line.removed }),
 	modified: Decoration.line({ class: diffClasses.line.modified }),
 	breaking: Decoration.line({ class: diffClasses.breaking }),
+	risky: Decoration.line({ class: diffClasses.risky }),
 	selected: Decoration.line({ class: diffClasses.selected }),
 };
 
@@ -87,9 +89,11 @@ function buildDecorations(
 			}
 		}
 
-		// Add breaking change indicator
+		// Add breaking / risky change indicator
 		if (type === "breaking") {
 			addLineDecoration(lineNum, lineDecorations.breaking);
+		} else if (type === "risky") {
+			addLineDecoration(lineNum, lineDecorations.risky);
 		}
 
 		// Add selected block indicator
@@ -164,6 +168,9 @@ export const diffDecorationsTheme = EditorView.baseTheme({
 	},
 	".cm-diff-breaking-line": {
 		borderLeft: "3px solid var(--diff-breaking-color, #f85149)",
+	},
+	".cm-diff-risky-line": {
+		borderLeft: "3px dashed var(--diff-risky-color, #f0883e)",
 	},
 	".cm-diff-selected": {
 		backgroundColor: "var(--diff-selected-bg, rgba(56, 139, 253, 0.15))",

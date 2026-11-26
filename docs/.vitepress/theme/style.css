@@ -1,0 +1,109 @@
+:root {
+  --vp-c-brand-1: #2f6fde;
+  --vp-c-brand-2: #275fc2;
+  --vp-c-brand-3: #1f4fa6;
+  --vp-c-brand-soft: rgba(47, 111, 222, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #2f6fde 30%, #1a7f37);
+
+  /* change type colours: the viewer's light defaults (lightColors in src/themes.ts) */
+  --adv-breaking: #cf222e;
+  --adv-risky: #bc4c00;
+  --adv-non-breaking: #1a7f37;
+  --adv-deprecated: #9a6700;
+  --adv-annotation: #8250df;
+  --adv-unclassified: #656d76;
+}
+
+.dark {
+  --vp-c-brand-1: #6ea0ff;
+  --vp-c-brand-2: #4d88f5;
+  --vp-c-brand-3: #2f6fde;
+
+  /* the viewer's dark defaults (darkColors in src/themes.ts) */
+  --adv-breaking: #f85149;
+  --adv-risky: #f0883e;
+  --adv-non-breaking: #3fb950;
+  --adv-deprecated: #d29922;
+  --adv-annotation: #a371f7;
+  --adv-unclassified: #768390;
+}
+
+/* change type badges in the guide: <span class="adv-type breaking">breaking</span> */
+.adv-type {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--adv-unclassified);
+}
+
+.adv-type.breaking {
+  background: var(--adv-breaking);
+}
+
+.adv-type.risky {
+  background: var(--adv-risky);
+}
+
+.adv-type.non-breaking {
+  background: var(--adv-non-breaking);
+}
+
+.adv-type.deprecated {
+  background: var(--adv-deprecated);
+}
+
+.adv-type.annotation {
+  background: var(--adv-annotation);
+}
+
+.dark .adv-type {
+  color: #0d1117;
+}
+
+/* colour swatches in the guide tables: <span class="adv-swatch" style="background: #cf222e"></span> */
+.adv-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 3px;
+  vertical-align: -2px;
+}
+
+/*
+ * Full width: the layout uses the whole viewport (VitePress caps it at --vp-layout-max-width, 90rem, and the doc
+ * column at 43rem-49rem). The sidebar and the outline aside keep their widths; the doc column takes the rest, so wide
+ * tables and code blocks span the whole body width. Running text keeps a readable line length (--adv-prose-width).
+ */
+:root {
+  --vp-layout-max-width: 100%;
+  --adv-prose-width: 960px;
+}
+
+.VPDoc > .container,
+.VPDoc > .container > .content,
+.VPDoc > .container > .content > .content-container {
+  max-width: none !important;
+}
+
+@media (min-width: 80rem) {
+  .VPDoc > .container > .content {
+    flex-grow: 1;
+    min-width: 0;
+  }
+}
+
+.vp-doc > div > p,
+.vp-doc > div > ul,
+.vp-doc > div > ol,
+.vp-doc > div > blockquote,
+.vp-doc > div > .custom-block {
+  max-width: var(--adv-prose-width);
+}

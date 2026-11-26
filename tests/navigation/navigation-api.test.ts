@@ -1,12 +1,12 @@
-import { apiMerge } from "api-smart-diff";
-import { describe, expect, it, vi } from "vitest";
+import { apiCompare } from "api-smart-diff";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { buildDiffBlock } from "../../src/diff-builder/index";
 import { NavigationAPIImpl } from "../../src/navigation/navigation-api";
 import type { DiffData, MergedDocument } from "../../src/types";
 
 /** Helper: create NavigationAPIImpl with null views (pure data tests) */
 function createNavFromSpecs(before: object, after: object) {
-	const merged = apiMerge(before, after, { arrayMeta: true }) as MergedDocument;
+	const merged = apiCompare(before, after, { arrayMeta: true }).merged as MergedDocument;
 	const rootBlock = buildDiffBlock(merged, "yaml");
 	const diffData: DiffData = {
 		blocks: [rootBlock],
@@ -296,7 +296,14 @@ describe("getChangeSummary", () => {
 
 		const summary = nav.getChangeSummary();
 		expect(summary.total).toBeGreaterThan(0);
-		expect(summary.total).toBe(summary.breaking + summary.nonBreaking + summary.annotation + summary.unclassified);
+		expect(summary.total).toBe(
+			summary.breaking +
+				summary.risky +
+				summary.nonBreaking +
+				summary.deprecated +
+				summary.annotation +
+				summary.unclassified
+		);
 	});
 
 	it("returns zero for identical specs", () => {

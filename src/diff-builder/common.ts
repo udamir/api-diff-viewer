@@ -1,7 +1,8 @@
 import type { ActionType, DiffMeta, DiffType } from "api-smart-diff";
+import { diffTypes } from "../diff-types";
 
+export { diffTypes };
 export const metaKey = "$diff";
-export const diffTypes: DiffType[] = ["breaking", "non-breaking", "annotation", "unclassified"];
 
 export type TokenTag = "before" | "after" | "empty" | "collapsed" | "expanded";
 
@@ -92,13 +93,15 @@ export class DiffBlockData extends DiffLineData {
 		super(index, indent, tokens, diff);
 		this.id = id;
 		this.children = [];
-		this.diffs = [0, 0, 0, 0];
+		/** Change counters indexed like `diffTypes` (breaking, risky, non-breaking, deprecated, annotation, unclassified) */
+		this.diffs = diffTypes.map(() => 0);
 		this.lines = tokens.length ? 1 : 0;
 	}
 
 	public addDiff(diff: DiffMeta) {
 		const i = diffTypes.indexOf(diff.type);
-		this.diffs[i]++;
+		// An unknown type must never write `diffs[-1]`
+		if (i >= 0) this.diffs[i]++;
 	}
 
 	public addBlock(block: DiffBlockData) {

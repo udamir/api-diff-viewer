@@ -1,6 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 import type { ActionType, DiffMeta, DiffType } from "api-smart-diff";
 import type { DiffBlockData } from "./diff-builder/common";
+import type { ClassificationCounts } from "./diff-types";
 import type { DiffPath } from "./utils/path";
 
 /** JSON primitive types */
@@ -32,7 +33,7 @@ export interface LineMapping {
 	afterLine: number | null;
 	type: "unchanged" | "modified" | "added" | "removed";
 	blockId?: string;
-	/** Diff type from api-smart-diff (breaking, non-breaking, annotation, unclassified) */
+	/** Diff type from api-smart-diff (breaking, risky, non-breaking, deprecated, annotation, unclassified) */
 	diffType?: DiffType;
 	/** True if this line is the root of a logical change (not a child of a changed parent) */
 	isChangeRoot?: boolean;
@@ -95,13 +96,9 @@ export interface NavigationOptions {
 	highlight?: boolean;
 }
 
-/** Summary of changes in the diff */
-export interface ChangeSummary {
+/** Summary of changes in the diff: one counter per diff type, `total` is their sum */
+export interface ChangeSummary extends ClassificationCounts {
 	total: number;
-	breaking: number;
-	nonBreaking: number;
-	annotation: number;
-	unclassified: number;
 	byPath: Map<string, { type: DiffType; count: number }[]>;
 }
 
@@ -141,11 +138,8 @@ export interface ChildKeyInfo {
 	action?: ActionType;
 	/** Whether this key has nested children (is an object/array) */
 	hasChildren: boolean;
-	/**
-	 * Aggregate change counts in this subtree, by classification type.
-	 * Index mapping: [breaking, non-breaking, annotation, unclassified]
-	 */
-	changeCounts: [number, number, number, number];
+	/** Aggregate change counts in this subtree, by classification type */
+	changeCounts: ClassificationCounts;
 }
 
 /** Navigation API for programmatic control (path-based) */
@@ -216,14 +210,15 @@ export interface DiffThemeColors {
 	removedBg?: string;
 	modifiedBg?: string;
 	breakingColor?: string;
+	riskyColor?: string;
 	nonBreakingColor?: string;
+	deprecatedColor?: string;
 	annotationColor?: string;
 	unclassifiedColor?: string;
 	addedTextBg?: string;
 	removedTextBg?: string;
 	spacerBg?: string;
 	spacerStripe?: string;
-	correspondingHighlight?: string;
 }
 
 /** Synchronization state shared between editors */

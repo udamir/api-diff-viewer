@@ -1,7 +1,7 @@
 {
   "name": "api-diff-viewer",
-  "version": "1.1.0",
-  "description": "CodeMirror-based component to view the difference between two documents: OpenAPI, AsyncAPI, JSON Schema",
+  "version": "1.2.0",
+  "description": "CodeMirror-based component to view the difference between two API documents: OpenAPI, AsyncAPI, GraphApi (GraphQL), ProtoApi (gRPC), JSON Schema",
   "author": "Damir Yusipov",
   "license": "MIT",
   "files": [
@@ -15,25 +15,29 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/api-diff-viewer.es.js",
       "require": "./dist/api-diff-viewer.umd.js"
-    }
+    },
+    "./style.css": "./dist/api-diff-viewer.css",
+    "./package.json": "./package.json"
   },
   "sideEffects": [
     "*.css"
   ],
   "scripts": {
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "build": "vp pack",
+    "dev": "vitepress dev docs",
+    "test": "vp test run",
+    "test:watch": "vp test watch",
+    "test:coverage": "vp test run --coverage --project unit",
+    "test-storybook": "vp test run --project storybook",
+    "check": "vp check",
+    "check:fix": "vp check --fix",
+    "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test-storybook": "vitest --project=storybook",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
-    "demo": "vite demo/",
-    "build-demo": "vite build --config demo/vite.config.js"
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:storybook": "storybook build --disable-telemetry --quiet -o docs/.vitepress/dist/storybook",
+    "docs:preview": "vitepress preview docs"
   },
   "repository": {
     "type": "git",
@@ -46,40 +50,44 @@
     "compare",
     "side-by-side",
     "openapi",
-    "swagger",
     "asyncapi",
+    "graphql",
+    "graphapi",
+    "grpc",
+    "protoapi",
     "api"
   ],
   "dependencies": {
-    "@codemirror/commands": "^6.10.2",
+    "@codemirror/commands": "^6.11.2",
     "@codemirror/lang-json": "^6.0.2",
-    "@codemirror/lang-yaml": "^6.1.2",
-    "@codemirror/language": "^6.12.1",
-    "@codemirror/state": "^6.5.4",
-    "@codemirror/view": "^6.39.12",
-    "@lezer/highlight": "^1.2.3",
-    "api-smart-diff": "^1.0.6",
-    "diff": "^8.0.3"
+    "@codemirror/lang-yaml": "^6.1.3",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.44.1",
+    "@lezer/highlight": "^1.2.5",
+    "api-smart-diff": "^2.0.1",
+    "diff": "^9.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.14",
-    "@codemirror/search": "^6.6.0",
-    "@storybook/addon-docs": "^10.2.7",
-    "@storybook/addon-links": "^10.2.7",
-    "@storybook/addon-vitest": "^10.2.7",
-    "@storybook/html-vite": "^10.2.7",
-    "@vitest/browser-playwright": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.18",
-    "js-yaml": "^4.1.1",
-    "playwright": "^1.58.2",
-    "storybook": "^10.2.7",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vite-plugin-dts": "^4.5.4",
-    "vitest": "^4.0.18"
+    "@codemirror/search": "^6.7.3",
+    "@storybook/addon-docs": "^10.6.9",
+    "@storybook/addon-links": "^10.6.9",
+    "@storybook/addon-vitest": "^10.6.9",
+    "@storybook/html-vite": "^10.6.9",
+    "@types/node": "^26.6.11",
+    "@vitest/browser-playwright": "5.1.1",
+    "@vitest/coverage-v8": "5.1.1",
+    "js-yaml": "^5.5.0",
+    "playwright": "^1.65.1",
+    "storybook": "^10.6.9",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.8.0",
+    "vitepress": "2.0.0-alpha.21",
+    "vitest": "5.1.1",
+    "vue": "^3.5.46"
   },
-  "resolutions": {
-    "strip-ansi": "6.0.1",
-    "jackspeak": "2.1.1"
-  }
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.0"
 }

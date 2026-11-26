@@ -29,3 +29,8 @@ node_modules
 
 .claude
 claude.md
+# Vitest 5 reports and attachments
+.vitest/
+# the documentation portal (VitePress) cache and build
+docs/.vitepress/cache
+docs/.vitepress/dist

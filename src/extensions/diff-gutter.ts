@@ -2,6 +2,7 @@ import { type Extension, RangeSet } from "@codemirror/state";
 import { EditorView, GutterMarker, gutter, gutters } from "@codemirror/view";
 import type { DiffType } from "api-smart-diff";
 import type { DiffBlockData } from "../diff-builder/common";
+import { diffTypeLabels } from "../diff-types";
 import { getDiffState } from "../state/diff-state";
 import type { DiffData } from "../types";
 
@@ -9,7 +10,9 @@ import type { DiffData } from "../types";
 const gutterClasses = {
 	marker: "cm-diff-marker",
 	breaking: "cm-diff-marker-breaking",
+	risky: "cm-diff-marker-risky",
 	nonBreaking: "cm-diff-marker-non-breaking",
+	deprecated: "cm-diff-marker-deprecated",
 	annotation: "cm-diff-marker-annotation",
 	unclassified: "cm-diff-marker-unclassified",
 	added: "cm-diff-marker-added",
@@ -54,21 +57,11 @@ class DiffGutterMarker extends GutterMarker {
 		const typeIndicator = document.createElement("span");
 		typeIndicator.className = "cm-diff-type-indicator";
 		typeIndicator.textContent = "\u25CF";
-		typeIndicator.title = this.diffType;
-
-		switch (this.diffType) {
-			case "breaking":
-				typeIndicator.classList.add("cm-diff-type-breaking");
-				break;
-			case "non-breaking":
-				typeIndicator.classList.add("cm-diff-type-non-breaking");
-				break;
-			case "annotation":
-				typeIndicator.classList.add("cm-diff-type-annotation");
-				break;
-			case "unclassified":
-				typeIndicator.classList.add("cm-diff-type-unclassified");
-				break;
+		const label = diffTypeLabels[this.diffType];
+		typeIndicator.title = label ?? this.diffType;
+		if (label) {
+			typeIndicator.classList.add(`cm-diff-type-${this.diffType}`);
+			typeIndicator.setAttribute("aria-label", `${label} change`);
 		}
 		wrapper.appendChild(typeIndicator);
 
@@ -197,8 +190,14 @@ export const diffGutterTheme = EditorView.baseTheme({
 	".cm-diff-type-breaking": {
 		color: "var(--diff-breaking-color, #f85149)",
 	},
+	".cm-diff-type-risky": {
+		color: "var(--diff-risky-color, #f0883e)",
+	},
 	".cm-diff-type-non-breaking": {
 		color: "var(--diff-non-breaking-color, #3fb950)",
+	},
+	".cm-diff-type-deprecated": {
+		color: "var(--diff-deprecated-color, #d29922)",
 	},
 	".cm-diff-type-annotation": {
 		color: "var(--diff-annotation-color, #a371f7)",

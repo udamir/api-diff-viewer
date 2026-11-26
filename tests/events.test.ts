@@ -1,11 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { TypedEventEmitter } from "../src/utils/events";
 
-interface TestEvents {
+// a type alias (not an interface) so it is assignable to the `Record<string, unknown>` constraint
+type TestEvents = {
 	foo: { value: number };
 	bar: string;
 	empty: undefined;
-}
+};
 
 class TestEmitter extends TypedEventEmitter<TestEvents> {
 	fire<K extends keyof TestEvents>(event: K, data: TestEvents[K]) {

@@ -10,6 +10,7 @@ import { foldable, foldEffect, foldedRanges, unfoldEffect } from "@codemirror/la
 import { StateEffect } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import type { LineMapping } from "../types";
+import { type FoldRange, foldRangeEffects } from "../utils/fold-ranges";
 
 /**
  * Sets up bidirectional fold sync between two editors.
@@ -59,23 +60,26 @@ export function setupFoldSync(beforeView: EditorView, afterView: EditorView, _li
 		if (newlyFolded.length > 0 || newlyUnfolded.length > 0) {
 			syncEnabled = false;
 
-			const effects: StateEffect<{ from: number; to: number }>[] = [];
+			const effects: StateEffect<FoldRange>[] = [];
 
-			for (const range of newlyFolded) {
-				const lineNumber = getLineNumberFromRange(sourceView, range);
-				const targetRange = getTargetFoldRange(targetView, lineNumber);
-				if (targetRange) {
-					effects.push(foldEffect.of(targetRange));
-				}
-			}
-
+			// unfold effects have no ordering requirement (each one filters the fold state on its own)
+			const unfolded = new Set<string>();
 			for (const range of newlyUnfolded) {
 				const lineNumber = getLineNumberFromRange(sourceView, range);
 				const targetRange = getTargetUnfoldRange(targetView, lineNumber);
-				if (targetRange) {
+				if (targetRange && !unfolded.has(`${targetRange.from}:${targetRange.to}`)) {
+					unfolded.add(`${targetRange.from}:${targetRange.to}`);
 					effects.push(unfoldEffect.of(targetRange));
 				}
 			}
+
+			// fold effects must be sorted by `from`: the source folds come in the per-layer order of foldedRanges
+			effects.push(
+				...foldRangeEffects(
+					targetView.state,
+					newlyFolded.map((range) => getTargetFoldRange(targetView, getLineNumberFromRange(sourceView, range)))
+				)
+			);
 
 			if (effects.length > 0) {
 				targetView.dispatch({ effects });

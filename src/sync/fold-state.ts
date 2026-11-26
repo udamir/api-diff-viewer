@@ -5,10 +5,10 @@
  * Uses blockId as stable identifier to map folds between old and new line structures.
  */
 
-import { foldable, foldEffect, foldedRanges } from "@codemirror/language";
-import type { StateEffect } from "@codemirror/state";
+import { foldable, foldedRanges } from "@codemirror/language";
 import type { EditorView } from "@codemirror/view";
 import type { LineMapping } from "../types";
+import { type FoldRange, foldRangeEffects } from "../utils/fold-ranges";
 
 /**
  * Extract the set of folded blockIds from a CodeMirror editor.
@@ -40,7 +40,8 @@ export function restoreFoldsFromBlockIds(
 ): void {
 	if (foldedBlockIds.size === 0) return;
 
-	const effects: StateEffect<{ from: number; to: number }>[] = [];
+	// the block ids are not in document order: foldRangeEffects sorts the ranges
+	const ranges: FoldRange[] = [];
 	const doc = view.state.doc;
 
 	for (const blockId of foldedBlockIds) {
@@ -55,10 +56,11 @@ export function restoreFoldsFromBlockIds(
 		// Use foldable() to get the correct fold range (after opening bracket)
 		const foldRange = foldable(view.state, line.from, line.to);
 		if (foldRange) {
-			effects.push(foldEffect.of(foldRange));
+			ranges.push(foldRange);
 		}
 	}
 
+	const effects = foldRangeEffects(view.state, ranges);
 	if (effects.length > 0) {
 		view.dispatch({ effects });
 	}

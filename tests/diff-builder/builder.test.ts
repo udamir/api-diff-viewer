@@ -1,10 +1,13 @@
-import { apiMerge } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { apiCompare, type CompareOptions } from "api-smart-diff";
+import { describe, expect, it } from "vite-plus/test";
 import { buildDiff, valueTokens } from "../../src/diff-builder/builder";
-import { DiffBlockData, metaKey, Token } from "../../src/diff-builder/common";
+import { DiffBlockData, diffTypes, metaKey, Token } from "../../src/diff-builder/common";
 import { buildDiffBlock } from "../../src/diff-builder/index";
 import { jsonStrategy } from "../../src/diff-builder/json-strategy";
 import { yamlStrategy } from "../../src/diff-builder/yaml-strategy";
+
+/** Merged document of a comparison (api-smart-diff 2.x replaced apiMerge with apiCompare(...).merged) */
+const merge = (before: unknown, after: unknown, options?: CompareOptions) => apiCompare(before, after, options).merged;
 
 // ─── valueTokens ───────────────────────────────────────────────────────
 
@@ -110,7 +113,7 @@ describe("buildDiff", () => {
 			[metaKey]: { a: { action: "add", type: "non-breaking" } },
 		};
 		buildDiff(input, parent, yamlStrategy);
-		expect(parent.diffs[1]).toBe(1); // non-breaking index
+		expect(parent.diffs[diffTypes.indexOf("non-breaking")]).toBe(1);
 	});
 
 	it("creates nested blocks for object values", () => {
@@ -252,13 +255,13 @@ describe("buildDiff", () => {
 	});
 });
 
-// ─── buildDiffBlock (integration via apiMerge) ─────────────────────────
+// ─── buildDiffBlock (integration via apiCompare) ───────────────────────
 
 describe("buildDiffBlock", () => {
 	it("returns a DiffBlockData instance", () => {
 		const before = { openapi: "3.0.0", info: { title: "A", version: "1.0" } };
 		const after = { openapi: "3.0.0", info: { title: "B", version: "1.0" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root).toBeInstanceOf(DiffBlockData);
@@ -267,7 +270,7 @@ describe("buildDiffBlock", () => {
 	it("returns a root block with children for a non-trivial spec", () => {
 		const before = { openapi: "3.0.0", info: { title: "A", version: "1.0" } };
 		const after = { openapi: "3.0.0", info: { title: "B", version: "1.0" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root.children.length).toBeGreaterThan(0);
@@ -276,7 +279,7 @@ describe("buildDiffBlock", () => {
 	it("marks changed properties with diff metadata", () => {
 		const before = { title: "Old" };
 		const after = { title: "New" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 
@@ -291,7 +294,7 @@ describe("buildDiffBlock", () => {
 	it("handles both json and yaml formats", () => {
 		const before = { key: "value" };
 		const after = { key: "changed" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const yamlRoot = buildDiffBlock(merged, "yaml");
 		const jsonRoot = buildDiffBlock(merged, "json");
@@ -305,7 +308,7 @@ describe("buildDiffBlock", () => {
 	it("defaults to yaml format", () => {
 		const before = { key: "value" };
 		const after = { key: "changed" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged);
 		expect(root).toBeDefined();
@@ -315,7 +318,7 @@ describe("buildDiffBlock", () => {
 	it("produces diff counts for changed blocks", () => {
 		const before = { openapi: "3.0.0", info: { title: "Old", version: "1.0" } };
 		const after = { openapi: "3.0.0", info: { title: "New", version: "2.0" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		const totalDiffs = root.diffs.reduce((sum, n) => sum + n, 0);
@@ -324,7 +327,7 @@ describe("buildDiffBlock", () => {
 
 	it("handles identical specs (no changes)", () => {
 		const spec = { openapi: "3.0.0", info: { title: "Same", version: "1.0" } };
-		const merged = apiMerge(spec, spec);
+		const merged = merge(spec, spec);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root).toBeDefined();
@@ -339,7 +342,7 @@ describe("buildDiffBlock", () => {
 	it("handles added properties", () => {
 		const before = { key: "value" };
 		const after = { key: "value", newKey: "newValue" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 
@@ -353,7 +356,7 @@ describe("buildDiffBlock", () => {
 	it("handles removed properties", () => {
 		const before = { key: "value", oldKey: "oldValue" };
 		const after = { key: "value" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 
@@ -367,7 +370,7 @@ describe("buildDiffBlock", () => {
 	it("handles nested objects", () => {
 		const before = { info: { contact: { name: "Old" } } };
 		const after = { info: { contact: { name: "New" } } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root.children.length).toBeGreaterThan(0);
@@ -385,7 +388,7 @@ describe("buildDiffBlock", () => {
 	it("handles arrays", () => {
 		const before = { items: ["a", "b"] };
 		const after = { items: ["a", "c"] };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root).toBeDefined();
@@ -395,7 +398,7 @@ describe("buildDiffBlock", () => {
 	it("tracks line count correctly", () => {
 		const before = { a: "1", b: "2", c: "3" };
 		const after = { a: "1", b: "changed", c: "3" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root.lines).toBeGreaterThan(0);
@@ -404,7 +407,7 @@ describe("buildDiffBlock", () => {
 	it("JSON produces more lines than YAML for same content", () => {
 		const before = { info: { title: "A" } };
 		const after = { info: { title: "B" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const yamlRoot = buildDiffBlock(merged, "yaml");
 		const jsonRoot = buildDiffBlock(merged, "json");
@@ -416,7 +419,7 @@ describe("buildDiffBlock", () => {
 	it("JSON container blocks have closing brace children", () => {
 		const before = { info: { title: "A" } };
 		const after = { info: { title: "B" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "json");
 		const infoBlock = root.children[0];
@@ -428,7 +431,7 @@ describe("buildDiffBlock", () => {
 	it("YAML container blocks have no closing brace children", () => {
 		const before = { info: { title: "A" } };
 		const after = { info: { title: "B" } };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		const infoBlock = root.children[0];
@@ -442,7 +445,7 @@ describe("buildDiffBlock", () => {
 	it("produces tokens with before/after tags for replaced values", () => {
 		const before = { title: "Old" };
 		const after = { title: "New" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 
@@ -486,7 +489,7 @@ describe("buildDiffBlock", () => {
 				},
 			},
 		};
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 		expect(root.lines).toBeGreaterThan(5);
@@ -501,37 +504,63 @@ describe("buildDiffBlock", () => {
 	it("handles array item additions", () => {
 		const before = { tags: ["tag1"] };
 		const after = { tags: ["tag1", "tag2"] };
-		const merged = apiMerge(before, after, { arrayMeta: true });
+		const merged = merge(before, after, { arrayMeta: true });
 
 		const root = buildDiffBlock(merged, "yaml");
 
-		// apiMerge stores array diffs in a nested $diff.tags.array structure
-		// The builder propagates the parent diff to array children,
-		// so verify the tree is built correctly and has diff metadata
+		// With arrayMeta the item diffs live on the array itself (tags.$diff)
 		const tagsBlock = root.children[0];
 		expect(tagsBlock).toBeDefined();
 		expect(tagsBlock.children.length).toBe(2); // both items present in merged
-		// The block's diff should carry the array diff metadata
-		expect(tagsBlock.diff).toBeDefined();
+		// The array container keeps no diff of its own (like an object); the item carries it
+		expect(tagsBlock.diff).toBeUndefined();
+		expect(tagsBlock.children[1].diff?.action).toBe("add");
+		expect(tagsBlock.diffs.reduce((a, b) => a + b, 0)).toBe(1);
 	});
 
 	it("handles array item removals", () => {
 		const before = { tags: ["tag1", "tag2"] };
 		const after = { tags: ["tag1"] };
-		const merged = apiMerge(before, after, { arrayMeta: true });
+		const merged = merge(before, after, { arrayMeta: true });
 
 		const root = buildDiffBlock(merged, "yaml");
 
 		const tagsBlock = root.children[0];
 		expect(tagsBlock).toBeDefined();
 		expect(tagsBlock.children.length).toBe(2); // both items present in merged
-		expect(tagsBlock.diff).toBeDefined();
+		expect(tagsBlock.diff).toBeUndefined();
+		expect(tagsBlock.children[1].diff?.action).toBe("remove");
+	});
+
+	it("reads array item metadata stored on the parent as { array } (default layout)", () => {
+		const before = { tags: ["tag1"], nested: [["a"]] };
+		const after = { tags: ["tag1", "tag2"], nested: [["a", "b"]] };
+		const merged = merge(before, after);
+		expect((merged as Record<string, Record<string, unknown>>)[metaKey].tags).toHaveProperty("array");
+
+		const root = buildDiffBlock(merged, "yaml");
+		const [tagsBlock, nestedBlock] = root.children;
+		expect(tagsBlock.diff).toBeUndefined();
+		expect(tagsBlock.children[1].diff?.action).toBe("add");
+		// nested arrays: { array: { 0: { array: { 1: DiffMeta } } } }
+		expect(nestedBlock.children[0].diff).toBeUndefined();
+		expect(nestedBlock.children[0].children[1].diff?.action).toBe("add");
+	});
+
+	it("does not let an array container subsume the changes of its items", () => {
+		const before = { items: [{ n: "x" }, { n: "y", m: 1 }] };
+		const after = { items: [{ n: "x" }, { n: "y", m: 2 }, { n: "w" }] };
+		const root = buildDiffBlock(merge(before, after), "yaml");
+		const itemsBlock = root.children[0];
+		expect(itemsBlock.diff).toBeUndefined();
+		// one replace inside item 1 and one added item 2
+		expect(itemsBlock.diffs.reduce((a, b) => a + b, 0)).toBe(2);
 	});
 
 	it("handles mixed changes (add + remove + replace)", () => {
 		const before = { a: "keep", b: "old", c: "remove_me" };
 		const after = { a: "keep", b: "new", d: "added" };
-		const merged = apiMerge(before, after);
+		const merged = merge(before, after);
 
 		const root = buildDiffBlock(merged, "yaml");
 

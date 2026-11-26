@@ -12,6 +12,9 @@ export type { FormatContext, FormatStrategy } from "./diff-builder/builder";
 export { valueTokens } from "./diff-builder/builder";
 export type { LineDiff, TokenTag, TokenType } from "./diff-builder/common";
 export { DiffBlockData, DiffLineData, Token } from "./diff-builder/common";
+// ── Diff classifications ──
+export type { ClassificationCounts } from "./diff-types";
+export { diffTypeCountKeys, diffTypeLabels, diffTypes } from "./diff-types";
 // ── Main API ──
 export * from "./diff-viewer";
 // ── Extensions ──
@@ -48,14 +51,7 @@ export {
 	tokensToStringBatch,
 } from "./sync/visual-alignment";
 // ── Themes ──
-export {
-	DiffThemeManager,
-	darkColors,
-	diffTheme,
-	diffThemeDark,
-	diffThemeLight,
-	lightColors,
-} from "./themes";
+export { DiffThemeManager, darkColors, diffTheme, diffThemeDark, diffThemeLight, lightColors } from "./themes";
 export type {
 	AlignedContent,
 	BlockMapping,

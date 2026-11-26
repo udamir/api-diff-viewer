@@ -7,6 +7,18 @@ import jsonSchemaBefore from './samples/jsonSchema.before'
 import jsonSchemaAfter from './samples/jsonSchema.after'
 import asyncApiBefore from './samples/asyncApi.before'
 import asyncApiAfter from './samples/asyncApi.after'
+import {
+  asyncApi30After,
+  asyncApi30Before,
+  graphApi10After,
+  graphApi10Before,
+  openApi31After,
+  openApi31Before,
+  protoApiAfter,
+  protoApiBefore,
+  swagger2After,
+  swagger2Before,
+} from './samples/asd2'
 
 import '../src/styles.css'
 
@@ -24,7 +36,9 @@ interface ClassificationDef {
 
 const CLASSIFICATIONS: ClassificationDef[] = [
   { key: 'breaking',      label: 'Breaking',     color: ['#cf222e', '#f85149'], bg: ['#ffebe9', '#490202'] },
+  { key: 'risky',         label: 'Risky',        color: ['#bc4c00', '#f0883e'], bg: ['#fff1e5', '#3d1d00'] },
   { key: 'non-breaking',  label: 'Non-breaking',  color: ['#1a7f37', '#3fb950'], bg: ['#dafbe1', '#04260f'] },
+  { key: 'deprecated',    label: 'Deprecated',   color: ['#9a6700', '#d29922'], bg: ['#fff8c5', '#3b2300'] },
   { key: 'annotation',    label: 'Annotation',   color: ['#8250df', '#a371f7'], bg: ['#f0e6ff', '#2a1a4e'] },
   { key: 'unclassified',  label: 'Unclassified', color: ['#656d76', '#768390'], bg: ['#eaeef2', '#21262d'] },
 ]
@@ -144,6 +158,14 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
 
   const actionBar = createActionBar(wrapper, dark)
   root.appendChild(actionBar)
+
+  // Errors (unsupported documents) and comparison problems (unresolved $ref, ...)
+  const errorBar = document.createElement('div')
+  errorBar.setAttribute('role', 'alert')
+  errorBar.style.cssText =
+    `display:none;padding:6px 10px;border-radius:6px;font-size:12px;` +
+    (dark ? 'background:#490202;color:#ffa198;border:1px solid #f85149' : 'background:#ffebe9;color:#82071e;border:1px solid #ff8182')
+  root.appendChild(errorBar)
   root.appendChild(wrapper)
 
   const { before, after, ...options } = args
@@ -163,18 +185,24 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
         useWorker: false, // sync in storybook for reliability
       })
 
-      viewer.on('ready', ({ summary }) => {
+      viewer.on('ready', ({ summary, errors }) => {
         console.log(
           `[DiffViewer] Ready — ${summary.total} changes ` +
-          `(${summary.breaking} breaking, ${summary.nonBreaking} non-breaking)`
+          `(${summary.breaking} breaking, ${summary.risky} risky, ${summary.nonBreaking} non-breaking)`
         )
+        errorBar.style.display = errors.length ? 'block' : 'none'
+        errorBar.textContent = errors.length
+          ? `${errors.length} comparison problem(s): ${errors.map((e) => `${e.kind} at /${e.path.join('/')}: ${e.message}`).join('; ')}`
+          : ''
 
         // Update classification badges
         const badges = badgeStore.get(actionBar)
         if (badges) {
           const counts: Record<string, number> = {
             breaking: summary.breaking,
+            risky: summary.risky,
             'non-breaking': summary.nonBreaking,
+            deprecated: summary.deprecated,
             annotation: summary.annotation,
             unclassified: summary.unclassified,
           }
@@ -190,8 +218,10 @@ function renderDiffViewer(args: DiffViewerStoryArgs): HTMLElement {
         }
       })
 
-      viewer.on('error', ({ message }) => {
+      viewer.on('error', ({ message, kind }) => {
         console.error('[DiffViewer] Error:', message)
+        errorBar.style.display = 'block'
+        errorBar.textContent = kind === 'unsupported-spec' ? `Cannot compare: ${message}` : `Error (${kind}): ${message}`
       })
 
       viewerStore.set(wrapper, viewer)
@@ -241,7 +271,7 @@ const meta: Meta<DiffViewerStoryArgs> = {
     },
     filters: {
       control: 'check',
-      options: ['breaking', 'non-breaking', 'annotation', 'unclassified'],
+      options: ['breaking', 'risky', 'non-breaking', 'deprecated', 'annotation', 'unclassified'],
       description: 'Filter visible changes by classification type',
     },
   },
@@ -337,6 +367,91 @@ export const OpenAPINoWordDiff = {
     before: openApiBefore,
     after: openApiAfter,
     wordDiffMode: 'none' as const,
+  },
+}
+
+// ── api-smart-diff 2.x: new specifications and classifications ──
+
+export const OpenAPI31AllTypes = {
+  name: 'OpenAPI 3.1 — All Six Classifications + Rename',
+  args: {
+    before: openApi31Before,
+    after: openApi31After,
+    enableFolding: true,
+    showClassification: true,
+  },
+}
+
+export const OpenAPI31AllTypesDark = {
+  name: 'OpenAPI 3.1 — All Six Classifications (Dark)',
+  args: {
+    before: openApi31Before,
+    after: openApi31After,
+    dark: true,
+    enableFolding: true,
+    showClassification: true,
+  },
+}
+
+export const OpenAPI31FilterRisky = {
+  name: 'OpenAPI 3.1 — Filter: Risky Only',
+  args: {
+    before: openApi31Before,
+    after: openApi31After,
+    enableFolding: true,
+    showClassification: true,
+    filters: ['risky'] as const,
+  },
+}
+
+export const AsyncAPI30 = {
+  name: 'AsyncAPI 3.0 — Side-by-Side',
+  args: {
+    before: asyncApi30Before,
+    after: asyncApi30After,
+    showClassification: true,
+  },
+}
+
+export const GraphApi10 = {
+  name: 'GraphApi 1.0 (GraphQL) — Side-by-Side',
+  args: {
+    before: graphApi10Before,
+    after: graphApi10After,
+    showClassification: true,
+  },
+}
+
+export const ProtoApi = {
+  name: 'ProtoApi (gRPC) — Side-by-Side',
+  args: {
+    before: protoApiBefore,
+    after: protoApiAfter,
+    showClassification: true,
+  },
+}
+
+export const UnsupportedSwagger2 = {
+  name: 'Error — Swagger 2.0 (Unsupported)',
+  args: {
+    before: swagger2Before,
+    after: swagger2After,
+  },
+}
+
+export const ComparisonProblems = {
+  name: 'Comparison Problems — Unresolved $ref',
+  args: {
+    before: {
+      openapi: '3.1.0',
+      info: { title: 'Broken refs', version: '1.0.0' },
+      paths: { '/a': { get: { responses: { '200': { $ref: '#/components/responses/Missing' } } } } },
+    },
+    after: {
+      openapi: '3.1.0',
+      info: { title: 'Broken refs', version: '1.1.0' },
+      paths: { '/a': { get: { responses: { '200': { $ref: '#/components/responses/Other' } } } } },
+    },
   },
 }
 
