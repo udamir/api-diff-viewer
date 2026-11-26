@@ -9,6 +9,7 @@
 import type { DiffType } from "api-smart-diff";
 import type { DiffBlockData } from "../diff-builder/common";
 import { diffTypes } from "../diff-builder/common";
+import { type ClassificationCounts, countsFromArray } from "../diff-types";
 
 /** Pre-computed index entry for a block */
 export interface BlockIndexEntry {
@@ -16,7 +17,7 @@ export interface BlockIndexEntry {
 	parentId: string | null;
 	depth: number;
 	/** Aggregate classification counts (mirrors block.diffs) */
-	counts: { breaking: number; nonBreaking: number; annotation: number; unclassified: number };
+	counts: ClassificationCounts;
 	/** Direct diff type if block has a change */
 	diffType?: DiffType;
 	/** All ancestor block IDs from root to parent */
@@ -62,12 +63,7 @@ export function buildBlockTreeIndex(blocks: DiffBlockData[]): BlockTreeIndex {
 			block,
 			parentId,
 			depth,
-			counts: {
-				breaking: block.diffs[0],
-				nonBreaking: block.diffs[1],
-				annotation: block.diffs[2],
-				unclassified: block.diffs[3],
-			},
+			counts: countsFromArray(block.diffs),
 			diffType: block.diff?.type,
 			ancestorIds: [...ancestorIds],
 		};

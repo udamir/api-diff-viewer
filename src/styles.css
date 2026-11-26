@@ -18,7 +18,9 @@
   --diff-removed-text-bg: rgba(248, 81, 73, 0.4);
 
   --diff-breaking-color: #cf222e;
+  --diff-risky-color: #bc4c00;
   --diff-non-breaking-color: #1a7f37;
+  --diff-deprecated-color: #9a6700;
   --diff-annotation-color: #8250df;
   --diff-unclassified-color: #656d76;
 
@@ -46,7 +48,9 @@
   --diff-removed-text-bg: rgba(248, 81, 73, 0.5);
 
   --diff-breaking-color: #f85149;
+  --diff-risky-color: #f0883e;
   --diff-non-breaking-color: #3fb950;
+  --diff-deprecated-color: #d29922;
   --diff-annotation-color: #a371f7;
   --diff-unclassified-color: #768390;
 

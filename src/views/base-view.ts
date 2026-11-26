@@ -11,6 +11,7 @@ import { yaml } from "@codemirror/lang-yaml";
 import { codeFolding, foldKeymap } from "@codemirror/language";
 import { Compartment, type Extension } from "@codemirror/state";
 import { drawSelection, EditorView, keymap } from "@codemirror/view";
+import { emptyClassificationCounts } from "../diff-types";
 import { alignedDecorations, alignedDecorationsTheme } from "../extensions/aligned-decorations";
 import { diffDecorationsTheme } from "../extensions/diff-decorations";
 import { diffFolding } from "../extensions/diff-folding";
@@ -118,7 +119,7 @@ export abstract class BaseView {
 					preparePlaceholder: (state, range) => {
 						const data = prepareFoldPlaceholder(state, range, capturedSide, capturedLineMap);
 						if (!this.config.showClassification && !data.isSpacer) {
-							return { counts: { breaking: 0, nonBreaking: 0, annotation: 0, unclassified: 0 }, isSpacer: false };
+							return { counts: emptyClassificationCounts(), isSpacer: false };
 						}
 						return data;
 					},

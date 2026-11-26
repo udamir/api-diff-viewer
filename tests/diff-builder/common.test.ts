@@ -1,3 +1,4 @@
+import { ClassifierType } from "api-smart-diff";
 import { describe, expect, it } from "vitest";
 import { DiffBlockData, DiffLineData, diffTypes, metaKey, Token } from "../../src/diff-builder/common";
 
@@ -52,17 +53,23 @@ describe("Token", () => {
 		});
 
 		it("Change creates a token with diff type", () => {
-			// changeIndex 0 = "breaking", 1 = "non-breaking", 2 = "annotation", 3 = "unclassified"
+			// changeIndex follows diffTypes: 0 breaking, 1 risky, 2 non-breaking, 3 deprecated, 4 annotation, 5 unclassified
 			const t = Token.Change(5, 0);
 			expect(t.type).toBe("breaking");
 			expect(t.value).toBe("5");
 		});
 
 		it("Change with different index", () => {
-			const t = Token.Change(3, 2, "collapsed");
+			const t = Token.Change(3, 4, "collapsed");
 			expect(t.type).toBe("annotation");
 			expect(t.value).toBe("3");
 			expect(t.tags).toEqual(["collapsed"]);
+		});
+
+		it("Change with the risky index", () => {
+			const t = Token.Change(2, 1);
+			expect(t.type).toBe("risky");
+			expect(t.value).toBe("2");
 		});
 	});
 
@@ -132,7 +139,7 @@ describe("DiffBlockData", () => {
 		const block = new DiffBlockData(1, 0, [Token.Key("x")]);
 		expect(block.id).toBe("");
 		expect(block.children).toEqual([]);
-		expect(block.diffs).toEqual([0, 0, 0, 0]);
+		expect(block.diffs).toEqual([0, 0, 0, 0, 0, 0]);
 	});
 
 	it("lines is 1 when tokens are non-empty", () => {
@@ -166,25 +173,44 @@ describe("DiffBlockData", () => {
 		it("increments breaking count", () => {
 			const block = new DiffBlockData(1, 0, []);
 			block.addDiff({ type: "breaking", action: "replace" });
-			expect(block.diffs).toEqual([1, 0, 0, 0]);
+			expect(block.diffs).toEqual([1, 0, 0, 0, 0, 0]);
+		});
+
+		it("increments risky count", () => {
+			const block = new DiffBlockData(1, 0, []);
+			block.addDiff({ type: "risky", action: "add" });
+			expect(block.diffs).toEqual([0, 1, 0, 0, 0, 0]);
 		});
 
 		it("increments non-breaking count", () => {
 			const block = new DiffBlockData(1, 0, []);
 			block.addDiff({ type: "non-breaking", action: "add" });
-			expect(block.diffs).toEqual([0, 1, 0, 0]);
+			expect(block.diffs).toEqual([0, 0, 1, 0, 0, 0]);
+		});
+
+		it("increments deprecated count", () => {
+			const block = new DiffBlockData(1, 0, []);
+			block.addDiff({ type: "deprecated", action: "add" });
+			expect(block.diffs).toEqual([0, 0, 0, 1, 0, 0]);
 		});
 
 		it("increments annotation count", () => {
 			const block = new DiffBlockData(1, 0, []);
 			block.addDiff({ type: "annotation", action: "replace" });
-			expect(block.diffs).toEqual([0, 0, 1, 0]);
+			expect(block.diffs).toEqual([0, 0, 0, 0, 1, 0]);
 		});
 
 		it("increments unclassified count", () => {
 			const block = new DiffBlockData(1, 0, []);
 			block.addDiff({ type: "unclassified", action: "replace" });
-			expect(block.diffs).toEqual([0, 0, 0, 1]);
+			expect(block.diffs).toEqual([0, 0, 0, 0, 0, 1]);
+		});
+
+		it("ignores an unknown type instead of writing diffs[-1]", () => {
+			const block = new DiffBlockData(1, 0, []);
+			block.addDiff({ type: "future-type" as never, action: "replace" });
+			expect(block.diffs).toEqual([0, 0, 0, 0, 0, 0]);
+			expect((block.diffs as unknown as Record<string, number>)["-1"]).toBeUndefined();
 		});
 
 		it("accumulates multiple diffs", () => {
@@ -192,7 +218,7 @@ describe("DiffBlockData", () => {
 			block.addDiff({ type: "breaking", action: "replace" });
 			block.addDiff({ type: "breaking", action: "remove" });
 			block.addDiff({ type: "annotation", action: "replace" });
-			expect(block.diffs).toEqual([2, 0, 1, 0]);
+			expect(block.diffs).toEqual([2, 0, 0, 0, 1, 0]);
 		});
 	});
 
@@ -220,7 +246,7 @@ describe("DiffBlockData", () => {
 			child.addDiff({ type: "breaking", action: "replace" });
 			child.addDiff({ type: "non-breaking", action: "add" });
 			parent.addBlock(child);
-			expect(parent.diffs).toEqual([1, 1, 0, 0]);
+			expect(parent.diffs).toEqual([1, 0, 1, 0, 0, 0]);
 		});
 
 		it("accumulates diffs from multiple children", () => {
@@ -231,7 +257,7 @@ describe("DiffBlockData", () => {
 			child2.addDiff({ type: "annotation", action: "add" });
 			parent.addBlock(child1);
 			parent.addBlock(child2);
-			expect(parent.diffs).toEqual([1, 0, 1, 0]);
+			expect(parent.diffs).toEqual([1, 0, 0, 0, 1, 0]);
 		});
 
 		it("nextLine updates as children are added", () => {
@@ -250,7 +276,11 @@ describe("constants", () => {
 		expect(metaKey).toBe("$diff");
 	});
 
-	it("diffTypes has 4 entries in the right order", () => {
-		expect(diffTypes).toEqual(["breaking", "non-breaking", "annotation", "unclassified"]);
+	it("diffTypes has 6 entries, from the most to the least severe", () => {
+		expect(diffTypes).toEqual(["breaking", "risky", "non-breaking", "deprecated", "annotation", "unclassified"]);
+	});
+
+	it("diffTypes covers every api-smart-diff classification", () => {
+		expect([...diffTypes].sort()).toEqual([...Object.values(ClassifierType)].sort());
 	});
 });

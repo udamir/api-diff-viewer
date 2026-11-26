@@ -2,7 +2,7 @@
 
 <img alt="npm" src="https://img.shields.io/npm/v/api-diff-viewer"> <img alt="npm" src="https://img.shields.io/npm/dm/api-diff-viewer?label=npm"> <img alt="npm type definitions" src="https://img.shields.io/npm/types/api-diff-viewer"> <img alt="GitHub" src="https://img.shields.io/github/license/udamir/api-diff-viewer">
 
-CodeMirror-based diff viewer for JSON-based API documents. Supports **OpenAPI 3.x**, **AsyncAPI 2.x**, and **JsonSchema** specifications.
+CodeMirror-based diff viewer for JSON-based API documents. Supports **OpenAPI 3.0 / 3.1 / 3.2**, **AsyncAPI 2.x / 3.0**, **GraphApi** (GraphQL, 1.0), **ProtoApi** (gRPC / Protocol Buffers) and **JSON Schema** documents, compared with [api-smart-diff](https://github.com/udamir/api-smart-diff) 2.x.
 
 [![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://api-diff-viewer.vercel.app/)
 
@@ -11,13 +11,13 @@ CodeMirror-based diff viewer for JSON-based API documents. Supports **OpenAPI 3.
 - **Side-by-side & inline views** — dual-editor or unified diff display
 - **YAML & JSON output** — render diffs in either format
 - **Word-level diff highlighting** — word or character granularity, or disable entirely
-- **Change classification** — breaking, non-breaking, annotation, unclassified with color-coded gutter indicators
+- **Change classification** — breaking, risky, non-breaking, deprecated, annotation, unclassified with color-coded gutter indicators
 - **Change filtering** — show only specific classification types
 - **Code folding** — collapse/expand API structure blocks with change count badges
 - **Array-level diffs** — per-item change tracking for parameters, enum values, tags, etc.
 - **Dark mode** — built-in light and dark themes with CSS variable overrides
 - **WebWorker support** — non-blocking merge computation for large specs
-- **Event system** — lifecycle events for loading, ready, errors, and state changes
+- **Event system** — lifecycle events for loading, ready (with comparison problems), errors (e.g. unsupported documents), and state changes
 - **Zero framework dependency** — pure DOM + CodeMirror, works with any framework or vanilla JS
 
 ## Installation
@@ -26,6 +26,17 @@ CodeMirror-based diff viewer for JSON-based API documents. Supports **OpenAPI 3.
 npm install api-diff-viewer
 ```
 
+### Compatibility
+
+| api-diff-viewer | api-smart-diff | Documents |
+| --- | --- | --- |
+| 2.x | 2.x (bundled) | OpenAPI 3.0 / 3.1 / 3.2, AsyncAPI 2.x / 3.0, GraphApi 1.0, ProtoApi, JSON Schema |
+| 1.x | 1.x (bundled) | OpenAPI 3.0, AsyncAPI 2.x, GraphApi 0.1.x, JSON Schema |
+
+api-smart-diff is bundled into the viewer's `dist`, so you do not install it yourself; the `api-smart-diff` types used in the viewer's API (`DiffType`, `CompareOptions`, `CompareError`) are those of api-smart-diff 2.x. The bundle targets current browsers (api-smart-diff 2.x is built for ES2020: Chrome 80, Firefox 74, Safari 13.1 or later). Its runtime dependencies declare Node.js 18 or later (allof-merge: 22 or later), which matters for tooling and SSR builds that load the package in Node.js.
+
+Swagger 2.0, OpenAPI 4+, AsyncAPI 1.x / 4+, unknown GraphApi versions and a pair of two different specifications are rejected: the viewer emits an `error` event with `kind: "unsupported-spec"` (see [Errors](#errors)). ProtoApi documents are the JSON documents built from `.proto` sources with [protoapi](https://github.com/udamir/protoapi); the viewer does not parse `.proto` text.
+
 ## Quick Start
 
 ```typescript
@@ -33,7 +44,7 @@ import { createDiffViewer } from 'api-diff-viewer'
 
 const viewer = createDiffViewer(
   document.getElementById('diff')!,
-  beforeSpec, // object or JSON/YAML string
+  beforeSpec, // object or JSON string (parse YAML yourself, e.g. with js-yaml)
   afterSpec,
   { format: 'yaml', mode: 'side-by-side' }
 )
@@ -55,8 +66,8 @@ Creates and returns a `DiffViewer` instance.
 | Parameter   | Type                | Description                                        |
 | ----------- | ------------------- | -------------------------------------------------- |
 | `container` | `HTMLElement`       | DOM element to mount into                          |
-| `before`    | `object \| string`  | The "before" API spec (object or JSON/YAML string) |
-| `after`     | `object \| string`  | The "after" API spec (object or JSON/YAML string)  |
+| `before`    | `object \| string`  | The "before" API spec (object or JSON string)      |
+| `after`     | `object \| string`  | The "after" API spec (object or JSON string)       |
 | `options`   | `DiffViewerOptions` | Configuration (see below)                          |
 
 ### `DiffViewerOptions`
@@ -76,7 +87,7 @@ Creates and returns a `DiffViewer` instance.
 | `extensions`                | `Extension[]`                | `[]`             | Additional CodeMirror extensions (search, active line, etc.) |
 | `useWorker`                 | `boolean`                    | `true`           | Use WebWorker for merging (non-blocking)                 |
 | `workerUrl`                 | `string`                     | `''`             | Custom worker URL (default: inline blob)                 |
-| `mergeOptions`              | `CompareOptions`             | `{}`             | Override options passed to `api-smart-diff`              |
+| `mergeOptions`              | `CompareOptions`             | `{}`             | Options passed to `api-smart-diff` (see [Diff Engine](#diff-engine)) |
 
 ### `DiffViewer` Instance Methods
 
@@ -123,16 +134,21 @@ viewer.togglePath(['paths', '/pets', 'get']) // Array form also works
 ```typescript
 viewer.on('loading', () => { /* merge started */ })
 
-viewer.on('ready', ({ summary }) => {
+viewer.on('ready', ({ summary, errors }) => {
   console.log(`${summary.total} changes`)
   console.log(`${summary.breaking} breaking`)
+  console.log(`${summary.risky} risky`)
   console.log(`${summary.nonBreaking} non-breaking`)
+  console.log(`${summary.deprecated} deprecated`)
   console.log(`${summary.annotation} annotation`)
   console.log(`${summary.unclassified} unclassified`)
+  // problems inside the comparison (unresolved $ref, a custom rule that threw, ...)
+  for (const e of errors) console.warn(e.kind, e.path.join('/'), e.message)
 })
 
-viewer.on('error', ({ message, cause }) => {
-  console.error('Merge failed:', message)
+viewer.on('error', ({ kind, message, name, cause }) => {
+  // kind: 'unsupported-spec' | 'invalid-input' | 'internal'
+  console.error('Compare failed:', message)
 })
 
 viewer.on('modeChange', ({ mode }) => { /* 'side-by-side' | 'inline' */ })
@@ -151,6 +167,9 @@ const { unified } = viewer.getEditorViews()            // inline
 // Get change summary without navigation
 viewer.getChangeSummary()
 
+// Problems api-smart-diff reported in the last comparison (also passed with `ready`)
+viewer.getCompareErrors()
+
 // Cleanup
 viewer.destroy()
 ```
@@ -166,7 +185,9 @@ viewer.setTheme({
     removedBg: 'rgba(248, 81, 73, 0.15)',
     modifiedBg: 'rgba(227, 179, 65, 0.15)',
     breakingColor: '#cf222e',
+    riskyColor: '#bc4c00',
     nonBreakingColor: '#1a7f37',
+    deprecatedColor: '#9a6700',
     annotationColor: '#8250df',
     unclassifiedColor: '#656d76',
     addedTextBg: 'rgba(46, 160, 67, 0.4)',
@@ -183,22 +204,38 @@ Returned by `ready` event and `getChangeSummary()`:
 
 ```typescript
 interface ChangeSummary {
-  total: 
+  total: number // the sum of the six counters
   breaking: number
+  risky: number
   nonBreaking: number
+  deprecated: number
   annotation: number
   unclassified: number
   byPath: Map<string, { type: DiffType; count: number }[]>
 }
 ```
 
+`diffTypes` (exported) lists the six types from the most to the least severe; it is also the index order of `DiffBlockData.diffs`. `diffTypeLabels` and `diffTypeCountKeys` map each type to its label and to its `ChangeSummary` / `ClassificationCounts` key.
+
+### Errors
+
+`createDiffViewer` and `update` never throw for documents the engine cannot compare; they emit `error` instead, and nothing new is rendered:
+
+| `kind` | When |
+| --- | --- |
+| `unsupported-spec` | api-smart-diff throws `UnsupportedSpecError` (`name` is kept across the worker): Swagger 2.0, OpenAPI 4+, AsyncAPI 1.x / 4+, an unknown GraphApi version, or two different specifications. Convert Swagger 2.0 to OpenAPI 3 first, or pass `mergeOptions: { engine: 'jsonschema' }` to compare the documents as plain JSON |
+| `invalid-input` | a string input is not valid JSON |
+| `internal` | anything else (worker failure, ...) |
+
+Problems inside a comparison that still completed (an unresolved `$ref`, a custom rule or annotate hook that threw) are passed as `errors` with `ready` and returned by `getCompareErrors()`. Set `mergeOptions.onError` to receive them yourself instead (the comparison then runs on the main thread, since functions cannot be posted to a worker).
+
 ### Diff Engine
 
-The diff logic is powered by [api-smart-diff](https://github.com/udamir/api-smart-diff), which performs structural merging and semantic comparison of API specifications. It understands the semantics of OpenAPI, AsyncAPI, and JsonSchema documents — so changes are classified not just as text edits but by their impact on API consumers.
+The diff logic is powered by [api-smart-diff](https://github.com/udamir/api-smart-diff) 2.x, which performs structural merging and semantic comparison of API specifications. It understands the semantics of OpenAPI, AsyncAPI, GraphApi, ProtoApi and JSON Schema documents — so changes are classified not just as text edits but by their impact on API consumers.
 
 The merge pipeline:
 
-1. **Structural merge** — `api-smart-diff` walks both specs in parallel, producing a single merged document annotated with `$diff` metadata on every changed node. Each `$diff` entry carries an `action` (add, remove, replace, rename) and a `type` (breaking, non-breaking, annotation, unclassified).
+1. **Structural merge** — `apiCompare(before, after).merged` walks both specs in parallel, producing a single merged document annotated with `$diff` metadata on every changed node. Each `$diff` entry carries an `action` (add, remove, replace, rename) and a `type` (breaking, risky, non-breaking, deprecated, annotation, unclassified). The merged document holds the original input values: the after side for kept and added nodes, the before side for removed ones; objects and arrays follow the after order with removed keys and items at the end of their container; an unchanged `$ref` stays a `$ref`, a `$ref` whose target changed is shown inlined at the usage. A renamed key (a path template, a component, a channel) is one `rename` change: the before editor shows the old key, the after editor the new one.
 2. **Diff tree construction** — the merged document is converted into a `DiffBlockData` tree by the diff builder, which generates format-specific tokens (JSON or YAML syntax) for rendering.
 3. **Content alignment** — for side-by-side mode, spacer lines are inserted so corresponding sections align visually across both editors.
 
@@ -209,8 +246,8 @@ createDiffViewer(container, before, after, {
   mergeOptions: {
     // Custom comparison rules
     rules: { ... },
-    // Custom annotation hook
-    annotateHook: (before, after, ctx) => { ... },
+    // Custom description hook
+    annotateHook: (diff, ctx) => { ... },
     // Resolved external $ref sources
     externalSources: {
       before: { 'common.yaml': { ... } },
@@ -222,22 +259,30 @@ createDiffViewer(container, before, after, {
 
 The `mergeOptions` field accepts `api-smart-diff` options. Available parameters:
 
-| Option            | Type                                              | Description                              |
-| ----------------- | ------------------------------------------------- | ---------------------------------------- |
-| `rules`           | `CompareRules`                                    | Custom comparison rules                  |
-| `annotateHook`    | `AnnotateHook`                                    | Custom hook for change annotations       |
-| `externalSources` | `{ before?: Record<string, unknown>; after?: Record<string, unknown> }` | Resolved external `$ref` sources |
+| Option             | Type                                              | Description                              |
+| ------------------ | ------------------------------------------------- | ---------------------------------------- |
+| `merged`           | `'original' \| 'normalized'`                      | `'original'` (default): show the documents as written; `'normalized'`: show the values the engine compared (path-level parameters moved into operations, merged `allOf`, ...), as the 1.x viewer did |
+| `engine`           | `'openapi' \| 'asyncapi' \| 'graphapi' \| 'protoapi' \| 'jsonschema'` | Force an engine instead of detecting it (e.g. `'jsonschema'` for documents that would be rejected) |
+| `components`       | `'usage' \| 'unclassified'`                       | How changes inside shared components are classified |
+| `externalSources`  | `{ before?: Record<string, unknown>; after?: Record<string, unknown> }` | Resolved external `$ref` sources |
+| `rules`, `extensions` | `CompareRules`, `CompareExtensionRules`        | Custom comparison rules (run on the main thread) |
+| `annotateHook`     | `AnnotateHook`                                    | Custom hook for change descriptions (run on the main thread) |
+| `onError`          | `(error: CompareError) => void`                   | Receive comparison problems yourself (run on the main thread) |
 
-> **Note:** `metaKey` and `arrayMeta` are managed internally and cannot be overridden.
+See the [api-smart-diff options](https://udamir.github.io/api-smart-diff/) for the full list.
+
+> **Note:** `metaKey` and `arrayMeta` are managed internally and cannot be overridden. Options holding functions cannot be posted to a WebWorker, so a comparison with `rules`, `extensions`, `annotateHook` or `onError` runs on the main thread.
 
 ### Change Classification Types
 
 | Type           | Description                          | Examples                                                                        |
 | -------------- | ------------------------------------ | ------------------------------------------------------------------------------- |
 | `breaking`     | Changes that break existing clients  | Removing endpoints/parameters, changing types, adding required fields           |
-| `non-breaking` | Backwards-compatible changes         | Adding optional parameters/properties, relaxing constraints, adding enum values |
-| `annotation`   | Documentation-only changes           | Description, summary, example changes                                           |
-| `unclassified` | Changes without clear classification | Extension field (`x-*`) changes                                                 |
+| `risky`        | Valid for most clients, but can break some | An enum value added to a response, a looser bound on a response value, a new argument with a default |
+| `non-breaking` | Backwards-compatible changes         | Adding optional parameters/properties, relaxing request constraints, adding enum values to a request |
+| `deprecated`   | Something was deprecated             | `deprecated: true` on an operation or parameter, a GraphQL `@deprecated` field |
+| `annotation`   | Documentation-only changes           | Description, summary, example, `x-*` extension changes                         |
+| `unclassified` | Changes without clear classification | Changes in a component that nothing references                                  |
 
 ## Usage Examples
 
@@ -345,10 +390,22 @@ const viewer = createDiffViewer(container, specV1, specV2)
 viewer.update(specV2, specV3)
 ```
 
+## Migrating from 1.x
+
+api-diff-viewer 2.0 uses api-smart-diff 2.x. What changes for viewer users:
+
+- **Two more classifications.** `risky` (new in api-smart-diff 2.0) and `deprecated` (already produced by 1.x but dropped by the viewer) are now counted, coloured, filterable and navigable. `ChangeSummary` has `risky` and `deprecated` counters and `total` is now exactly the sum of the six; `DiffThemeColors` has `riskyColor` and `deprecatedColor` (CSS variables `--diff-risky-color`, `--diff-deprecated-color`, plus `--diff-badge-risky-*` / `--diff-badge-deprecated-*`); add `'risky'` / `'deprecated'` to any filter list or legend you build. Gutter bars, fold badges and change badges use the classes `cm-diff-type-risky`, `cm-diff-fold-badge-risky`, `cm-change-badge-risky` (and `-deprecated`).
+- **Breaking type changes.** `ChildKeyInfo.changeCounts` (from `navigation.getChildKeys()`) is a `ClassificationCounts` object (`{ breaking, risky, nonBreaking, deprecated, annotation, unclassified }`) instead of a four-number tuple. `DiffBlockData.diffs` has six entries in the order of `diffTypes` (`breaking, risky, non-breaking, deprecated, annotation, unclassified`), so `annotation` moved from index 2 to 4 and `unclassified` from 3 to 5. `BadgeData` and `ClassificationCounts` gained `risky` / `deprecated`, and `ChangeBadgeWidget` takes `(counts, blockId)`. `mergeOptions` is api-smart-diff 2.x `CompareOptions` (the misspelled `ComapreOptions` type no longer exists; `annotateHook` is `(diff, ctx) => string`).
+- **Events.** `ready` also passes `errors` (comparison problems, see [Errors](#errors)); `error` passes `kind` (and `name`). Unsupported documents (Swagger 2.0, ...) are reported with `error` instead of being diffed as plain JSON, and the constructor no longer throws when `useWorker: false`.
+- **String inputs must be JSON.** A YAML string used to be compared as a plain string; it is now an `invalid-input` error. Parse YAML yourself and pass the object.
+- **Rendered content.** The viewer shows the documents as written (api-smart-diff `merged: "original"`): path-level parameters stay on the path item, unchanged `$ref`s stay `$ref`s, `allOf` is not merged, and removed keys and array items are shown at the end of their container, after the after-side entries. Navigation paths (`goToPath`, `findPaths`, `getChildKeys`, `togglePath`) follow that document, so a path that only existed in the 1.x normalized document (e.g. a path-level parameter under `.../get/parameters/N`) no longer resolves. Pass `mergeOptions: { merged: 'normalized' }` to get the 1.x-style content.
+- **Different classifications and counts.** api-smart-diff 2.x classifies changes inside components by their usages, reports a changed component at the declaration and at each usage, produces `rename` changes for renamed paths, components, channels and messages, and rewrote its rules, so the counts of the same documents differ from 1.x. An array container no longer borrows the change of its first changed item, so the summary counts each item change instead of the container.
+- **Bundle size.** api-smart-diff 2.x (with its OpenAPI 3.2, AsyncAPI 3.0, GraphApi 1.0 and ProtoApi engines) makes the ES bundle about 470 kB larger (about 125 kB gzipped).
+
 ## Development
 
 ```sh
-pnpm install          # Install dependencies
+pnpm install          # Install dependencies (the lockfile is pnpm 8 format: use pnpm 8, e.g. `npx pnpm@8 install`)
 pnpm run build        # Type-check + build library
 pnpm run storybook    # Run Storybook on port 6006
 pnpm run test         # Run tests

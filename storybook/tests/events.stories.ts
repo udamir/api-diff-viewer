@@ -33,12 +33,15 @@ export const ReadyEventSummary: Story = {
     expect(summary).toBeDefined()
     expect(summary.total).toBeGreaterThan(0)
     expect(typeof summary.breaking).toBe('number')
+    expect(typeof summary.risky).toBe('number')
     expect(typeof summary.nonBreaking).toBe('number')
+    expect(typeof summary.deprecated).toBe('number')
     expect(typeof summary.annotation).toBe('number')
     expect(typeof summary.unclassified).toBe('number')
-    // Categorized changes should not exceed total
-    const categorized = summary.breaking + summary.nonBreaking + summary.annotation + summary.unclassified
-    expect(categorized).toBeLessThanOrEqual(summary.total)
+    // Every change is in exactly one bucket (no classification is dropped)
+    const categorized =
+      summary.breaking + summary.risky + summary.nonBreaking + summary.deprecated + summary.annotation + summary.unclassified
+    expect(categorized).toBe(summary.total)
     expect(categorized).toBeGreaterThan(0)
   },
 }

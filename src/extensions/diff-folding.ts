@@ -11,12 +11,7 @@ import type { Extension, StateEffect } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 /** Classification counts for a foldable range */
-export interface ClassificationCounts {
-	breaking: number;
-	nonBreaking: number;
-	annotation: number;
-	unclassified: number;
-}
+export type { ClassificationCounts } from "../diff-types";
 
 /** Theme for fold styling */
 export const diffFoldingTheme = EditorView.baseTheme({
@@ -61,9 +56,17 @@ export const diffFoldingTheme = EditorView.baseTheme({
 		backgroundColor: "var(--diff-badge-breaking-bg, #ffebe9)",
 		color: "var(--diff-breaking-color, #cf222e)",
 	},
+	".cm-diff-fold-badge-risky": {
+		backgroundColor: "var(--diff-badge-risky-bg, #fff1e5)",
+		color: "var(--diff-risky-color, #bc4c00)",
+	},
 	".cm-diff-fold-badge-non-breaking": {
 		backgroundColor: "var(--diff-badge-non-breaking-bg, #dafbe1)",
 		color: "var(--diff-non-breaking-color, #1a7f37)",
+	},
+	".cm-diff-fold-badge-deprecated": {
+		backgroundColor: "var(--diff-badge-deprecated-bg, #fff8c5)",
+		color: "var(--diff-deprecated-color, #9a6700)",
 	},
 	".cm-diff-fold-badge-annotation": {
 		backgroundColor: "var(--diff-badge-annotation-bg, #f0e6ff)",
@@ -86,9 +89,17 @@ export const diffFoldingTheme = EditorView.baseTheme({
 		backgroundColor: "var(--diff-badge-breaking-bg, #490202)",
 		color: "var(--diff-breaking-color, #f85149)",
 	},
+	"&dark .cm-diff-fold-badge-risky": {
+		backgroundColor: "var(--diff-badge-risky-bg, #3d1d00)",
+		color: "var(--diff-risky-color, #f0883e)",
+	},
 	"&dark .cm-diff-fold-badge-non-breaking": {
 		backgroundColor: "var(--diff-badge-non-breaking-bg, #04260f)",
 		color: "var(--diff-non-breaking-color, #3fb950)",
+	},
+	"&dark .cm-diff-fold-badge-deprecated": {
+		backgroundColor: "var(--diff-badge-deprecated-bg, #3b2300)",
+		color: "var(--diff-deprecated-color, #d29922)",
 	},
 	"&dark .cm-diff-fold-badge-annotation": {
 		backgroundColor: "var(--diff-badge-annotation-bg, #2a1a4e)",

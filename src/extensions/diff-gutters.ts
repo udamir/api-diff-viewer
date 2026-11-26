@@ -9,6 +9,7 @@ import { foldEffect, foldedRanges, unfoldEffect } from "@codemirror/language";
 import { type EditorState, type Extension, type RangeSet, RangeSetBuilder, StateField } from "@codemirror/state";
 import { EditorView, GutterMarker, gutter } from "@codemirror/view";
 import type { DiffType } from "api-smart-diff";
+import { type ClassificationCounts, diffTypeCountKeys, diffTypeLabels, diffTypes } from "../diff-types";
 import type { LineMapping } from "../types";
 import { LINE_HEIGHT_PX } from "./aligned-decorations";
 
@@ -48,14 +49,6 @@ const markerCache: Record<GutterChangeType, DiffMarkerGutterMarker> = {
 	spacer: new DiffMarkerGutterMarker("spacer"),
 };
 
-/** Diff type label map for tooltips */
-const diffTypeLabels: Record<string, string> = {
-	breaking: "Breaking",
-	"non-breaking": "Non-breaking",
-	annotation: "Annotation",
-	unclassified: "Unclassified",
-};
-
 /** Gutter marker for diff type indicator (colored dot with tooltip) */
 class DiffTypeGutterMarker extends GutterMarker {
 	constructor(readonly diffType: DiffType) {
@@ -65,7 +58,10 @@ class DiffTypeGutterMarker extends GutterMarker {
 	toDOM() {
 		const span = document.createElement("span");
 		span.className = `cm-diff-type-dot cm-diff-type-${this.diffType}`;
-		span.title = diffTypeLabels[this.diffType] || this.diffType;
+		const label = diffTypeLabels[this.diffType] || this.diffType;
+		span.title = label;
+		span.setAttribute("role", "img");
+		span.setAttribute("aria-label", `${label} change`);
 		return span;
 	}
 
@@ -75,12 +71,9 @@ class DiffTypeGutterMarker extends GutterMarker {
 }
 
 /** Pre-computed diff type markers */
-const diffTypeMarkerCache: Record<string, DiffTypeGutterMarker> = {
-	breaking: new DiffTypeGutterMarker("breaking"),
-	"non-breaking": new DiffTypeGutterMarker("non-breaking"),
-	annotation: new DiffTypeGutterMarker("annotation"),
-	unclassified: new DiffTypeGutterMarker("unclassified"),
-};
+const diffTypeMarkerCache: Record<string, DiffTypeGutterMarker> = Object.fromEntries(
+	diffTypes.map((type) => [type, new DiffTypeGutterMarker(type)])
+);
 
 /** Spacer marker for diff type gutter — fills space with spacer background */
 class DiffTypeSpacer extends GutterMarker {
@@ -174,25 +167,14 @@ function buildDiffGutterMarkers(
 	return builder.finish();
 }
 
-/** Priority map for diff types — lower is more severe */
-const diffTypePriority: Record<string, number> = {
-	breaking: 0,
-	"non-breaking": 1,
-	annotation: 2,
-	unclassified: 3,
-};
+/** Priority map for diff types — lower is more severe (the order of `diffTypes`) */
+const diffTypePriority: Record<string, number> = Object.fromEntries(diffTypes.map((type, i) => [type, i]));
 
 /** Get the most severe diff type from a BlockTreeIndex entry's counts */
-function getMostSevereDiffTypeFromCounts(counts: {
-	breaking: number;
-	nonBreaking: number;
-	annotation: number;
-	unclassified: number;
-}): string | null {
-	if (counts.breaking > 0) return "breaking";
-	if (counts.nonBreaking > 0) return "non-breaking";
-	if (counts.annotation > 0) return "annotation";
-	if (counts.unclassified > 0) return "unclassified";
+function getMostSevereDiffTypeFromCounts(counts: ClassificationCounts): string | null {
+	for (const type of diffTypes) {
+		if (counts[diffTypeCountKeys[type]] > 0) return type;
+	}
 	return null;
 }
 
@@ -445,8 +427,14 @@ export const diffMarkerGutterTheme = EditorView.baseTheme({
 	".cm-diff-type-breaking": {
 		backgroundColor: "var(--diff-breaking-color, #cf222e)",
 	},
+	".cm-diff-type-risky": {
+		backgroundColor: "var(--diff-risky-color, #bc4c00)",
+	},
 	".cm-diff-type-non-breaking": {
 		backgroundColor: "var(--diff-non-breaking-color, #1a7f37)",
+	},
+	".cm-diff-type-deprecated": {
+		backgroundColor: "var(--diff-deprecated-color, #9a6700)",
 	},
 	".cm-diff-type-annotation": {
 		backgroundColor: "var(--diff-annotation-color, #8250df)",
@@ -463,8 +451,14 @@ export const diffMarkerGutterTheme = EditorView.baseTheme({
 	"&dark .cm-diff-type-breaking": {
 		backgroundColor: "var(--diff-breaking-color, #f85149)",
 	},
+	"&dark .cm-diff-type-risky": {
+		backgroundColor: "var(--diff-risky-color, #f0883e)",
+	},
 	"&dark .cm-diff-type-non-breaking": {
 		backgroundColor: "var(--diff-non-breaking-color, #3fb950)",
+	},
+	"&dark .cm-diff-type-deprecated": {
+		backgroundColor: "var(--diff-deprecated-color, #d29922)",
 	},
 	"&dark .cm-diff-type-annotation": {
 		backgroundColor: "var(--diff-annotation-color, #a371f7)",

@@ -13,7 +13,9 @@
   --accent: #0969da;
   --error: #cf222e;
   --filter-breaking: #cf222e;
+  --filter-risky: #bc4c00;
   --filter-non-breaking: #1a7f37;
+  --filter-deprecated: #9a6700;
   --filter-annotation: #8250df;
   --filter-unclassified: #656d76;
 }
@@ -30,7 +32,9 @@ body.dark {
   --accent: #58a6ff;
   --error: #f85149;
   --filter-breaking: #f85149;
+  --filter-risky: #f0883e;
   --filter-non-breaking: #3fb950;
+  --filter-deprecated: #d29922;
   --filter-annotation: #a371f7;
   --filter-unclassified: #768390;
 }
@@ -188,12 +192,16 @@ body {
 }
 
 .filter-btn[data-filter="breaking"]       { color: var(--filter-breaking); }
+.filter-btn[data-filter="risky"]          { color: var(--filter-risky); }
 .filter-btn[data-filter="non-breaking"]   { color: var(--filter-non-breaking); }
+.filter-btn[data-filter="deprecated"]     { color: var(--filter-deprecated); }
 .filter-btn[data-filter="annotation"]     { color: var(--filter-annotation); }
 .filter-btn[data-filter="unclassified"]   { color: var(--filter-unclassified); }
 
 .filter-btn.active[data-filter="breaking"]       { border-color: var(--filter-breaking); }
+.filter-btn.active[data-filter="risky"]          { border-color: var(--filter-risky); }
 .filter-btn.active[data-filter="non-breaking"]   { border-color: var(--filter-non-breaking); }
+.filter-btn.active[data-filter="deprecated"]     { border-color: var(--filter-deprecated); }
 .filter-btn.active[data-filter="annotation"]     { border-color: var(--filter-annotation); }
 .filter-btn.active[data-filter="unclassified"]   { border-color: var(--filter-unclassified); }
 
@@ -212,9 +220,15 @@ body {
 }
 
 .filter-btn[data-filter="breaking"]     .filter-count { background: var(--filter-breaking); }
+.filter-btn[data-filter="risky"]        .filter-count { background: var(--filter-risky); }
 .filter-btn[data-filter="non-breaking"] .filter-count { background: var(--filter-non-breaking); }
+.filter-btn[data-filter="deprecated"]   .filter-count { background: var(--filter-deprecated); }
 .filter-btn[data-filter="annotation"]   .filter-count { background: var(--filter-annotation); }
 .filter-btn[data-filter="unclassified"] .filter-count { background: var(--filter-unclassified); }
+
+/* Errors (unsupported documents) and comparison problems */
+#summary.error { color: var(--error); font-weight: 600; }
+#summary.warning { color: var(--filter-risky); }
 
 /* Resize handles */
 .resize-handle {

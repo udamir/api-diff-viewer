@@ -121,12 +121,15 @@ export const ChangeSummaryValid: Story = {
     const summary = viewer.getChangeSummary()
     expect(summary.total).toBeGreaterThan(0)
     expect(summary.breaking).toBeGreaterThanOrEqual(0)
+    expect(summary.risky).toBeGreaterThanOrEqual(0)
     expect(summary.nonBreaking).toBeGreaterThanOrEqual(0)
+    expect(summary.deprecated).toBeGreaterThanOrEqual(0)
     expect(summary.annotation).toBeGreaterThanOrEqual(0)
     expect(summary.unclassified).toBeGreaterThanOrEqual(0)
-    // Categorized changes should not exceed total
-    const categorized = summary.breaking + summary.nonBreaking + summary.annotation + summary.unclassified
-    expect(categorized).toBeLessThanOrEqual(summary.total)
+    // Every change is in exactly one bucket (no classification is dropped)
+    const categorized =
+      summary.breaking + summary.risky + summary.nonBreaking + summary.deprecated + summary.annotation + summary.unclassified
+    expect(categorized).toBe(summary.total)
     expect(categorized).toBeGreaterThan(0)
   },
 }

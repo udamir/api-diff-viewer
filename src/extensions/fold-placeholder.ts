@@ -2,13 +2,20 @@
  * Fold Placeholder — Classification-aware fold placeholder for CodeMirror
  *
  * Produces fold placeholders that show classification counter badges
- * (breaking, non-breaking, annotation, unclassified) and detects
+ * (breaking, risky, non-breaking, deprecated, annotation, unclassified) and detects
  * spacer-only fold ranges.
  */
 
 import type { EditorState } from "@codemirror/state";
+import {
+	type ClassificationCounts,
+	diffTypeCountKeys,
+	diffTypeLabels,
+	diffTypes,
+	emptyClassificationCounts,
+	incrementCount,
+} from "../diff-types";
 import type { LineMapping } from "../types";
-import type { ClassificationCounts } from "./diff-folding";
 
 export interface FoldPlaceholderData {
 	counts: ClassificationCounts;
@@ -30,12 +37,7 @@ export function prepareFoldPlaceholder(
 	const doc = state.doc;
 	const fromLine = doc.lineAt(range.from).number;
 	const toLine = doc.lineAt(range.to).number;
-	const counts: ClassificationCounts = {
-		breaking: 0,
-		nonBreaking: 0,
-		annotation: 0,
-		unclassified: 0,
-	};
+	const counts: ClassificationCounts = emptyClassificationCounts();
 
 	// The fold widget appears on the header line (fromLine). If the header line
 	// is a spacer, the placeholder must be invisible — the fold range may include
@@ -66,20 +68,7 @@ export function prepareFoldPlaceholder(
 		if (!mapping.diffType) continue;
 		if (!mapping.isChangeRoot) continue;
 
-		switch (mapping.diffType) {
-			case "breaking":
-				counts.breaking++;
-				break;
-			case "non-breaking":
-				counts.nonBreaking++;
-				break;
-			case "annotation":
-				counts.annotation++;
-				break;
-			case "unclassified":
-				counts.unclassified++;
-				break;
-		}
+		incrementCount(counts, mapping.diffType);
 	}
 
 	return { counts, isSpacer: false };
@@ -114,18 +103,15 @@ export function createFoldPlaceholder(prepared: FoldPlaceholderData, onclick?: (
 	wrapper.appendChild(ellipsis);
 
 	// Classification counter badges
-	const addCounter = (type: string, count: number) => {
-		if (count <= 0) return;
+	for (const type of diffTypes) {
+		const count = counts[diffTypeCountKeys[type]];
+		if (count <= 0) continue;
 		const badge = document.createElement("span");
 		badge.className = `cm-diff-fold-badge cm-diff-fold-badge-${type}`;
 		badge.textContent = String(count);
-		badge.title = `${count} ${type.replace("-", " ")}`;
+		badge.title = `${count} ${diffTypeLabels[type].toLowerCase()}`;
 		wrapper.appendChild(badge);
-	};
-	addCounter("breaking", counts.breaking);
-	addCounter("non-breaking", counts.nonBreaking);
-	addCounter("annotation", counts.annotation);
-	addCounter("unclassified", counts.unclassified);
+	}
 
 	return wrapper;
 }

@@ -257,14 +257,23 @@ function createViewer(before, after) {
       useWorker: false,
     })
 
-    viewer.on('ready', ({ summary }) => {
+    viewer.on('ready', ({ summary, errors }) => {
       updateFilterCounts(summary)
-      summaryEl.textContent = `${summary.total} changes`
-
+      // comparison problems (unresolved $ref, a throwing rule, ...): the diff still rendered
+      summaryEl.className = errors.length ? 'warning' : ''
+      summaryEl.textContent = errors.length
+        ? `${summary.total} changes, ${errors.length} comparison problem(s)`
+        : `${summary.total} changes`
+      summaryEl.title = errors.map((e) => `${e.kind} at /${e.path.join('/')}: ${e.message}`).join('\n')
     })
 
-    viewer.on('error', ({ message }) => {
+    viewer.on('error', ({ message, kind }) => {
+      // e.g. UnsupportedSpecError for Swagger 2.0 or two different specifications
       console.warn('Viewer error:', message)
+      summaryEl.className = 'error'
+      updateFilterCounts({})
+      summaryEl.textContent = kind === 'unsupported-spec' ? `Cannot compare: ${message}` : `Error: ${message}`
+      summaryEl.title = message
     })
   } catch (e) {
     console.warn('Init error', e)
@@ -279,7 +288,9 @@ function getFilters() {
 function updateFilterCounts(summary) {
   const counts = {
     breaking: summary.breaking,
+    risky: summary.risky,
     'non-breaking': summary.nonBreaking,
+    deprecated: summary.deprecated,
     annotation: summary.annotation,
     unclassified: summary.unclassified,
   }

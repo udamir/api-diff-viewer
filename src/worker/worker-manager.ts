@@ -2,16 +2,16 @@
  * Worker Manager
  *
  * Promise-based wrapper around the diff worker with automatic fallback
- * to synchronous apiMerge() when Worker creation fails.
+ * to synchronous apiCompare() when Worker creation fails.
  */
 
-import type { ComapreOptions } from "api-smart-diff";
-import { apiMerge } from "api-smart-diff";
+import type { CompareOptions } from "api-smart-diff";
 import type { MergedDocument } from "../types";
-import type { WorkerResponse } from "./types";
+import { compareDocuments, isCloneableCompareOptions } from "./compare";
+import type { WorkerCompareResult, WorkerResponse } from "./types";
 
 interface PendingRequest {
-	resolve: (value: MergedDocument) => void;
+	resolve: (value: WorkerCompareResult) => void;
 	reject: (reason: unknown) => void;
 }
 
@@ -46,7 +46,10 @@ export class DiffWorkerManager {
 				if (msg.type === "result") {
 					pending.resolve(msg.payload);
 				} else if (msg.type === "error") {
-					pending.reject(new Error(msg.payload.message));
+					const error = new Error(msg.payload.message);
+					// Keep the class name (e.g. "UnsupportedSpecError") — instanceof is lost across the worker
+					if (msg.payload.name) error.name = msg.payload.name;
+					pending.reject(error);
 				}
 			};
 
@@ -64,11 +67,21 @@ export class DiffWorkerManager {
 	}
 
 	/**
-	 * Merge before/after specs. Uses worker if available, otherwise falls back to sync.
+	 * Merge before/after specs and return only the merged document.
+	 * Uses worker if available, otherwise falls back to sync.
 	 */
-	async merge(before: unknown, after: unknown, options?: ComapreOptions): Promise<MergedDocument> {
-		if (this._useFallback || !this.worker) {
-			return apiMerge(before, after, options) as MergedDocument;
+	async merge(before: unknown, after: unknown, options?: CompareOptions): Promise<MergedDocument> {
+		return (await this.compare(before, after, options)).merged;
+	}
+
+	/**
+	 * Compare before/after specs: the merged document plus the comparison errors.
+	 * Uses worker if available, otherwise (or when the options hold functions,
+	 * which cannot be posted to a worker) falls back to sync.
+	 */
+	async compare(before: unknown, after: unknown, options?: CompareOptions): Promise<WorkerCompareResult> {
+		if (this._useFallback || !this.worker || !isCloneableCompareOptions(options)) {
+			return compareDocuments(before, after, options);
 		}
 
 		return new Promise((resolve, reject) => {

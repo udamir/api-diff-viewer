@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FormatContext } from "../../src/diff-builder/builder";
-import { DiffBlockData, Token } from "../../src/diff-builder/common";
+import { DiffBlockData, diffTypes, Token } from "../../src/diff-builder/common";
 import { jsonStrategy } from "../../src/diff-builder/json-strategy";
 
 const ctx = (last = false, level = 0): FormatContext => ({ last, level });
@@ -181,18 +181,18 @@ describe("jsonStrategy", () => {
 	describe("addBlockTokens", () => {
 		it("appends Change tokens for blocks with diffs", () => {
 			const block = new DiffBlockData(1, 0, [Token.Key("info")]);
-			block.diffs[0] = 3; // 3 breaking
-			block.diffs[1] = 1; // 1 non-breaking
+			block.diffs[diffTypes.indexOf("breaking")] = 3;
+			block.diffs[diffTypes.indexOf("risky")] = 2;
+			block.diffs[diffTypes.indexOf("non-breaking")] = 1;
 
 			jsonStrategy.addBlockTokens(block, false);
 
-			const changeTokens = block.tokens.filter(
-				(t) =>
-					t.type === "breaking" || t.type === "non-breaking" || t.type === "annotation" || t.type === "unclassified"
-			);
-			expect(changeTokens.length).toBe(2);
-			expect(changeTokens[0].value).toBe("3"); // breaking
-			expect(changeTokens[1].value).toBe("1"); // non-breaking
+			const changeTokens = block.tokens.filter((t) => (diffTypes as string[]).includes(t.type));
+			expect(changeTokens.map((t) => [t.type, t.value])).toEqual([
+				["breaking", "3"],
+				["risky", "2"],
+				["non-breaking", "1"],
+			]);
 		});
 
 		it("adds collapsed tag to Change tokens", () => {

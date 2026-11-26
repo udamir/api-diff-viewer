@@ -1,4 +1,4 @@
-import type { DiffMeta } from "api-smart-diff";
+import type { DiffMeta, MergeMeta } from "api-smart-diff";
 import { diffWords } from "diff";
 import type { JsonValue } from "../types";
 import { encodeKey, isEmpty } from "../utils/common";
@@ -63,12 +63,22 @@ export function valueTokens(
 	return content;
 }
 
-/** Recursively build the diff tree for an input object/array */
+/** Per-item metadata of an array, keyed by the item's position in the merged array */
+export type ArrayMetaRecord = Record<string | number, MergeMeta>;
+
+/**
+ * Recursively build the diff tree for an input object/array.
+ *
+ * @param arrayMeta - For an array input: the item metadata api-smart-diff stored on the
+ *   parent as `{ array: {...} }` (the default layout, `arrayMeta: false`). Metadata stored
+ *   on the array itself (`arrayMeta: true`) is read from `input[metaKey]` instead.
+ */
 export function buildDiff(
 	input: Record<string, unknown> | unknown[],
 	parent: DiffBlockData,
 	strategy: FormatStrategy,
-	ctx: FormatContext = { last: false, level: 0 }
+	ctx: FormatContext = { last: false, level: 0 },
+	arrayMeta?: ArrayMetaRecord
 ): void {
 	const isArray = Array.isArray(input);
 	// Mutable iteration context — postAddBlock may modify level for subsequent siblings
@@ -77,7 +87,7 @@ export function buildDiff(
 	if (isArray) {
 		for (let i = 0; i < input.length; i++) {
 			iterCtx.last = i === input.length - 1;
-			buildChildBlock(input, i, parent, strategy, iterCtx);
+			buildChildBlock(input, i, parent, strategy, iterCtx, arrayMeta);
 		}
 	} else {
 		const keys = Object.keys(input).filter((k) => k !== metaKey);
@@ -90,26 +100,36 @@ export function buildDiff(
 	strategy.addBlockTokens(parent, isArray);
 }
 
+/** Whether a meta entry is the `{ array: {...} }` wrapper of an array's item metadata */
+function isArrayMetaEntry(meta: MergeMeta | undefined): meta is { array: ArrayMetaRecord } {
+	return !!meta && !("action" in meta) && "array" in meta;
+}
+
 /** Build a single child block (leaf or container) */
 function buildChildBlock(
 	input: Record<string, unknown> | unknown[],
 	key: string | number,
 	parent: DiffBlockData,
 	strategy: FormatStrategy,
-	ctx: FormatContext
+	ctx: FormatContext,
+	arrayMeta?: ArrayMetaRecord
 ): void {
 	const value = (input as Record<string | number, unknown>)[key];
 	const metaRecord =
 		metaKey in input
-			? ((input as Record<string, unknown>)[metaKey] as Record<string, DiffMeta> | undefined)
-			: undefined;
-	let diff: DiffMeta | undefined = metaRecord ? metaRecord[key as string] : undefined;
+			? ((input as Record<string, unknown>)[metaKey] as Record<string | number, MergeMeta> | undefined)
+			: arrayMeta;
+	const entry = metaRecord ? metaRecord[key] : undefined;
 
-	// Handle nested array format from api-smart-diff (when arrayMeta is not set).
-	// In that case the parent $diff entry looks like { array: { "0": DiffMeta, ... } }
-	// which has no `action` property. Discard it so children don't inherit a malformed diff.
-	if (diff && !("action" in diff) && "array" in (diff as Record<string, unknown>)) {
-		diff = undefined;
+	// Array item metadata in the default api-smart-diff layout: the parent's entry for an
+	// array key is { array: { "0": MergeMeta, ... } } (no `action`). It is not a diff of the
+	// array itself — pass it down to the array's items instead.
+	let childArrayMeta: ArrayMetaRecord | undefined;
+	let diff: DiffMeta | undefined;
+	if (isArrayMetaEntry(entry)) {
+		childArrayMeta = entry.array;
+	} else {
+		diff = entry as DiffMeta | undefined;
 	}
 
 	if (diff) {
@@ -150,21 +170,24 @@ function buildChildBlock(
 
 		block.id = blockId;
 
-		buildDiff(value as Record<string, unknown> | unknown[], block, strategy, {
-			last: false,
-			level: childLevel,
-			skipWordDiff: ctx.skipWordDiff,
-		});
+		buildDiff(
+			value as Record<string, unknown> | unknown[],
+			block,
+			strategy,
+			{
+				last: false,
+				level: childLevel,
+				skipWordDiff: ctx.skipWordDiff,
+			},
+			childArrayMeta
+		);
 
-		// When arrayMeta is enabled, per-item diffs live on the array's own $diff
-		// but the parent object has no entry for this key. Propagate the first
-		// child diff to the container so it is marked as changed.
-		if (!block.diff && isArrayValue && metaKey in (value as unknown as Record<string, unknown>)) {
-			const childWithDiff = block.children.find((c) => c.diff);
-			if (childWithDiff?.diff) {
-				block.diff = childWithDiff.diff;
-			}
-		}
+		// Per-item diffs of an array (on the parent as { array }, or on the array's own
+		// $diff with arrayMeta) are not a diff of the array itself: like an object with
+		// changed properties, the container keeps no diff of its own and only aggregates
+		// its children's counters (block.diffs). Borrowing a child's diff here would mark
+		// the header line as added/replaced and make the summary count the container
+		// instead of (and, for add/remove, on top of hiding) the item changes.
 
 		const endTokens = strategy.endBlockTokens(isArrayValue, ctx);
 		if (endTokens.length) {

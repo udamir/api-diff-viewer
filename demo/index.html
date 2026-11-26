@@ -79,13 +79,15 @@
 
         <div class="toolbar-group" id="filter-group">
           <button class="filter-btn" data-filter="breaking">Breaking <span class="filter-count">0</span></button>
+          <button class="filter-btn" data-filter="risky">Risky <span class="filter-count">0</span></button>
           <button class="filter-btn" data-filter="non-breaking">Non-breaking <span class="filter-count">0</span></button>
+          <button class="filter-btn" data-filter="deprecated">Deprecated <span class="filter-count">0</span></button>
           <button class="filter-btn" data-filter="annotation">Annotation <span class="filter-count">0</span></button>
           <button class="filter-btn" data-filter="unclassified">Unclassified <span class="filter-count">0</span></button>
         </div>
 
         <div class="toolbar-group">
-          <span id="summary"></span>
+          <span id="summary" role="status" aria-live="polite"></span>
         </div>
       </div>
     </div>

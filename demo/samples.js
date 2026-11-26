@@ -1,6 +1,44 @@
+import {
+  asyncApi30After,
+  asyncApi30Before,
+  graphApi10After,
+  graphApi10Before,
+  openApi31After,
+  openApi31Before,
+  protoApiAfter,
+  protoApiBefore,
+  swagger2After,
+  swagger2Before,
+} from '../storybook/samples/asd2.ts'
+
 export const samples = {
+  openapi31: {
+    label: 'OpenAPI 3.1 — All classifications + rename',
+    before: openApi31Before,
+    after: openApi31After,
+  },
+  asyncapi30: {
+    label: 'AsyncAPI 3.0 — Orders',
+    before: asyncApi30Before,
+    after: asyncApi30After,
+  },
+  graphapi10: {
+    label: 'GraphApi 1.0 (GraphQL) — Books',
+    before: graphApi10Before,
+    after: graphApi10After,
+  },
+  protoapi: {
+    label: 'ProtoApi (gRPC) — Orders',
+    before: protoApiBefore,
+    after: protoApiAfter,
+  },
+  swagger2: {
+    label: 'Swagger 2.0 — unsupported (error)',
+    before: swagger2Before,
+    after: swagger2After,
+  },
   openapi: {
-    label: 'OpenAPI 3.x — Pet Store',
+    label: 'OpenAPI 3.0 — Pet Store',
     before: {
       openapi: '3.0.1',
       info: { title: 'Pet Store', version: '1.0.0', description: 'A sample pet store API' },

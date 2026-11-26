@@ -8,10 +8,10 @@
 
 import type { Extension } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import type { ComapreOptions, DiffType } from "api-smart-diff";
-import { apiMerge } from "api-smart-diff";
+import type { CompareError, CompareOptions, DiffType } from "api-smart-diff";
 import { foldAllInView, unfoldAllInView } from "./coordinator";
 import { buildDiffBlock } from "./diff-builder";
+import { emptyClassificationCounts } from "./diff-types";
 import { applyFilterFolds } from "./extensions/filter-fold";
 import { createNavigationAPI, NavigationAPIImpl } from "./navigation/navigation-api";
 import { setBlockTreeIndexEffect } from "./state/block-index-state";
@@ -33,6 +33,7 @@ import { resolvePathToBlock } from "./utils/path";
 import type { BaseView, ViewConfig } from "./views/base-view";
 import { InlineView } from "./views/inline-view";
 import { SideBySideView } from "./views/side-by-side-view";
+import { compareDocuments } from "./worker/compare";
 import { DiffWorkerManager } from "./worker/worker-manager";
 
 import "./styles.css";
@@ -89,15 +90,58 @@ export interface DiffViewerOptions {
 	useWorker?: boolean;
 	/** Custom worker URL. Default: inline blob */
 	workerUrl?: string;
-	/** api-smart-diff merge options override */
-	mergeOptions?: ComapreOptions;
+	/**
+	 * api-smart-diff compare options (`CompareOptions`), e.g. `merged: "normalized"`,
+	 * `engine: "jsonschema"`, `components`, custom `rules`. `metaKey` and `arrayMeta`
+	 * are always overridden (the viewer reads its metadata from them). Options that
+	 * hold functions (`rules`, `extensions`, `annotateHook`, `onError`) make the
+	 * comparison run on the main thread, since functions cannot be posted to a worker.
+	 */
+	mergeOptions?: CompareOptions;
+}
+
+/**
+ * Category of an `error` event:
+ * - `unsupported-spec`: api-smart-diff rejected the documents (`UnsupportedSpecError`: Swagger 2.0,
+ *   OpenAPI 4+, AsyncAPI 1.x / 4+, an unknown GraphApi version, or two different specifications)
+ * - `invalid-input`: a string input is not valid JSON
+ * - `internal`: any other failure (worker, rendering, ...)
+ */
+export type DiffViewerErrorKind = "unsupported-spec" | "invalid-input" | "internal";
+
+/** Payload of the `error` event */
+export interface DiffViewerError {
+	message: string;
+	kind: DiffViewerErrorKind;
+	/** Error class name, e.g. "UnsupportedSpecError" (kept across the worker boundary) */
+	name?: string;
+	cause?: unknown;
+}
+
+/** Thrown for string inputs that are not valid JSON */
+class InvalidInputError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "InvalidInputError";
+	}
+}
+
+/** Convert a thrown value into an `error` event payload */
+function toViewerError(error: unknown): DiffViewerError {
+	const name = error instanceof Error ? error.name : undefined;
+	const message = error instanceof Error ? error.message : String(error);
+	const kind: DiffViewerErrorKind =
+		name === "UnsupportedSpecError" ? "unsupported-spec" : name === "InvalidInputError" ? "invalid-input" : "internal";
+	return { message, kind, name, cause: error };
 }
 
 /** Events emitted by DiffViewer */
 export type DiffViewerEvents = {
 	loading: undefined;
-	ready: { summary: ChangeSummary };
-	error: { message: string; cause?: unknown };
+	/** `errors` lists problems inside the comparison (api-smart-diff `result.errors`); the diff still rendered */
+	ready: { summary: ChangeSummary; errors: CompareError[] };
+	/** The documents could not be compared; nothing new is rendered */
+	error: DiffViewerError;
 	navigate: { path: string | null };
 	modeChange: { mode: "side-by-side" | "inline" };
 	formatChange: { format: "json" | "yaml" };
@@ -124,7 +168,10 @@ function resolveOptions(opts?: DiffViewerOptions): Required<DiffViewerOptions> {
 		mergeOptions: {
 			...opts?.mergeOptions,
 			metaKey: "$diff", // internal — diff-builder reads metadata from this key
-			arrayMeta: true, // internal — required for per-item array diffs
+			// internal — array item metadata on the parent as { array: {...} } (the api-smart-diff
+			// default). api-smart-diff 2.0.0 drops array-level meta (`arrayMeta: true`) inside the
+			// second and later usages of a changed $ref target, so the default layout is used.
+			arrayMeta: false,
 		},
 	};
 }
@@ -141,6 +188,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 	private _diffData: DiffData | null = null;
 	private _merged: MergedDocument | null = null;
 	private _changeSummary: ChangeSummary | null = null;
+	private _compareErrors: CompareError[] = [];
 	private _treeIndex: BlockTreeIndex | null = null;
 
 	private _destroyed = false;
@@ -156,11 +204,20 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 			this.workerManager = new DiffWorkerManager(this.options.workerUrl || undefined);
 			this.initAsync();
 		} else {
-			this.initSync();
-			// Emit ready via microtask so handlers registered after construction receive it
+			let initError: unknown;
+			try {
+				this.initSync();
+			} catch (error) {
+				// e.g. UnsupportedSpecError — report it as an event instead of throwing from the constructor
+				initError = error;
+			}
+			// Emit ready / error via microtask so handlers registered after construction receive it
 			queueMicrotask(() => {
-				if (!this._destroyed && this._changeSummary) {
-					this.emit("ready", { summary: this._changeSummary });
+				if (this._destroyed) return;
+				if (initError !== undefined) {
+					this.emit("error", toViewerError(initError));
+				} else if (this._changeSummary) {
+					this.emit("ready", { summary: this._changeSummary, errors: this.getCompareErrors() });
 				}
 			});
 		}
@@ -181,6 +238,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 		this._diffData = null;
 		this._merged = null;
 		this._changeSummary = null;
+		this._compareErrors = [];
 		this._treeIndex = null;
 	}
 
@@ -197,9 +255,9 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 			this.emit("loading", undefined);
 			try {
 				this.initSync();
-				this.emit("ready", { summary: this.getChangeSummary() });
+				this.emit("ready", { summary: this.getChangeSummary(), errors: this.getCompareErrors() });
 			} catch (error) {
-				this.emit("error", { message: String(error), cause: error });
+				this.emit("error", toViewerError(error));
 			}
 		}
 	}
@@ -374,14 +432,17 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 
 	getChangeSummary(): ChangeSummary {
 		if (this._changeSummary) return this._changeSummary;
-		return {
-			total: 0,
-			breaking: 0,
-			nonBreaking: 0,
-			annotation: 0,
-			unclassified: 0,
-			byPath: new Map(),
-		};
+		return { ...emptyClassificationCounts(), total: 0, byPath: new Map() };
+	}
+
+	/**
+	 * Problems api-smart-diff reported inside the last comparison (an unresolved `$ref`,
+	 * a custom rule or annotate hook that threw, ...). The diff is still rendered; affected
+	 * nodes are compared as opaque values or classified as `unclassified`.
+	 * Empty when `mergeOptions.onError` is set (the errors then go to that callback).
+	 */
+	getCompareErrors(): CompareError[] {
+		return [...this._compareErrors];
 	}
 
 	// ── Internal ──
@@ -396,18 +457,19 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 			const afterObj = this.parseInput(this.after);
 
 			if (!this.workerManager) return;
-			const merged = await this.workerManager.merge(beforeObj, afterObj, this.options.mergeOptions);
+			const { merged, errors } = await this.workerManager.compare(beforeObj, afterObj, this.options.mergeOptions);
 
 			if (this._destroyed) return;
 
 			this._merged = merged;
+			this._compareErrors = errors;
 			this._diffData = this.buildDiffData(merged, this.options.format);
 			this.rebuildView();
 
-			this.emit("ready", { summary: this.getChangeSummary() });
+			this.emit("ready", { summary: this.getChangeSummary(), errors: this.getCompareErrors() });
 		} catch (error) {
 			if (!this._destroyed) {
-				this.emit("error", { message: String(error), cause: error });
+				this.emit("error", toViewerError(error));
 			}
 		}
 	}
@@ -416,21 +478,23 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 		const beforeObj = this.parseInput(this.before);
 		const afterObj = this.parseInput(this.after);
 
-		const merged = apiMerge(beforeObj, afterObj, this.options.mergeOptions) as MergedDocument;
+		const { merged, errors } = compareDocuments(beforeObj, afterObj, this.options.mergeOptions);
 		this._merged = merged;
+		this._compareErrors = errors;
 		this._diffData = this.buildDiffData(merged, this.options.format);
 		this.rebuildView();
 	}
 
 	private parseInput(input: object | string): unknown {
 		if (typeof input === "string") {
-			// Try JSON first
+			// String inputs must be JSON: api-smart-diff compares parsed documents only, and the
+			// viewer has no YAML parser — parse YAML yourself (e.g. with js-yaml) and pass the object.
 			try {
 				return JSON.parse(input);
-			} catch {
-				// Try YAML (api-smart-diff handles this)
-				// For now, return the string as-is; apiMerge can handle strings
-				return input;
+			} catch (error) {
+				throw new InvalidInputError(
+					`String input is not valid JSON (${error instanceof Error ? error.message : String(error)}); parse YAML documents before passing them`
+				);
 			}
 		}
 		return input;
@@ -534,11 +598,8 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
 
 		// Compute change summary
 		this._changeSummary = this._navigation?.getChangeSummary() ?? {
+			...emptyClassificationCounts(),
 			total: 0,
-			breaking: 0,
-			nonBreaking: 0,
-			annotation: 0,
-			unclassified: 0,
 			byPath: new Map(),
 		};
 

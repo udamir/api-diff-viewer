@@ -103,7 +103,12 @@ export const GetChangeSummary: Story = {
 
     // Total should equal sum of all types
     expect(summary.total).toBe(
-      summary.breaking + summary.nonBreaking + summary.annotation + summary.unclassified
+      summary.breaking +
+        summary.risky +
+        summary.nonBreaking +
+        summary.deprecated +
+        summary.annotation +
+        summary.unclassified
     )
     expect(summary.total).toBeGreaterThan(0)
   },

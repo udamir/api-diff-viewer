@@ -31,8 +31,8 @@ dependencies:
     specifier: ^1.2.3
     version: 1.2.3
   api-smart-diff:
-    specifier: ^1.0.6
-    version: 1.0.6
+    specifier: ^2.0.1
+    version: 2.0.1
   diff:
     specifier: ^8.0.3
     version: 8.0.3
@@ -1659,10 +1659,11 @@ packages:
     resolution: {integrity: sha512-itUAVzhczTmP2U5yX67xVpsbbOiquusbWVyA9N+sy6+r6YVbFkahXvNCeEPWEOMhwDYwbVbGHFkVL03N9I5g+Q==}
     dev: true
 
-  /allof-merge@0.6.7:
-    resolution: {integrity: sha512-slvjkM56OdeVkm1tllrnaumtSHwqyHrepXkAe6Am+CW4WdbHkNqdOKPF6cvY3/IouzvXk1BoLICT5LY7sCoFGw==}
+  /allof-merge@1.1.0:
+    resolution: {integrity: sha512-us5c3/fqcdqRunLsxGOKlSAoHzn64TaHNPSXwfev0+rkqdyHpFev30IYdZM9u3YfJ33dmsxxLpX7f2Mi4OZi3g==}
+    engines: {node: '>=22'}
     dependencies:
-      json-crawl: 0.5.3
+      json-crawl: 1.2.0
     dev: false
 
   /ansi-regex@5.0.1:
@@ -1682,11 +1683,11 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /api-smart-diff@1.0.6:
-    resolution: {integrity: sha512-kDkGblcJG9eqy6duqYC/Cr0jN5AC9RrELRSLb3rOKgeni+7wBkCxBVIcNQVtKbYwUQ3K9JOxfPTZaEZDWtyOhg==}
+  /api-smart-diff@2.0.1:
+    resolution: {integrity: sha512-t9lMGRAdt0fY4c4Tx41MNeCXE5k+BnuHybTJ8cMHD3QenIk+LnCgO5ErH70ck+FJ6iSRB0tBtEzo7tvNLUdRSw==}
     dependencies:
-      allof-merge: 0.6.7
-      json-crawl: 0.5.3
+      allof-merge: 1.1.0
+      json-crawl: 1.2.0
     dev: false
 
   /argparse@1.0.10:
@@ -2117,9 +2118,9 @@ packages:
       argparse: 2.0.1
     dev: true
 
-  /json-crawl@0.5.3:
-    resolution: {integrity: sha512-BEjjCw8c7SxzNK4orhlWD5cXQh8vCk2LqDr4WgQq4CV+5dvopeYwt1Tskg67SuSLKvoFH5g0yuYtg7rcfKV6YA==}
-    engines: {node: '>=14.0.0'}
+  /json-crawl@1.2.0:
+    resolution: {integrity: sha512-fNVoylzzpQx++/XEqChuX4Hyf3M1U1mM8zpWn6kAfQHbuHsSxuW1AgnjqL62kPl2PHuMdCMKgWs6iU1Go1gj9Q==}
+    engines: {node: '>=18.0.0'}
     dev: false
 
   /json-schema-traverse@1.0.0:

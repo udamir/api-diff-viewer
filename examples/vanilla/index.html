@@ -163,12 +163,14 @@
       wordDiffMode: 'word',
     })
 
-    viewer.on('ready', ({ summary }) => {
-      statusEl.textContent = `Ready — ${summary.total} changes (${summary.breaking} breaking, ${summary.nonBreaking} non-breaking, ${summary.annotation} annotation)`
+    viewer.on('ready', ({ summary, errors }) => {
+      statusEl.textContent = `Ready — ${summary.total} changes (${summary.breaking} breaking, ${summary.risky} risky, ${summary.nonBreaking} non-breaking, ${summary.deprecated} deprecated, ${summary.annotation} annotation)` +
+        (errors.length ? `, ${errors.length} comparison problem(s)` : '')
     })
 
-    viewer.on('error', ({ message }) => {
-      statusEl.textContent = `Error: ${message}`
+    viewer.on('error', ({ message, kind }) => {
+      // kind: 'unsupported-spec' (e.g. Swagger 2.0), 'invalid-input' or 'internal'
+      statusEl.textContent = `Error (${kind}): ${message}`
     })
 
     // Toolbar actions

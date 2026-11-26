@@ -1,7 +1,7 @@
 {
   "name": "api-diff-viewer",
-  "version": "1.1.0",
-  "description": "CodeMirror-based component to view the difference between two documents: OpenAPI, AsyncAPI, JSON Schema",
+  "version": "2.0.0",
+  "description": "CodeMirror-based component to view the difference between two API documents: OpenAPI, AsyncAPI, GraphApi (GraphQL), ProtoApi (gRPC), JSON Schema",
   "author": "Damir Yusipov",
   "license": "MIT",
   "files": [
@@ -46,8 +46,11 @@
     "compare",
     "side-by-side",
     "openapi",
-    "swagger",
     "asyncapi",
+    "graphql",
+    "graphapi",
+    "grpc",
+    "protoapi",
     "api"
   ],
   "dependencies": {
@@ -58,7 +61,7 @@
     "@codemirror/state": "^6.5.4",
     "@codemirror/view": "^6.39.12",
     "@lezer/highlight": "^1.2.3",
-    "api-smart-diff": "^1.0.6",
+    "api-smart-diff": "^2.0.1",
     "diff": "^8.0.3"
   },
   "devDependencies": {
