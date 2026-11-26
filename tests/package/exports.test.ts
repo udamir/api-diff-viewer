@@ -1,27 +1,34 @@
-// The package `exports` decide which specifiers resolve in bundlers and Node.js. These tests resolve the documented
-// specifiers through the package's own `exports` (a package can import itself by name), so a stylesheet path in the
-// docs or the JSDoc that the exports do not cover fails here.
+// The package `exports` decide which specifiers resolve in bundlers and Node.js. These tests check the documented
+// specifiers against the `exports` map of package.json, so a stylesheet path in the docs or the JSDoc that the exports
+// do not cover fails here. They read the map instead of resolving files, so they do not need a build (`dist/`).
 
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import { describe, expect, it } from "vite-plus/test";
 
 const root = path.resolve(import.meta.dirname, "../..");
-const require = createRequire(path.join(root, "package.json"));
-const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as { name: string };
+const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as {
+	name: string;
+	exports: Record<string, unknown>;
+};
+
+/** The export target of `<name>/<subpath>`, or undefined when the exports map does not cover it. */
+const exportTarget = (specifier: string): unknown => {
+	const subpath = `.${specifier.slice(pkg.name.length)}`;
+	return pkg.exports[subpath];
+};
 
 describe("package exports", () => {
 	it("exports the stylesheet as api-diff-viewer/style.css", () => {
-		expect(require.resolve(`${pkg.name}/style.css`)).toBe(path.join(root, "dist/api-diff-viewer.css"));
+		expect(exportTarget(`${pkg.name}/style.css`)).toBe("./dist/api-diff-viewer.css");
 	});
 
 	it("exports package.json", () => {
-		expect(require.resolve(`${pkg.name}/package.json`)).toBe(path.join(root, "package.json"));
+		expect(exportTarget(`${pkg.name}/package.json`)).toBe("./package.json");
 	});
 
-	it("every stylesheet specifier in the docs, the README and the JSDoc resolves", () => {
+	it("every stylesheet specifier in the docs, the README and the JSDoc is exported", () => {
 		const files = [
 			"README.md",
 			"src/diff-viewer.ts",
@@ -38,7 +45,7 @@ describe("package exports", () => {
 		}
 		expect([...specifiers]).toContain("api-diff-viewer/style.css");
 		for (const specifier of specifiers) {
-			expect(() => require.resolve(specifier), specifier).not.toThrow();
+			expect(exportTarget(specifier), specifier).toBeDefined();
 		}
 	});
 });
