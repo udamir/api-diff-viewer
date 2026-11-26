@@ -21,8 +21,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Format, lint and type check
+        run: pnpm run check
+
       - name: Unit tests
-        run: pnpm exec vitest run --project unit
+        run: pnpm run test --project unit
 
       - name: Build
         run: pnpm run build
@@ -32,4 +35,4 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Storybook tests
-        run: pnpm exec vitest run --project storybook
+        run: pnpm run test-storybook

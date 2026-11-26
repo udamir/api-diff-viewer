@@ -51,12 +51,7 @@ export {
 	toggleFoldAtRange,
 	toggleFoldEffect,
 } from "./extensions/diff-folding";
-export {
-	buildGutterMarkers,
-	DiffGutterMarker,
-	diffGutter,
-	diffGutterTheme,
-} from "./extensions/diff-gutter";
+export { buildGutterMarkers, DiffGutterMarker, diffGutter, diffGutterTheme } from "./extensions/diff-gutter";
 export type { InlineWordDiffConfig, InlineWordDiffLine } from "./extensions/inline-word-diff";
 // Inline word diff extension (for unified view)
 export {
@@ -111,11 +106,7 @@ export {
 export type { FoldSyncOptions } from "./sync/fold-sync";
 
 // Fold sync
-export {
-	disableFoldSyncEffect,
-	foldSync,
-	setupFoldSync,
-} from "./sync/fold-sync";
+export { disableFoldSyncEffect, foldSync, setupFoldSync } from "./sync/fold-sync";
 export type { AlignmentResult, UnifiedContentOptions, UnifiedResult } from "./sync/visual-alignment";
 // Sync utilities
 export {

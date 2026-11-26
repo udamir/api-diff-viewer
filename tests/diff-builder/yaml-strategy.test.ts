@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import type { FormatContext } from "../../src/diff-builder/builder";
 import { DiffBlockData, Token } from "../../src/diff-builder/common";
 import { yamlStrategy } from "../../src/diff-builder/yaml-strategy";
@@ -371,26 +371,30 @@ describe("yamlStrategy", () => {
 		it("creates a block with no tokens", () => {
 			const parent = new DiffBlockData(1, 0, []);
 			const result = yamlStrategy.createArrayContainerBlock?.(parent, false, undefined, ctx(false, 1));
-			expect(result.block.tokens.length).toBe(0);
+			expect(result).toBeDefined();
+			expect(result?.block.tokens.length).toBe(0);
 		});
 
 		it("returns childLevel = level + 1", () => {
 			const parent = new DiffBlockData(1, 0, []);
 			const result = yamlStrategy.createArrayContainerBlock?.(parent, false, undefined, ctx(false, 2));
-			expect(result.childLevel).toBe(3);
+			expect(result).toBeDefined();
+			expect(result?.childLevel).toBe(3);
 		});
 
 		it("inherits parent indent", () => {
 			const parent = new DiffBlockData(1, 4, []);
 			const result = yamlStrategy.createArrayContainerBlock?.(parent, false, undefined, ctx());
-			expect(result.block.indent).toBe(4);
+			expect(result).toBeDefined();
+			expect(result?.block.indent).toBe(4);
 		});
 
 		it("passes diff to child block", () => {
 			const parent = new DiffBlockData(1, 0, []);
 			const diff = { action: "add" as const, type: "non-breaking" as const };
 			const result = yamlStrategy.createArrayContainerBlock?.(parent, false, diff, ctx());
-			expect(result.block.diff).toBe(diff);
+			expect(result).toBeDefined();
+			expect(result?.block.diff).toBe(diff);
 		});
 	});
 });

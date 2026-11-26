@@ -5,7 +5,7 @@
  */
 
 import { apiCompare, type DiffType } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { type DiffBlockData, diffTypes, metaKey } from "../../src/diff-builder/common";
 import { buildDiffBlock } from "../../src/diff-builder/index";
 import { diffTypeCountKeys, totalCount } from "../../src/diff-types";

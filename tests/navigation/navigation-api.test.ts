@@ -1,5 +1,5 @@
 import { apiCompare } from "api-smart-diff";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { buildDiffBlock } from "../../src/diff-builder/index";
 import { NavigationAPIImpl } from "../../src/navigation/navigation-api";
 import type { DiffData, MergedDocument } from "../../src/types";

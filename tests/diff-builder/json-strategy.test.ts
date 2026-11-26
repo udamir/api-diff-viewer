@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import type { FormatContext } from "../../src/diff-builder/builder";
 import { DiffBlockData, diffTypes, Token } from "../../src/diff-builder/common";
 import { jsonStrategy } from "../../src/diff-builder/json-strategy";

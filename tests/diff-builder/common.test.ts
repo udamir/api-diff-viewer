@@ -1,5 +1,5 @@
 import { ClassifierType } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DiffBlockData, DiffLineData, diffTypes, metaKey, Token } from "../../src/diff-builder/common";
 
 describe("Token", () => {

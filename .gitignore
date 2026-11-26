@@ -29,3 +29,6 @@ node_modules
 
 .claude
 claude.md
+# Vitest 5 reports and attachments, the demo build
+.vitest/
+demo-dist

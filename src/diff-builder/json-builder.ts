@@ -93,7 +93,12 @@ export const _jsonEndBlockTokens = (isArray: boolean, last: boolean) => {
 	return [...(isArray ? [Token.Spec(`]${last ? "" : ","}`)] : [Token.Spec(`}${last ? "" : ","}`)])];
 };
 
-export const buildDiffJsonBlock = (input: MergedDocument, key: string | number, parent: DiffBlockData, last: boolean) => {
+export const buildDiffJsonBlock = (
+	input: MergedDocument,
+	key: string | number,
+	parent: DiffBlockData,
+	last: boolean
+) => {
 	const value = (input as Record<string | number, unknown>)[key];
 	const meta = metaKey in input ? (input as MergedObject).$diff : undefined;
 	let diff: DiffMeta | undefined = meta?.[String(key)];

@@ -1,5 +1,5 @@
 import type { DiffMeta } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DiffBlockData, Token, type TokenTag } from "../../src/diff-builder/common";
 import {
 	generateAlignedContentFromDiff,

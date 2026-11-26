@@ -1,5 +1,5 @@
 import { apiCompare, type CompareOptions } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { buildDiff, valueTokens } from "../../src/diff-builder/builder";
 import { DiffBlockData, diffTypes, metaKey, Token } from "../../src/diff-builder/common";
 import { buildDiffBlock } from "../../src/diff-builder/index";

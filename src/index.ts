@@ -51,14 +51,7 @@ export {
 	tokensToStringBatch,
 } from "./sync/visual-alignment";
 // ── Themes ──
-export {
-	DiffThemeManager,
-	darkColors,
-	diffTheme,
-	diffThemeDark,
-	diffThemeLight,
-	lightColors,
-} from "./themes";
+export { DiffThemeManager, darkColors, diffTheme, diffThemeDark, diffThemeLight, lightColors } from "./themes";
 export type {
 	AlignedContent,
 	BlockMapping,

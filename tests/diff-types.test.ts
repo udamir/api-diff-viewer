@@ -1,5 +1,5 @@
 import { ClassifierType, type DiffType } from "api-smart-diff";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import {
 	addCounts,
 	countsEqual,

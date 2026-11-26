@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DiffBlockData, Token } from "../../src/diff-builder/common";
 import {
 	decodeSegment,
@@ -52,17 +52,12 @@ describe("decodeSegment", () => {
 });
 
 describe("encodeSegment/decodeSegment round-trip", () => {
-	it.each([
-		"simple",
-		"/pets/{petId}",
-		"~config",
-		"a/b/c",
-		"a~b~c",
-		"~/mixed/~path",
-		"",
-	])('round-trips "%s"', (input) => {
-		expect(decodeSegment(encodeSegment(input))).toBe(input);
-	});
+	it.each(["simple", "/pets/{petId}", "~config", "a/b/c", "a~b~c", "~/mixed/~path", ""])(
+		'round-trips "%s"',
+		(input) => {
+			expect(decodeSegment(encodeSegment(input))).toBe(input);
+		}
+	);
 });
 
 // ─── parsePath ─────────────────────────────────────────────────────────

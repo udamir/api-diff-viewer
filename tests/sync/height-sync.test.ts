@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { type HeightPadding, mapToPaddings, paddingsEqual } from "../../src/sync/height-sync";
 
 // ── paddingsEqual ──

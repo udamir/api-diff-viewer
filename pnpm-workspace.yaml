@@ -1,3 +1,13 @@
-# esbuild (used by Vite 7 and Storybook) downloads its platform binary in a postinstall script
+# Vite+ ships its own Vite core and Vitest; make every package (Storybook included) resolve to them.
+overrides:
+  vite: npm:@voidzero-dev/vite-plus-core@8.3.8001
+  vitest: 5.1.1
+
+# esbuild (used by Storybook) downloads its platform binary in a postinstall script
 onlyBuiltDependencies:
   - esbuild
+
+# Storybook reads vendored versions from vite-plus when present; its optional peer range predates Vite+ 1.x
+peerDependencyRules:
+  allowedVersions:
+    storybook>vite-plus: ">=0.1.15"
