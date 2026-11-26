@@ -7,15 +7,14 @@ The source is on GitHub: [udamir/api-diff-viewer](https://github.com/udamir/api-
 - Node.js 22.18 or later (Vite+ and Vitest 5 need `^22.18.0 || ^24.11.0 || >=26.0.0`). Using the package needs Node.js 22 only for tooling and SSR builds.
 - pnpm 10: the version is pinned in the `packageManager` field of `package.json`; `corepack enable` picks it up.
 
-The toolchain is [Vite+](https://viteplus.dev) (`vp`): Vite and Rolldown for the demo, tsdown (`vp pack`) for the library build, Vitest 5 for the tests, Oxlint and Oxfmt plus the TypeScript 7 type check for `vp check`. The documentation portal is built with VitePress.
+The toolchain is [Vite+](https://viteplus.dev) (`vp`): tsdown (`vp pack`) for the library build, Vitest 5 for the tests, Oxlint and Oxfmt plus the TypeScript 7 type check for `vp check`. The documentation portal is built with VitePress.
 
 ## Commands
 
 ```sh
 pnpm install                  # install dependencies
 pnpm run build                # library build (vp pack): dist/api-diff-viewer.es.js, .umd.js, .css, index.d.ts
-pnpm run dev                  # demo page with live reload (vp dev)
-pnpm run build-demo           # demo build to demo-dist/
+pnpm run dev                  # the documentation portal and its live demo with live reload
 pnpm run test                 # all Vitest projects: unit tests and the Storybook tests in Chromium
 pnpm run test --project unit  # unit tests only
 pnpm run test:watch           # watch mode
@@ -36,7 +35,6 @@ pnpm run docs:preview         # serve the built portal
 | `src/` | The library: `diff-viewer.ts` (entry class), `diff-builder/` (merged document to blocks and tokens), `views/` (side-by-side and inline views), `extensions/` (CodeMirror decorations, gutters, word diff, badges), `sync/` (alignment, height and fold sync), `navigation/`, `worker/` |
 | `tests/` | Unit tests (Vitest, Node.js) |
 | `storybook/` | Stories and the Storybook interaction tests (Vitest browser mode) |
-| `demo/` | The local demo page (`pnpm run dev`) |
 | `docs/` | This portal (VitePress); `docs/demo.md` is the live demo |
 
 ## Documentation

@@ -24,9 +24,7 @@
   ],
   "scripts": {
     "build": "vp pack",
-    "dev": "vp dev --config demo/vite.config.ts",
-    "build-demo": "vp build --config demo/vite.config.ts",
-    "preview": "vp preview --config demo/vite.config.ts",
+    "dev": "vitepress dev docs",
     "test": "vp test run",
     "test:watch": "vp test watch",
     "test:coverage": "vp test run --coverage --project unit",

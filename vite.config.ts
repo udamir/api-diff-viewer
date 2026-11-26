@@ -79,16 +79,14 @@ export default defineConfig({
 		],
 	},
 	lint: {
-		// the Biome scope of 1.x: src/, tests/, examples/ and the root configs
+		// the Biome scope of 1.x: src/, tests/ and the root configs
 		ignorePatterns: [
 			"dist/**",
-			"demo-dist/**",
 			"storybook-static/**",
 			"coverage/**",
 			"temp/**",
 			".storybook/**",
 			"storybook/**",
-			"demo/**",
 			// the documentation portal: the VitePress cache and build (its config and theme sources are checked)
 			"docs/.vitepress/cache/**",
 			"docs/.vitepress/dist/**",
@@ -109,7 +107,6 @@ export default defineConfig({
 		endOfLine: "lf",
 		ignorePatterns: [
 			"dist/**",
-			"demo-dist/**",
 			"storybook-static/**",
 			"coverage/**",
 			"temp/**",
@@ -117,11 +114,10 @@ export default defineConfig({
 			"docs/.vitepress/dist/**",
 			"pnpm-lock.yaml",
 			"*.md",
-			// the Biome scope of 1.x: TypeScript in src/, tests/ and examples/ (plus the root configs); the Storybook
-			// stories, the demo, stylesheets, HTML and JSON keep their own hand-written style
+			// the Biome scope of 1.x: TypeScript in src/ and tests/ (plus the root configs); the Storybook stories,
+			// stylesheets, HTML and JSON keep their own hand-written style
 			".storybook/**",
 			"storybook/**",
-			"demo/**",
 			"**/*.css",
 			"**/*.html",
 			"**/*.json",
