@@ -33,7 +33,7 @@ npm install api-diff-viewer
 | 2.x | 2.x (bundled) | OpenAPI 3.0 / 3.1 / 3.2, AsyncAPI 2.x / 3.0, GraphApi 1.0, ProtoApi, JSON Schema |
 | 1.x | 1.x (bundled) | OpenAPI 3.0, AsyncAPI 2.x, GraphApi 0.1.x, JSON Schema |
 
-api-smart-diff is bundled into the viewer's `dist`, so you do not install it yourself; the `api-smart-diff` types used in the viewer's API (`DiffType`, `CompareOptions`, `CompareError`) are those of api-smart-diff 2.x. The bundle targets current browsers (api-smart-diff 2.x is built for ES2020: Chrome 80, Firefox 74, Safari 13.1 or later). Its runtime dependencies declare Node.js 18 or later (allof-merge: 22 or later), which matters for tooling and SSR builds that load the package in Node.js.
+api-smart-diff is bundled into the viewer's `dist`, so you do not install it yourself; the `api-smart-diff` types used in the viewer's API (`DiffType`, `CompareOptions`, `CompareError`) are those of api-smart-diff 2.x. The bundle targets current browsers (api-smart-diff 2.x is built for ES2020: Chrome 80, Firefox 74, Safari 13.1 or later). The package declares Node.js 22 or later (`engines`), the requirement of allof-merge, a dependency of api-smart-diff 2.x; this matters for tooling and SSR builds that load the package in Node.js.
 
 Swagger 2.0, OpenAPI 4+, AsyncAPI 1.x / 4+, unknown GraphApi versions and a pair of two different specifications are rejected: the viewer emits an `error` event with `kind: "unsupported-spec"` (see [Errors](#errors)). ProtoApi documents are the JSON documents built from `.proto` sources with [protoapi](https://github.com/udamir/protoapi); the viewer does not parse `.proto` text.
 
@@ -404,12 +404,20 @@ api-diff-viewer 2.0 uses api-smart-diff 2.x. What changes for viewer users:
 
 ## Development
 
+Requires Node.js 22.18 or later (Vite+ and Vitest 5 need `^22.18.0 || ^24.11.0 || >=26.0.0`) and pnpm 10 (the version is pinned in `packageManager`; `corepack enable` picks it up). The toolchain is [Vite+](https://viteplus.dev) (`vp`): Vite and Rolldown for the demo, tsdown (`vp pack`) for the library build, Vitest 5 for the tests, Oxlint and Oxfmt plus the TypeScript 7 type check for `vp check`.
+
 ```sh
-pnpm install          # Install dependencies (the lockfile is pnpm 8 format: use pnpm 8, e.g. `npx pnpm@8 install`)
-pnpm run build        # Type-check + build library
-pnpm run storybook    # Run Storybook on port 6006
-pnpm run test         # Run tests
-pnpm run lint         # Lint with Biome
+pnpm install            # install dependencies
+pnpm run build          # library build (vp pack): dist/api-diff-viewer.es.js, .umd.js, .css, index.d.ts
+pnpm run dev            # demo page with live reload (vp dev)
+pnpm run build-demo     # demo build to demo-dist/
+pnpm run test           # all Vitest projects: unit tests and the Storybook tests in Chromium
+pnpm run test --project unit   # unit tests only
+pnpm run test:watch     # watch mode
+pnpm run test-storybook # Storybook play functions in Chromium (`pnpm exec playwright install chromium` once)
+pnpm run check          # format, lint and type check (vp check); `pnpm run check:fix` applies the fixes
+pnpm run typecheck      # TypeScript 7 (tsc --noEmit)
+pnpm run storybook      # Storybook on port 6006
 ```
 
 ## License
