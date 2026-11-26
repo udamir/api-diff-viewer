@@ -4,7 +4,7 @@
 
 A framework-free CodeMirror 6 component that renders the difference between two versions of an API document, side by side or inline, with every change classified by [api-smart-diff](https://github.com/udamir/api-smart-diff) 2.x as breaking, risky, non-breaking, deprecated, annotation or unclassified. It supports OpenAPI 3.0 / 3.1 / 3.2, AsyncAPI 2.x / 3.0, GraphApi 1.0 (GraphQL), ProtoApi (gRPC / Protocol Buffers) and JSON Schema documents.
 
-**[Documentation](https://udamir.github.io/api-diff-viewer/)** · **[Getting started](https://udamir.github.io/api-diff-viewer/guide/getting-started)** · **[Live demo](https://udamir.github.io/api-diff-viewer/demo)** · **[API reference](https://udamir.github.io/api-diff-viewer/guide/api)** · **[Migration from 1.x](https://udamir.github.io/api-diff-viewer/guide/migration)**
+**[Documentation](https://udamir.github.io/api-diff-viewer/)** · **[Getting started](https://udamir.github.io/api-diff-viewer/guide/getting-started)** · **[Live demo](https://udamir.github.io/api-diff-viewer/demo)** · **[API reference](https://udamir.github.io/api-diff-viewer/guide/api)** · **[Migration from 1.1](https://udamir.github.io/api-diff-viewer/guide/migration)**
 
 ## Features
 
@@ -55,7 +55,7 @@ The documents are parsed objects or JSON strings; parse YAML yourself (for examp
 - [Change types and colours](https://udamir.github.io/api-diff-viewer/guide/change-types) and [Theming](https://udamir.github.io/api-diff-viewer/guide/theming)
 - [Events and errors](https://udamir.github.io/api-diff-viewer/guide/events)
 - [Web Worker](https://udamir.github.io/api-diff-viewer/guide/worker), [CodeMirror extensions](https://udamir.github.io/api-diff-viewer/guide/extensions) and [Navigation API](https://udamir.github.io/api-diff-viewer/guide/navigation)
-- [API reference](https://udamir.github.io/api-diff-viewer/guide/api), [Migration from 1.x](https://udamir.github.io/api-diff-viewer/guide/migration) and [Changelog](https://udamir.github.io/api-diff-viewer/changelog)
+- [API reference](https://udamir.github.io/api-diff-viewer/guide/api), [Migration from 1.1](https://udamir.github.io/api-diff-viewer/guide/migration) and [Changelog](https://udamir.github.io/api-diff-viewer/changelog)
 
 ## Development
 

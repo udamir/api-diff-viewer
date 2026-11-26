@@ -1,6 +1,6 @@
-# Migration from 1.x
+# Migration from 1.1
 
-api-diff-viewer 2.0 compares documents with api-smart-diff 2.x. The API of the viewer is the same; what changes for 1.x users is listed below.
+api-diff-viewer 1.2 compares documents with api-smart-diff 2.x. The API of the viewer is the same; what changes for users of 1.1 and earlier is listed below.
 
 ## Two more change types
 
@@ -23,7 +23,7 @@ api-diff-viewer 2.0 compares documents with api-smart-diff 2.x. The API of the v
 
 - `ready` also passes `errors`, the problems inside the comparison (see [Events and errors](/guide/events#comparison-problems)).
 - `error` passes `kind` (and `name`).
-- Unsupported documents (Swagger 2.0, ...) are reported with `error` instead of being compared as plain JSON. To keep the 1.x behaviour, pass `mergeOptions: { engine: "jsonschema" }`.
+- Unsupported documents (Swagger 2.0, ...) are reported with `error` instead of being compared as plain JSON. To keep the 1.1 behaviour, pass `mergeOptions: { engine: "jsonschema" }`.
 - The constructor no longer throws when `useWorker: false`; it emits `error`.
 
 ## String inputs must be JSON
@@ -34,7 +34,7 @@ A YAML string used to be compared as a plain string; it is now an `invalid-input
 
 The viewer shows the documents as written (api-smart-diff `merged: "original"`): path-level parameters stay on the path item, unchanged `$ref`s stay `$ref`s, `allOf` is not merged, and removed keys and array items are shown at the end of their container, after the after-side entries. A renamed key (a path template, a component, a channel) is one `rename` change: the before editor shows the old key, the after editor the new one.
 
-Navigation paths (`goToPath`, `findPaths`, `getChildKeys`, `togglePath`) follow that document, so a path that only existed in the 1.x normalized document (for example a path-level parameter under `.../get/parameters/N`) no longer resolves. Pass `mergeOptions: { merged: "normalized" }` to get the 1.x-style content.
+Navigation paths (`goToPath`, `findPaths`, `getChildKeys`, `togglePath`) follow that document, so a path that only existed in the 1.1 normalized document (for example a path-level parameter under `.../get/parameters/N`) no longer resolves. Pass `mergeOptions: { merged: "normalized" }` to get the 1.x-style content.
 
 ## Different classifications and counts
 
@@ -50,4 +50,4 @@ The ES module no longer bundles its dependencies: it imports CodeMirror, `@lezer
 2. Read `changeCounts` by key instead of by index; read `DiffBlockData.diffs` with the new indices.
 3. Handle the `error` event (`kind`), and the `errors` of `ready` if you show comparison problems.
 4. Parse YAML before passing it to the viewer.
-5. If you rely on 1.x paths or content, set `mergeOptions: { merged: "normalized" }`.
+5. If you rely on 1.1 paths or content, set `mergeOptions: { merged: "normalized" }`.

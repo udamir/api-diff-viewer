@@ -28,12 +28,12 @@ The UMD build (`dist/api-diff-viewer.umd.js`) is self-contained: it bundles all 
 
 ### api-smart-diff
 
-api-diff-viewer 2.x compares documents with [api-smart-diff](https://udamir.github.io/api-smart-diff/) 2.x. You do not install it yourself: it is a dependency of the package (its types are part of the viewer's API: `DiffType`, `CompareOptions`, `CompareError`), installed with it; the UMD build bundles it.
+api-diff-viewer 1.2 and later compares documents with [api-smart-diff](https://udamir.github.io/api-smart-diff/) 2.x. You do not install it yourself: it is a dependency of the package (its types are part of the viewer's API: `DiffType`, `CompareOptions`, `CompareError`), installed with it; the UMD build bundles it.
 
 | api-diff-viewer | api-smart-diff | Documents |
 | --- | --- | --- |
-| 2.x | 2.x (dependency; bundled in the UMD build) | OpenAPI 3.0 / 3.1 / 3.2, AsyncAPI 2.x / 3.0, GraphApi 1.0, ProtoApi, JSON Schema |
-| 1.x | 1.x (bundled) | OpenAPI 3.0, AsyncAPI 2.x, GraphApi 0.1.x, JSON Schema |
+| 1.2 | 2.x (dependency; bundled in the UMD build) | OpenAPI 3.0 / 3.1 / 3.2, AsyncAPI 2.x / 3.0, GraphApi 1.0, ProtoApi, JSON Schema |
+| 1.0 – 1.1 | 1.x (bundled) | OpenAPI 3.0, AsyncAPI 2.x, GraphApi 0.1.x, JSON Schema |
 
 ### Requirements
 
@@ -46,7 +46,7 @@ Without a bundler, load the UMD build with a `<script>` tag. It defines the glob
 
 ```html
 <div id="diff" style="height: 600px"></div>
-<script src="https://unpkg.com/api-diff-viewer@2/dist/api-diff-viewer.umd.js"></script>
+<script src="https://unpkg.com/api-diff-viewer@1/dist/api-diff-viewer.umd.js"></script>
 <script>
   const viewer = ApiDiffViewer.createDiffViewer(
     document.getElementById("diff"),
@@ -57,7 +57,7 @@ Without a bundler, load the UMD build with a `<script>` tag. It defines the glob
 </script>
 ```
 
-The same file is available from jsDelivr: `https://cdn.jsdelivr.net/npm/api-diff-viewer@2/dist/api-diff-viewer.umd.js`. The ES module (`dist/api-diff-viewer.es.js`) imports its dependencies by package name, so a `<script type="module">` needs an import map for them or a CDN that rewrites the imports (for example `https://esm.sh/api-diff-viewer@2`).
+The same file is available from jsDelivr: `https://cdn.jsdelivr.net/npm/api-diff-viewer@1/dist/api-diff-viewer.umd.js`. The ES module (`dist/api-diff-viewer.es.js`) imports its dependencies by package name, so a `<script type="module">` needs an import map for them or a CDN that rewrites the imports (for example `https://esm.sh/api-diff-viewer@1`).
 
 ## Stylesheet
 
@@ -73,7 +73,7 @@ import "api-diff-viewer/style.css";
 Without a bundler, link it from a CDN:
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/api-diff-viewer@2/dist/api-diff-viewer.css" />
+<link rel="stylesheet" href="https://unpkg.com/api-diff-viewer@1/dist/api-diff-viewer.css" />
 ```
 
 ## TypeScript

@@ -31,7 +31,7 @@ const REFERENCE = {
 	text: "Reference",
 	items: [
 		{ text: "API reference", link: "/guide/api" },
-		{ text: "Migration from 1.x", link: "/guide/migration" },
+		{ text: "Migration from 1.1", link: "/guide/migration" },
 		{ text: "Contributing", link: "/guide/contributing" },
 		{ text: "Changelog", link: "/changelog" },
 	],
@@ -64,7 +64,7 @@ export default defineConfig({
 				text: `v${pkg.version}`,
 				items: [
 					{ text: "Changelog", link: "/changelog" },
-					{ text: "Migration from 1.x", link: "/guide/migration" },
+					{ text: "Migration from 1.1", link: "/guide/migration" },
 					{ text: "Releases", link: `${REPO}/releases` },
 					{ text: "npm", link: "https://www.npmjs.com/package/api-diff-viewer" },
 				],

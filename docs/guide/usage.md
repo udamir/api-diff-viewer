@@ -145,7 +145,7 @@ document.getElementById("toggle-dark")!.onclick = () => {
 
 ### Comparing other engine options
 
-`mergeOptions` passes options to api-smart-diff, for example the normalized document of the 1.x viewer or a forced engine:
+`mergeOptions` passes options to api-smart-diff, for example the normalized document of the 1.1 viewer or a forced engine:
 
 ```ts
 createDiffViewer(container, before, after, { mergeOptions: { merged: "normalized" } });

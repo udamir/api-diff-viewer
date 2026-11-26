@@ -1,6 +1,6 @@
 {
   "name": "api-diff-viewer",
-  "version": "2.0.0",
+  "version": "1.2.0",
   "description": "CodeMirror-based component to view the difference between two API documents: OpenAPI, AsyncAPI, GraphApi (GraphQL), ProtoApi (gRPC), JSON Schema",
   "author": "Damir Yusipov",
   "license": "MIT",
