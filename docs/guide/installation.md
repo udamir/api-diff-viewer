@@ -57,7 +57,14 @@ The same file is available from jsDelivr: `https://cdn.jsdelivr.net/npm/api-diff
 
 You do not need to import a stylesheet. The viewer's look (colours, gutters, badges, word highlights) is applied by its CodeMirror themes, which set the colour variables on the editors themselves.
 
-The package also contains `dist/api-diff-viewer.css`. It only declares the [colour variables](/guide/theming#css-variables) with their light defaults on `:root` and their dark values on `.dark` / `[data-theme="dark"]`, which matters only for the few variables the editor themes do not set (selection, gutter and border colours). The file is not listed in the package `exports`, so `import "api-diff-viewer/dist/api-diff-viewer.css"` fails in bundlers that enforce `exports` (Vite, webpack 5, Node.js). If you want it, link it from a CDN or copy it into your assets:
+The package also contains a stylesheet, exported as `api-diff-viewer/style.css` (the file `dist/api-diff-viewer.css`). It only declares the [colour variables](/guide/theming#css-variables) with their light defaults on `:root` and their dark values on `.dark` / `[data-theme="dark"]`, which matters only for the few variables the editor themes do not set (selection, gutter and border colours). If you want it, import it next to the module:
+
+```ts
+import { createDiffViewer } from "api-diff-viewer";
+import "api-diff-viewer/style.css";
+```
+
+Without a bundler, link it from a CDN:
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/api-diff-viewer@2/dist/api-diff-viewer.css" />

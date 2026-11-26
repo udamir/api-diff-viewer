@@ -625,6 +625,7 @@ export class DiffViewer extends TypedEventEmitter<DiffViewerEvents> {
  * @example
  * ```typescript
  * import { createDiffViewer } from 'api-diff-viewer'
+ * // optional: the colour variables on :root / .dark (the editor themes set their own)
  * import 'api-diff-viewer/style.css'
  *
  * const viewer = createDiffViewer(

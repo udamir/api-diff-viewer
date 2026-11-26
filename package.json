@@ -15,7 +15,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/api-diff-viewer.es.js",
       "require": "./dist/api-diff-viewer.umd.js"
-    }
+    },
+    "./style.css": "./dist/api-diff-viewer.css",
+    "./package.json": "./package.json"
   },
   "sideEffects": [
     "*.css"

@@ -81,7 +81,7 @@ Because the theme declares its variables on `.cm-editor`, a declaration on `:roo
 }
 ```
 
-The optional stylesheet `dist/api-diff-viewer.css` declares the light values on `:root` and the dark values on `.dark` and `[data-theme="dark"]` (see [Installation](/guide/installation#stylesheet)).
+The optional stylesheet `api-diff-viewer/style.css` (`dist/api-diff-viewer.css`) declares the light values on `:root` and the dark values on `.dark` and `[data-theme="dark"]` (see [Installation](/guide/installation#stylesheet)).
 
 ## Base CodeMirror theme
 
