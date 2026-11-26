@@ -81,8 +81,8 @@
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
   },
-  "resolutions": {
-    "strip-ansi": "6.0.1",
-    "jackspeak": "2.1.1"
-  }
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.0"
 }

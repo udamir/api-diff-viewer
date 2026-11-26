@@ -1,0 +1,3 @@
+# esbuild (used by Vite 7 and Storybook) downloads its platform binary in a postinstall script
+onlyBuiltDependencies:
+  - esbuild
