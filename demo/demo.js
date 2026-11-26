@@ -6,7 +6,7 @@ import { yaml } from '@codemirror/lang-yaml'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { foldGutter, syntaxHighlighting, HighlightStyle } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
-import jsyaml from 'js-yaml'
+import * as jsyaml from 'js-yaml'
 import { samples } from './samples.js'
 
 // ── State ──
