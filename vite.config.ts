@@ -7,12 +7,17 @@ import { playwright } from "vite-plus/test/browser-playwright";
 // the published 1.x file names (`main`, `module`, `exports` in package.json)
 const fileName = "api-diff-viewer";
 
-// both builds bundle every dependency (CodeMirror, api-smart-diff, diff), as the 1.x Vite library build did; the
-// declarations keep importing the dependency types from their packages
+// the ES module imports its runtime dependencies (CodeMirror, Lezer, api-smart-diff, diff) from the packages listed in
+// `dependencies`, so the application and its own CodeMirror extensions share one copy of @codemirror/state and
+// @codemirror/view; the UMD build for `<script>` tags bundles every dependency. The declarations import the dependency
+// types from their packages
 // Vite 7's library default ("baseline-widely-available"), which built 1.x
 const target = ["chrome107", "edge107", "firefox104", "safari16"];
 
-const deps = { alwaysBundle: [/.*/], onlyBundle: false as const, dts: { alwaysBundle: [] } };
+// anything imported at runtime that is not in `dependencies` (for example a devDependency) would be bundled into the
+// ES module: `onlyBundle: []` makes such an import fail the build instead
+const esmDeps = { onlyBundle: [] as string[], dts: { alwaysBundle: [] } };
+const umdDeps = { alwaysBundle: [/.*/], onlyBundle: false as const, dts: { alwaysBundle: [] } };
 
 export default defineConfig({
 	pack: [
@@ -24,7 +29,7 @@ export default defineConfig({
 			target,
 			dts: true,
 			sourcemap: true,
-			deps,
+			deps: esmDeps,
 			// like the Vite library build: identifiers mangled, whitespace kept
 			minify: { compress: true, mangle: true, codegen: { removeWhitespace: false } },
 			css: { fileName: `${fileName}.css`, minify: true },
@@ -38,7 +43,7 @@ export default defineConfig({
 			platform: "browser",
 			target,
 			sourcemap: true,
-			deps,
+			deps: umdDeps,
 			minify: true,
 			css: { fileName: `${fileName}.css`, minify: true },
 			outputOptions: { entryFileNames: `${fileName}.umd.js` },

@@ -22,9 +22,9 @@ const viewer = createDiffViewer(container, before, after, {
 
 CodeMirror recognises extensions by identity, so an editor only accepts extensions created with the same copy of `@codemirror/state` and `@codemirror/view` as the editor itself.
 
-The published bundle (`dist/api-diff-viewer.es.js` and `.umd.js`) contains its own copy of CodeMirror. Extensions and base themes created from separately installed `@codemirror/*` packages are therefore rejected: the viewer emits an `error` event (`kind: "internal"`) with the CodeMirror message "Unrecognized extension value in extension set ... multiple instances of @codemirror/state are loaded", and the diff is not rendered. This applies to the `extensions` option and to the `theme` option (unless the theme is one of the viewer's exports, such as `diffThemeDark`).
+The package's ES module imports CodeMirror from its `dependencies` instead of bundling it (see [Installation](/guide/installation#dependencies)), so your bundler gives the viewer and your extensions and base themes (`extensions`, `theme`) the same copy. Keep your `@codemirror/*` dependencies on ranges compatible with the viewer's, so the package manager installs one copy of each package. If two copies are loaded anyway, CodeMirror rejects the extension: the viewer emits an `error` event (`kind: "internal"`) with the message "Unrecognized extension value in extension set ... multiple instances of @codemirror/state are loaded", and the diff is not rendered. `npm ls @codemirror/state` (or `pnpm why @codemirror/state`) shows whether there is more than one.
 
-The extensions work when the viewer and your code share one CodeMirror, which is the case when the viewer is compiled from its sources in the same build as your code (as in this portal's demo and in the repository's Storybook). With the published bundle, use the viewer's own options instead where they exist (`colors`, `dark`, `theme: diffThemeLight | diffThemeDark`, `wordWrap`, `enableFolding`).
+The UMD build (`dist/api-diff-viewer.umd.js`) bundles its own CodeMirror, so with it only the viewer's own options and exports apply (`colors`, `dark`, `theme: diffThemeLight | diffThemeDark`, `wordWrap`, `enableFolding`).
 
 ## Viewer extensions
 

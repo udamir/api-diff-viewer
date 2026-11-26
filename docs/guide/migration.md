@@ -41,7 +41,7 @@ api-smart-diff 2.x classifies changes inside components by their usages, reports
 
 ## Bundle size
 
-api-smart-diff 2.x (with its OpenAPI 3.2, AsyncAPI 3.0, GraphApi 1.0 and ProtoApi engines) makes the ES bundle about 470 kB larger (about 125 kB gzipped).
+The ES module no longer bundles its dependencies: it imports CodeMirror, `@lezer/highlight`, api-smart-diff and `diff` from the packages installed with it (see [Installation](/guide/installation#dependencies)), so it is about 130 kB, and your own CodeMirror extensions work with it. The UMD build still bundles everything; api-smart-diff 2.x (with its OpenAPI 3.2, AsyncAPI 3.0, GraphApi 1.0 and ProtoApi engines) makes it larger than in 1.x.
 
 ## Checklist
 

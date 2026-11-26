@@ -22,7 +22,7 @@ A framework-free CodeMirror 6 component that renders the difference between two 
 npm install api-diff-viewer
 ```
 
-api-smart-diff 2.x and CodeMirror are bundled; no stylesheet import is needed. See [Installation](https://udamir.github.io/api-diff-viewer/guide/installation) for the browser build and the requirements.
+api-smart-diff 2.x and CodeMirror are installed with the package (the UMD build bundles them); no stylesheet import is needed. See [Installation](https://udamir.github.io/api-diff-viewer/guide/installation) for the browser build and the requirements.
 
 ## Usage
 
