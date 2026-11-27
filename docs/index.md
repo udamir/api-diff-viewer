@@ -4,7 +4,7 @@ layout: home
 hero:
   name: api-diff-viewer
   text: See what changed in your API
-  tagline: A framework-free CodeMirror 6 component that renders the difference between two versions of an OpenAPI, AsyncAPI, GraphQL (GraphApi), gRPC (ProtoApi) or JSON Schema document, side by side or inline, with every change classified by api-smart-diff 2.x.
+  tagline: A framework-free component that renders the difference between two versions of an OpenAPI, AsyncAPI, GraphQL (GraphApi), gRPC (ProtoApi) or JSON Schema documents.
   actions:
     - theme: brand
       text: Get started
